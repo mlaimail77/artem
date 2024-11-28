@@ -2,6 +2,7 @@ import os
 import requests
 
 from helpers.prompts.llm_prompts import *
+from helpers.utils import *
 
 from dotenv import load_dotenv # can be installed with `pip install python-dotenv`
 
@@ -133,12 +134,27 @@ def post_long_cast(text, parent=None, channel_id=None):
     Returns:
         list: List of responses from the Neynar API for each cast
     """
+    posts_replied_to = get_all_posts_replied_to(supabase)
+    
+    # Check if we've already replied to this parent
+    if parent and any(p['parent_id'] == parent for p in posts_replied_to):
+        return []
+
     # Farcaster character limit
     CHAR_LIMIT = 1024
     
     # If text is under limit, post as single cast
     if len(text) <= CHAR_LIMIT:
-        return [post_cast(text, parent, channel_id)]
+        response = post_cast(text, parent, channel_id)
+        if response.get('cast', {}).get('hash'):
+            post = {
+                'hash': response['cast']['hash'],
+                'text': text,
+                'parent_id': parent
+            }
+            set_post_created(supabase, post)
+            return [response]
+        return []
         
     # Split into chunks
     chunks = []
@@ -164,10 +180,14 @@ def post_long_cast(text, parent=None, channel_id=None):
         marked_text = f"\\{i+1} {chunk}"
         
         response = post_cast(marked_text, thread_parent, channel_id)
-        responses.append(response)
-        
-        # Make each cast reply to previous one
         if response.get('cast', {}).get('hash'):
+            post = {
+                'hash': response['cast']['hash'],
+                'text': marked_text,
+                'parent_id': thread_parent
+            }
+            set_post_created(supabase, post)
+            responses.append(response)
             thread_parent = response['cast']['hash']
             
     return responses

@@ -6,8 +6,6 @@ from dotenv import load_dotenv # can be installed with `pip install python-doten
 
 load_dotenv('.env.local')
 
-
-
 def get_supabase_client():
     url: str = os.getenv("SUPABASE_URL")
     key: str = os.getenv("SUPABASE_KEY")
@@ -17,7 +15,6 @@ def get_supabase_client():
 
 def get_last_n_posts(supabase, n=10):
     response = supabase.auth.refresh_session()
-    print(response)
 
     """
     Get the N most recent posts ordered by timestamp in descending order.
@@ -34,6 +31,14 @@ def get_last_n_posts(supabase, n=10):
                       .order("timestamp", desc=True) \
                       .limit(n) \
                       .execute()
+    
+    # Convert list of post dictionaries to newline-separated string of post contents
+    posts_text = "\n".join([post["content"] for post in response.data])
+    return posts_text
+
+def get_all_posts_replied_to(supabase):
+    response = supabase.auth.refresh_session()
+    response = supabase.table("posts_created").select("parent_id").execute()
     return response.data
 
 
@@ -42,6 +47,7 @@ def get_all_posts(supabase):
     return response.data
 
 def set_post_created(supabase, post):
+    response = supabase.auth.refresh_session()
     hash = post['hash']
     text = post['text']
     parent_id = post['parent_id']
@@ -54,12 +60,12 @@ def set_post_created(supabase, post):
          "timestamp": timestamp}).execute()
     return response.data
 
+supabase = get_supabase_client()
+print("Successfully connected to Supabase!")
+
 def main():
     supabase = get_supabase_client()
     print("Successfully connected to Supabase!")
-
-    response = get_last_n_posts(supabase, 10)
-    print(response)
 
     # print(user)
 
