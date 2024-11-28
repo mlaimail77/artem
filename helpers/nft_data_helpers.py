@@ -34,6 +34,41 @@ def filter_nft_metadata(response):
     
     return filtered_response
 
+async def get_trending_collections(time_period='24h', chains=['ethereum', 'base', 'solana'], limit=20, api_key=SIMPLEHASH_API_KEY):
+    """
+    Fetches trending NFT collections from the SimpleHash API.
+
+    Args:
+        time_period (str): Time period for trending data. Options: '24h', '1d', '7d', '30d'. Default: '24h'
+        chains (list): List of blockchain networks to include. Default: ['ethereum', 'base', 'solana']
+        limit (int): Number of collections to return. Default: 100
+        api_key (str): The SimpleHash API key to use.
+
+    Returns:
+        dict: The response from the SimpleHash API containing trending collections data.
+    """
+    # Construct chains parameter
+    chains_param = '%2C'.join(chains)
+    
+    # Construct the API endpoint URL
+    url = f"https://api.simplehash.com/api/v0/nfts/collections/trending?chains={chains_param}&time_period={time_period}&limit={limit}"
+
+    headers = {
+        "accept": "application/json",
+        "X-API-KEY": api_key
+    }
+
+    # Send the GET request
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            # Check if the response is valid
+            if response.status == 200:
+                return await response.json()
+            else:
+                # Handle the case where the API response is invalid
+                print(f"Error fetching trending collections: {response.status}")
+                return None
+
 async def get_nft_metadata(network, contract_address, token_id, api_key=SIMPLEHASH_API_KEY):
     """
     Fetches NFT metadata from the SimpleHash API.

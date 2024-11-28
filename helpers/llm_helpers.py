@@ -19,32 +19,22 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "network": {
-                        "type": "string",
-                        "description": "The network the NFT is on: base, ethereum, etc."
-                    },
-                    "contract_address": {
-                        "type": "string",
-                        "description": "The contract address of the NFT, typically a long string of numbers and letters"
-                    },
-                    "token_id": {
-                        "type": "string",
-                        "description": "The token ID of the NFT, typically a number"
+                    "network": {"type": "string"},
+                    "contract_address": {"type": "string"},
+                    "token_id": {"type": "string"},
                 },
                 "required": ["network", "contract_address", "token_id"],
                 "additionalProperties": False,
-                },
             },
-        }
+        },
     }
 ]
-
 
 async def get_nft_opinion(network, contract_address, token_id):
     metadata = await get_nft_metadata(network, contract_address, token_id)
     pretty_metadata = json.dumps(metadata, indent=2)
 
-    system_prompt = SYSTEM_PROMPT_GET_NFT_OPINION.format(metadata=pretty_metadata)
+    system_prompt = get_get_nft_opinion_prompt(pretty_metadata)
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -78,7 +68,7 @@ async def get_image_opinion(cast_details):
         model="gpt-4o-mini",
         messages=[
             {"role": "system", 
-             "content": SYSTEM_PROMPT_IMAGE_REPLY},
+             "content": get_image_opinion_prompt()},
             {
                 "role": "user",
                 "content": [
@@ -95,9 +85,21 @@ async def get_image_opinion(cast_details):
                 ]
             }
         ],
-        max_tokens=300
+        max_tokens=800
     )
 
+    return response.choices[0].message.content
+
+async def get_trending_posts(trending_collections_response):
+    system_prompt = get_trending_nft_thoughts_prompt(trending_collections_response)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+                {"role": "system", 
+                "content": system_prompt},
+            ],
+        max_tokens=300
+    )
     return response.choices[0].message.content
 
 
@@ -115,7 +117,7 @@ async def get_reply(cast_details):
         model="gpt-4o-mini",
         messages=[
             {"role": "system", 
-            "content": SYSTEM_PROMPT_REPLY + cast_text},
+            "content": get_reply_guy_prompt(cast_text)},
         ],
         tools=tools,
         max_tokens=300
@@ -131,54 +133,24 @@ async def get_reply(cast_details):
 
     return response.choices[0].message.content
 
-def get_thought(previous_thoughts="No recent thoughts"):
+async def get_thought(previous_posts="No recent posts"):
+    system_prompt = get_casual_thoughts_prompt(previous_posts)
+    print("system prompt for get_thought: ", system_prompt)
     response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=[
-        {"role": "system", 
-        "content": SYSTEM_PROMPT_TWEET + previous_thoughts},
-    ],
-    max_tokens=300
+        model="gpt-4o-mini",
+        messages=[
+                {"role": "system", 
+                "content": system_prompt},
+            ],
+        max_tokens=300
     )
-
-    print(SYSTEM_PROMPT_TWEET + previous_thoughts)
-
     return response.choices[0].message.content
-
-def split_tweet(tweet):
-    # If tweet is already under limit, return as single item array
-    if len(tweet) <= 280*2:
-        return [tweet]
-    
-    words = tweet.split()
-    chunks = []
-    current_chunk = []
-    current_length = 0
-    
-    for word in words:
-        # Add 1 for the space between words
-        word_length = len(word) + (1 if current_chunk else 0)
-        
-        if current_length + word_length <= 280*2:
-            current_chunk.append(word)
-            current_length += word_length
-        else:
-            # Store current chunk and start new one
-            chunks.append(' '.join(current_chunk))
-            current_chunk = [word]
-            current_length = len(word)
-    
-    # Add final chunk if exists
-    if current_chunk:
-        chunks.append(' '.join(current_chunk))
-        
-    return chunks
 
 
 async def main():
-
-    response = await generate_reply_smart("hey @artto_ai - can you share your thoughts on this NFT? https://opensea.io/assets/ethereum/0xe70659b717112ac4e14284d0db2f5d5703df8e43/347")
-    print(response)
+    pass
+    # response = await get_reply("hey @artto_ai - can you share your thoughts on this NFT? https://opensea.io/assets/ethereum/0xe70659b717112ac4e14284d0db2f5d5703df8e43/347")
+    # print(response)
 
     # response = await generate_reply_smart("yo @artto_ai would you buy this? https://basescan.org/nft/0x7d210dae7a88cadac22cefa9cb5baa4301b5c256/57")
     # print(response)

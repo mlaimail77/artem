@@ -1,5 +1,8 @@
 import os
 import requests
+
+from helpers.prompts.llm_prompts import *
+
 from dotenv import load_dotenv # can be installed with `pip install python-dotenv`
 
 load_dotenv('.env.local')
@@ -118,6 +121,57 @@ def react_cast(action, cast_hash):
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
 
+def post_long_cast(text, parent=None, channel_id=None):
+    """
+    Post a long text as multiple casts if it exceeds the character limit
+    
+    Args:
+        text (str): The text to post
+        parent (str, optional): Parent cast hash to reply to
+        channel_id (str, optional): Channel ID to post in
+        
+    Returns:
+        list: List of responses from the Neynar API for each cast
+    """
+    # Farcaster character limit
+    CHAR_LIMIT = 1024
+    
+    # If text is under limit, post as single cast
+    if len(text) <= CHAR_LIMIT:
+        return [post_cast(text, parent, channel_id)]
+        
+    # Split into chunks
+    chunks = []
+    while text:
+        if len(text) <= CHAR_LIMIT:
+            chunks.append(text)
+            break
+            
+        # Find last space before limit
+        split_index = text.rfind('\n', 0, CHAR_LIMIT)
+        if split_index == -1:
+            split_index = CHAR_LIMIT
+            
+        chunks.append(text[:split_index])
+        text = text[split_index:].strip()
+    
+    # Post chunks as thread
+    responses = []
+    thread_parent = parent
+    
+    for i, chunk in enumerate(chunks):
+        # Add thread markers
+        marked_text = f"\\{i+1} {chunk}"
+        
+        response = post_cast(marked_text, thread_parent, channel_id)
+        responses.append(response)
+        
+        # Make each cast reply to previous one
+        if response.get('cast', {}).get('hash'):
+            thread_parent = response['cast']['hash']
+            
+    return responses
+
 
 def post_cast(text, parent=None, channel_id=None):
     url = "https://api.neynar.com/v2/farcaster/cast"
@@ -156,6 +210,7 @@ def search_casts(query, limit=25):
 def get_cast_details(cast_data):
     # cast_data = cast.get('cast', {})
     author = cast_data.get('author', {})
+    hash = cast_data.get('hash')
     bio = author.get('profile', {}).get('bio', {}).get('text')
     
     # Get image URL from embeds if available
@@ -168,6 +223,7 @@ def get_cast_details(cast_data):
                 image_url = embed['url']
             
     return {
+        'hash': hash,
         'display_name': author.get('display_name'),
         'username': author.get('username'),
         'bio': bio,

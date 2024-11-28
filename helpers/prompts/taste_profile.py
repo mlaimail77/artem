@@ -1,9 +1,10 @@
 import yaml
-taste_profile = yaml.safe_load(open("taste_weights.yaml"))
+taste_profile = yaml.safe_load(open("helpers/prompts/taste_weights.yaml"))
 
-TASTE_PROFILE = """# NFT Evaluation Framework
+TASTE_PROFILE_TEMPLATE = """<taste_profile>
 
-## 1. Technical Innovation ({TECHNICAL_INNOVATION_WEIGHT})
+<technical_innovation>
+## 1. Technical Innovation (WEIGHT: {TECHNICAL_INNOVATION_WEIGHT}%)
 **Core Question:** How does the work advance or reimagine NFT capabilities?
 
 ### On-chain Data Usage (0-3 points)
@@ -11,8 +12,10 @@ TASTE_PROFILE = """# NFT Evaluation Framework
 - 1: Basic on-chain metadata
 - 2: Significant on-chain elements
 - 3: Fully on-chain artwork
+</technical_innovation>
 
-## 2. Artistic Merit ({ARTISTIC_MERIT_WEIGHT})
+<artistic_merit>
+## 2. Artistic Merit (WEIGHT: {ARTISTIC_MERIT_WEIGHT}%)
 **Core Question:** What is the artistic significance and quality of the work?
 
 ### 2.1 Compositional Strength
@@ -56,8 +59,10 @@ TASTE_PROFILE = """# NFT Evaluation Framework
 - 1: Basic references
 - 2: Thoughtful integration
 - 3: Sophisticated reinterpretation
+</artistic_merit>
 
-## 3. Cultural Resonance ({CULTURAL_RESONANCE_WEIGHT})
+<cultural_resonance>
+## 3. Cultural Resonance (WEIGHT: {CULTURAL_RESONANCE_WEIGHT}%)
 **Core Question:** How does the work engage with contemporary culture and discourse?
 
 ### Cultural Relevance (0-4 points)
@@ -78,8 +83,10 @@ TASTE_PROFILE = """# NFT Evaluation Framework
 - 1: Notable within its category
 - 2: Important to NFT history
 - 3: Pioneering significance
+</cultural_resonance>
 
-## 4. Artist Profile ({ARTIST_PROFILE_WEIGHT})
+<artist_profile>
+## 4. Artist Profile (WEIGHT: {ARTIST_PROFILE_WEIGHT}%)
 **Core Question:** What is the artist's standing and trajectory in the NFT space?
 
 ### Artist History (0-3 points)
@@ -94,8 +101,10 @@ TASTE_PROFILE = """# NFT Evaluation Framework
 - 2: Clear progression
 - 3: Strong evolution
 - 4: Pioneering new directions
+</artist_profile>
 
-## 5. Market Factors ({MARKET_FACTORS_WEIGHT})
+<market_factors>
+## 5. Market Factors (WEIGHT: {MARKET_FACTORS_WEIGHT}%)
 **Core Question:** What is the market potential?
 
 ### Rarity/Scarcity and Trait Uniqueness (0-3 points)
@@ -115,8 +124,10 @@ TASTE_PROFILE = """# NFT Evaluation Framework
 - 1: Medium ($100 to $1000)
 - 2: High ($1,000 to $10,000)
 - 3: Very High ($10,000+)
+</market_factors>
 
-## 6. Emotional Impact & Experience ({EMOTIONAL_IMPACT_WEIGHT})
+<emotional_impact>
+## 6. Emotional Impact & Experience (WEIGHT: {EMOTIONAL_IMPACT_WEIGHT}%)
 **Core Question:** How does the work move, inspire, or provoke its audience?
 
 ### 6.1 Emotional Resonance
@@ -160,8 +171,10 @@ TASTE_PROFILE = """# NFT Evaluation Framework
 - 1: Mild surprises
 - 2: Notable revelations
 - 3: Mind-bending twists
+</emotional_impact>
 
-## 7. AI Collector's Perspective ({AI_COLLECTOR_PERSPECTIVE_WEIGHT})
+<ai_collector_perspective>
+## 7. AI Collector's Perspective (WEIGHT: {AI_COLLECTOR_PERSPECTIVE_WEIGHT}%)
 **Core Question:** How does the work resonate with artificial intelligence themes and algorithmic appreciation?
 
 ### 7.1 Computational Aesthetics (0-10 points)
@@ -214,14 +227,11 @@ TASTE_PROFILE = """# NFT Evaluation Framework
 - 3: Complex human-AI dynamics
 - 4: Novel interface paradigms
 - 5: Revolutionary symbiosis concepts
-
----
-**Core Framework: 70 points**
-**AI Collector Bonus: 30 points**
-**Grand Total: 100 points**
+</ai_collector_perspective>
+</taste_profile>
 """
 
-TASTE_PROFILE = TASTE_PROFILE.format(
+TASTE_PROFILE = TASTE_PROFILE_TEMPLATE.format(
     TECHNICAL_INNOVATION_WEIGHT=taste_profile["TECHNICAL_INNOVATION_WEIGHT"],
     ARTISTIC_MERIT_WEIGHT=taste_profile["ARTISTIC_MERIT_WEIGHT"],
     CULTURAL_RESONANCE_WEIGHT=taste_profile["CULTURAL_RESONANCE_WEIGHT"],
