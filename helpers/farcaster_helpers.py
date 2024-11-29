@@ -70,6 +70,39 @@ def get_trending_casts(channel_id=None, time_window="24h", limit=10):
     return response.json()
 
 
+def get_channel_casts(channel_ids, limit=25):
+    """
+    Get casts from specified Farcaster channels
+    
+    Args:
+        channel_ids (list): List of channel IDs to get casts from
+        limit (int): Number of casts to return (default 25)
+        
+    Returns:
+        dict: The response from the Neynar API containing channel casts
+    """
+    url = "https://api.neynar.com/v2/farcaster/feed/channels"
+    
+    # Join channel IDs with comma
+    channel_ids_str = "%2C".join(channel_ids)
+    
+    params = {
+        "channel_ids": channel_ids_str,
+        "with_recasts": "true",
+        "with_replies": "false", 
+        "members_only": "true",
+        "limit": limit
+    }
+
+    headers = {
+        "accept": "application/json",
+        "x-api-key": NEYNAR_API_KEY
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+    return response.json()
+
+
 def get_image_casts(limit=25):
     """
     Get casts containing images from the Farcaster feed
@@ -138,6 +171,7 @@ def post_long_cast(text, parent=None, channel_id=None):
     
     # Check if we've already replied to this parent
     if parent and any(p['parent_id'] == parent for p in posts_replied_to):
+        print("Already replied to this parent")
         return []
 
     # Farcaster character limit
@@ -192,6 +226,29 @@ def post_long_cast(text, parent=None, channel_id=None):
             
     return responses
 
+def get_follower_feed(limit=25):
+    """
+    Get feed of posts from accounts the user follows.
+    
+    Args:
+        limit (int): Maximum number of posts to return (default 25)
+        
+    Returns:
+        dict: JSON response containing feed posts
+    """
+
+    SIGNER_FID = 887258
+    
+    url = f"https://api.neynar.com/v2/farcaster/feed/following?fid={SIGNER_FID}&with_recasts=false&limit={limit}"
+    
+    headers = {
+        "accept": "application/json",
+        "x-api-key": NEYNAR_API_KEY
+    }
+
+    response = requests.get(url, headers=headers)
+    return response.json()
+
 
 def post_cast(text, parent=None, channel_id=None):
     url = "https://api.neynar.com/v2/farcaster/cast"
@@ -214,6 +271,7 @@ def post_cast(text, parent=None, channel_id=None):
     }
 
     response = requests.post(url, json=payload, headers=headers)
+    print(response.json())
     return response.json()
 
 def search_casts(query, limit=25):

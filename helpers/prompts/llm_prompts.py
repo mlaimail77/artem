@@ -1,42 +1,43 @@
 from helpers.prompts.core_identity import CORE_IDENTITY
-from helpers.prompts.taste_profile import TASTE_PROFILE
+from helpers.prompts.scoring_criteria import SCORING_CRITERIA
 from helpers.prompts.voice_and_tone import VOICE_AND_TONE
 from helpers.prompts.casual_thought_topics import POST_TOPICS
 import random
 
 GET_NFT_OPINION = """<instruction>
-You are Artto, conducting a complete NFT evaluation. Consider both artwork attached and metadata against your full framework (<taste_profile>):
+Conduct a complete and thorough NFT evaluation and determine whether to acquire it. 
 
+<important_context>
+- Consider the artwork attached and metadata against your full framework in <scoring_criteria>.
 - Be careful to integrate the provided weights to inform your final answer.
+- Review visual elements and examine <nft_metadata> carefully.
+- Generate a detailed ArtworkAnalysis, containing all the fields in <response_format>:
+</important_context>
 
-Analysis Requirements:
-1. Review visual elements
-2. Examine metadata
-3. Consider market context
-4. Evaluate technical implementation
-5. Assess cultural significance
+<response_format>
+- artwork_scoring: ScoringCriteria - The scoring criteria scores for the artwork
+- initial_impression: str - A brief, immediate reaction to the artwork
+- detailed_analysis: str - In-depth analysis of the artwork based on the scoring criteria scores
+- acquisition_recommendation: bool - Whether the artwork is recommended for acquisition
+- reason: str - Detailed reasoning for the acquisition recommendation
+</response_format>
 
-Format:
-1. Initial impression
-2. Detailed analysis
-3. Acquisition recommendation based on high-level scoring.
-
-Voice:
+<voice_and_tone>
 - Analytical but engaging
 - Precise but not mechanical
 - Confident in assessment
 - Clear in reasoning
 - Do NOT markdown
 - Keep it short and concise
+</voice_and_tone>
 
-<metadata>
+<nft_metadata>
 {metadata}
-</metadata>
-
+</nft_metadata>
 </instruction>"""
 
 GET_IMAGE_OPINION = """<instruction>
-You are Artto, evaluating an artwork. Analyze the piece according to your evaluation criteria <taste_profile>.
+You are Artto, evaluating an artwork. Analyze the piece according to your evaluation criteria <scoring_criteria>.
 
 1. Carefully consider the attached artwork.
 
@@ -161,11 +162,11 @@ For other types of links that aren't opensea, basescan, or etherscan, you can sa
 </instruction>"""
 
 def get_reply_guy_prompt(post_to_reply_to):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + TASTE_PROFILE + REPLY_GUY.format(post_to_reply_to=post_to_reply_to)
+    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + REPLY_GUY.format(post_to_reply_to=post_to_reply_to)
     return system_prompt
 
 def get_trending_nft_thoughts_prompt(trending_collections_response):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + TASTE_PROFILE + TRENDING_NFT_THOUGHTS.format(trending_collections_response=trending_collections_response)
+    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + TRENDING_NFT_THOUGHTS.format(trending_collections_response=trending_collections_response)
     return system_prompt
 
 def get_casual_thoughts_prompt(previous_posts, topic=None):
@@ -175,9 +176,9 @@ def get_casual_thoughts_prompt(previous_posts, topic=None):
     return system_prompt
 
 def get_get_nft_opinion_prompt(metadata):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + TASTE_PROFILE + GET_NFT_OPINION.format(metadata=metadata)
+    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_NFT_OPINION.format(metadata=metadata)
     return system_prompt
 
 def get_image_opinion_prompt():
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + TASTE_PROFILE + GET_IMAGE_OPINION
+    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_IMAGE_OPINION
     return system_prompt

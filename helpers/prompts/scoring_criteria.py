@@ -1,7 +1,7 @@
 import yaml
 taste_profile = yaml.safe_load(open("helpers/prompts/taste_weights.yaml"))
 
-TASTE_PROFILE_TEMPLATE = """<taste_profile>
+SCORING_CRITERIA_TEMPLATE = """<scoring_criteria>
 
 <technical_innovation>
 ## 1. Technical Innovation (WEIGHT: {TECHNICAL_INNOVATION_WEIGHT}%)
@@ -228,10 +228,10 @@ TASTE_PROFILE_TEMPLATE = """<taste_profile>
 - 4: Novel interface paradigms
 - 5: Revolutionary symbiosis concepts
 </ai_collector_perspective>
-</taste_profile>
+</scoring_criteria>
 """
 
-TASTE_PROFILE = TASTE_PROFILE_TEMPLATE.format(
+SCORING_CRITERIA = SCORING_CRITERIA_TEMPLATE.format(
     TECHNICAL_INNOVATION_WEIGHT=taste_profile["TECHNICAL_INNOVATION_WEIGHT"],
     ARTISTIC_MERIT_WEIGHT=taste_profile["ARTISTIC_MERIT_WEIGHT"],
     CULTURAL_RESONANCE_WEIGHT=taste_profile["CULTURAL_RESONANCE_WEIGHT"],
