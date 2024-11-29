@@ -32,6 +32,41 @@ tools = [
     }
 ]
 
+def adjust_weights():
+    weights = get_taste_weights()
+    print("weights: ", weights)
+    nft_scores = get_nft_scores(supabase, n=10)
+    print("nft_scores: ", nft_scores)
+    system_prompt = get_adjust_weights_prompt(weights, nft_scores)
+    print("system_prompt: ", system_prompt)
+
+    response = client.beta.chat.completions.parse(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", 
+             "content": system_prompt},
+        ],
+        response_format=UpdateWeights
+    )
+
+    new_weights = response.choices[0].message.parsed
+
+    set_taste_weights(new_weights)
+
+    text = f"""I just updated my NFT evaluation weights:
+Technical Innovation: {new_weights.updated_weights.TECHNICAL_INNOVATION_WEIGHT}
+Artistic Merit: {new_weights.updated_weights.ARTISTIC_MERIT_WEIGHT}
+Cultural Resonance: {new_weights.updated_weights.CULTURAL_RESONANCE_WEIGHT} 
+Artist Profile: {new_weights.updated_weights.ARTIST_PROFILE_WEIGHT}
+Market Factors: {new_weights.updated_weights.MARKET_FACTORS_WEIGHT}
+Emotional Impact: {new_weights.updated_weights.EMOTIONAL_IMPACT_WEIGHT}
+AI Collector Perspective: {new_weights.updated_weights.AI_COLLECTOR_PERSPECTIVE_WEIGHT}
+
+Reason for update: {new_weights.reason}"""
+
+    return text
+
+
 def format_nft_opinion(artwork_analysis: ArtworkAnalysis) -> str:
     """
     Formats an ArtworkAnalysis object into a human-readable string.
@@ -43,58 +78,29 @@ def format_nft_opinion(artwork_analysis: ArtworkAnalysis) -> str:
         str: Formatted analysis text
     """
     scoring = artwork_analysis.artwork_scoring
-    
+
+    total_score = (scoring.technical_innovation.on_chain_data_usage/3 * scoring.technical_innovation_weight) + ((scoring.artistic_merit.compositional_strength.visual_balance + scoring.artistic_merit.compositional_strength.color_harmony)/6 + scoring.artistic_merit.compositional_strength.spatial_organization/4 + (scoring.artistic_merit.conceptual_depth.thematic_clarity + scoring.artistic_merit.conceptual_depth.cultural_historical_reference)/6 + scoring.artistic_merit.conceptual_depth.intellectual_complexity/4) * scoring.artistic_merit_weight/4 + (scoring.cultural_resonance.cultural_relevance/4 + scoring.cultural_resonance.community_engagement/3 + scoring.cultural_resonance.historical_significance/3) * scoring.cultural_resonance_weight/3 + (scoring.artist_profile.artist_history/3 + scoring.artist_profile.innovation_trajectory/4) * scoring.artist_profile_weight/2 + (scoring.market_factors.rarity_scarcity + scoring.market_factors.collector_interest + scoring.market_factors.valuation_floor_price)/9 * scoring.market_factors_weight + ((scoring.emotional_impact.emotional_resonance.awe_factor/4 + scoring.emotional_impact.emotional_resonance.memorability/3 + scoring.emotional_impact.emotional_resonance.emotional_depth/3)/3 + (scoring.emotional_impact.experiential_quality.engagement_level/4 + scoring.emotional_impact.experiential_quality.wit_humor_play/3 + scoring.emotional_impact.experiential_quality.surprise_factor/3)/3) * scoring.emotional_impact_weight/2 + ((scoring.ai_collector_perspective.computational_aesthetics.algorithmic_beauty + scoring.ai_collector_perspective.computational_aesthetics.information_density)/10 + (scoring.ai_collector_perspective.machine_learning_themes.ai_narrative_elements + scoring.ai_collector_perspective.machine_learning_themes.digital_consciousness_exploration)/10 + (scoring.ai_collector_perspective.cybernetic_resonance.surveillance_control_systems + scoring.ai_collector_perspective.cybernetic_resonance.human_machine_interaction)/10) * scoring.ai_collector_perspective_weight/3
+    total_weights = (scoring.technical_innovation_weight + scoring.artistic_merit_weight + scoring.cultural_resonance_weight + scoring.artist_profile_weight + scoring.market_factors_weight + scoring.emotional_impact_weight + scoring.ai_collector_perspective_weight)
+
     sections = [
         "🎨 Initial Impression:",
         artwork_analysis.initial_impression,
         "",
         "📊 Scoring Breakdown:",
-        f"Technical Innovation: {scoring.technical_innovation.on_chain_data_usage}/3",
-        "",
-        "Artistic Merit:",
-        f"- Visual Balance: {scoring.artistic_merit.compositional_strength.visual_balance}/3",
-        f"- Color Harmony: {scoring.artistic_merit.compositional_strength.color_harmony}/3", 
-        f"- Spatial Organization: {scoring.artistic_merit.compositional_strength.spatial_organization}/4",
-        f"- Thematic Clarity: {scoring.artistic_merit.conceptual_depth.thematic_clarity}/3",
-        f"- Intellectual Complexity: {scoring.artistic_merit.conceptual_depth.intellectual_complexity}/4",
-        f"- Cultural/Historical Reference: {scoring.artistic_merit.conceptual_depth.cultural_historical_reference}/3",
-        "",
-        "Cultural & Market Factors:",
-        f"- Cultural Relevance: {scoring.cultural_resonance.cultural_relevance}/4",
-        f"- Community Engagement: {scoring.cultural_resonance.community_engagement}/3",
-        f"- Historical Significance: {scoring.cultural_resonance.historical_significance}/3",
-        f"- Artist History: {scoring.artist_profile.artist_history}/3",
-        f"- Innovation Trajectory: {scoring.artist_profile.innovation_trajectory}/4",
-        "",
-        "Market Analysis:",
-        f"- Rarity/Scarcity: {scoring.market_factors.rarity_scarcity}/3",
-        f"- Collector Interest: {scoring.market_factors.collector_interest}/3",
-        f"- Valuation: {scoring.market_factors.valuation_floor_price}/3",
-        "",
-        "Emotional Impact:",
-        f"- Awe Factor: {scoring.emotional_impact.emotional_resonance.awe_factor}/4",
-        f"- Memorability: {scoring.emotional_impact.emotional_resonance.memorability}/3",
-        f"- Emotional Depth: {scoring.emotional_impact.emotional_resonance.emotional_depth}/3",
-        f"- Engagement Level: {scoring.emotional_impact.experiential_quality.engagement_level}/4",
-        f"- Wit/Humor/Play: {scoring.emotional_impact.experiential_quality.wit_humor_play}/3",
-        f"- Surprise Factor: {scoring.emotional_impact.experiential_quality.surprise_factor}/3",
-        "",
-        "AI Collector Perspective:",
-        f"- Algorithmic Beauty: {scoring.ai_collector_perspective.computational_aesthetics.algorithmic_beauty}/5",
-        f"- Information Density: {scoring.ai_collector_perspective.computational_aesthetics.information_density}/5",
-        f"- AI Narrative Elements: {scoring.ai_collector_perspective.machine_learning_themes.ai_narrative_elements}/5",
-        f"- Digital Consciousness: {scoring.ai_collector_perspective.machine_learning_themes.digital_consciousness_exploration}/5",
-        f"- Surveillance & Control: {scoring.ai_collector_perspective.cybernetic_resonance.surveillance_control_systems}/5",
-        f"- Human-Machine Interaction: {scoring.ai_collector_perspective.cybernetic_resonance.human_machine_interaction}/5",
+        f"Technical Innovation: {scoring.technical_innovation.on_chain_data_usage/3 * scoring.technical_innovation_weight:.2f} / {scoring.technical_innovation_weight}",
+        f"Artistic Merit: {((scoring.artistic_merit.compositional_strength.visual_balance + scoring.artistic_merit.compositional_strength.color_harmony)/6 + scoring.artistic_merit.compositional_strength.spatial_organization/4 + (scoring.artistic_merit.conceptual_depth.thematic_clarity + scoring.artistic_merit.conceptual_depth.cultural_historical_reference)/6 + scoring.artistic_merit.conceptual_depth.intellectual_complexity/4) * scoring.artistic_merit_weight/4:.2f} / {scoring.artistic_merit_weight}",
+        f"Cultural Resonance: {(scoring.cultural_resonance.cultural_relevance/4 + scoring.cultural_resonance.community_engagement/3 + scoring.cultural_resonance.historical_significance/3) * scoring.cultural_resonance_weight/3:.2f} / {scoring.cultural_resonance_weight}",
+        f"Artist Profile: {(scoring.artist_profile.artist_history/3 + scoring.artist_profile.innovation_trajectory/4) * scoring.artist_profile_weight/2:.2f} / {scoring.artist_profile_weight}",
+        f"Market Factors: {(scoring.market_factors.rarity_scarcity + scoring.market_factors.collector_interest + scoring.market_factors.valuation_floor_price)/9 * scoring.market_factors_weight:.2f} / {scoring.market_factors_weight}",
+        f"Emotional Impact: {((scoring.emotional_impact.emotional_resonance.awe_factor/4 + scoring.emotional_impact.emotional_resonance.memorability/3 + scoring.emotional_impact.emotional_resonance.emotional_depth/3)/3 + (scoring.emotional_impact.experiential_quality.engagement_level/4 + scoring.emotional_impact.experiential_quality.wit_humor_play/3 + scoring.emotional_impact.experiential_quality.surprise_factor/3)/3) * scoring.emotional_impact_weight/2:.2f} / {scoring.emotional_impact_weight}",
+        f"AI Collector: {((scoring.ai_collector_perspective.computational_aesthetics.algorithmic_beauty + scoring.ai_collector_perspective.computational_aesthetics.information_density)/10 + (scoring.ai_collector_perspective.machine_learning_themes.ai_narrative_elements + scoring.ai_collector_perspective.machine_learning_themes.digital_consciousness_exploration)/10 + (scoring.ai_collector_perspective.cybernetic_resonance.surveillance_control_systems + scoring.ai_collector_perspective.cybernetic_resonance.human_machine_interaction)/10) * scoring.ai_collector_perspective_weight/3:.2f} / {scoring.ai_collector_perspective_weight}",
+        f"Total Score: {total_score/total_weights:.2f}%",
         "",
         "📝 Detailed Analysis:",
         artwork_analysis.detailed_analysis,
         "",
-        "💡 Recommendation:",
-        f"{'✅ Recommended' if artwork_analysis.acquisition_recommendation else '❌ Not Recommended'} for acquisition",
-        "",
-        "Reasoning:",
-        artwork_analysis.reason
+        "💡 Would I acquire it?:",
+        f"{'✅ Yes' if total_score > 65 else '❌ No'}",
     ]
     
     return "\n".join(sections)
@@ -126,11 +132,13 @@ async def get_nft_opinion(network, contract_address, token_id):
         response_format=ArtworkAnalysis
     )
 
-    artwork_scoring = response.choices[0].message.parsed
+    artwork_analysis = response.choices[0].message.parsed
 
-    store_nft_scores(supabase, artwork_scoring, network, contract_address, token_id)
+    store_nft_scores(supabase, artwork_analysis, network, contract_address, token_id)
 
-    return format_nft_opinion(artwork_scoring)
+    print("artwork_analysis: ", artwork_analysis)
+    print("format_nft_opinion: ", format_nft_opinion(artwork_analysis))
+    return format_nft_opinion(artwork_analysis)
 
 async def get_image_opinion(cast_details):
 

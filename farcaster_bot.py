@@ -78,22 +78,22 @@ if __name__ == "__main__":
     # # NFT LINK: 0xf9c082234c66fdad818ae9f999e21d15eff7b601
     ## REPLY: 0x23f421e3c9f405beaf963cc9e5890261f90a200b
 
-    casts = get_casts("0xf9c082234c66fdad818ae9f999e21d15eff7b601")
+    asyncio.run(adjust_weights())
+
+    # casts = get_casts("0x8da3efeee5729402cc96ab5abb951828bc210356")
 
 
-    cast = casts["cast"]
+    # cast = casts["cast"]
 
-    print(json.dumps(cast, indent=2))
+    # print(json.dumps(cast, indent=2))
 
-    cast_details = get_cast_details(cast)
+    # cast_details = get_cast_details(cast)
 
-    print(json.dumps(cast_details, indent=2))
+    # print(json.dumps(cast_details, indent=2))
 
-    reply = asyncio.run(get_reply(cast_details))
-    print(format_nft_opinion(reply))
-
+    # reply = asyncio.run(get_reply(cast_details))
+    # print(reply)
     # hash = cast_details["hash"]
-    # print(hash)
 
     # response = post_long_cast(reply, parent=hash)
     # print(response)

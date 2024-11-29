@@ -35,6 +35,13 @@ async def neynar_webhook():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@scheduler.task('cron', id='tweet_task', hour='12', minute='0')
+async def adjust_weights():
+    text = await adjust_weights()
+    print(text)
+    response = post_long_cast(text)
+    print(response)
+
 @scheduler.task('cron', id='tweet_task', minute='*/30')
 async def post_thought():
     print("Posting thought")
@@ -52,6 +59,7 @@ async def post_following_casts():
     for cast in following_casts["casts"]:
         cast_details = get_cast_details(cast)
         reply = await get_reply(cast_details)
+        react_cast('like', cast["hash"])
         print(reply)
         response = post_long_cast(reply, parent=cast["hash"])
         print(response)
@@ -66,6 +74,7 @@ async def post_channel_casts():
     for cast in channel_casts["casts"]:
         cast_details = get_cast_details(cast)
         reply = await get_reply(cast_details)
+        react_cast('like', cast["hash"])
         print(reply)
         response = post_long_cast(reply, parent=cast["hash"])
         print(response)
@@ -75,4 +84,3 @@ if __name__ == '__main__':
             port=int(os.getenv('PORT', 3000)))
     scheduler.init_app(app)
     scheduler.start()
-

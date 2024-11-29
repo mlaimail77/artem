@@ -1,11 +1,36 @@
 import os
 import json
+import yaml
 from datetime import datetime
 from supabase import create_client, Client
+
+import hashlib
 
 from dotenv import load_dotenv # can be installed with `pip install python-dotenv`
 
 load_dotenv('.env.local')
+
+def get_taste_weights():
+    return yaml.safe_load(open("helpers/prompts/taste_weights.yaml"))
+
+def set_taste_weights(weights):
+    print("setting weights")
+    print(weights.updated_weights)
+    print(weights.reason)
+    with open("helpers/prompts/taste_weights.yaml", "w") as f:
+        f.write("# NFT Evaluation Weights\n")
+        f.write(f"# ({datetime.now().strftime('%Y-%m-%d')}) Update Reason: {weights.reason}\n")
+        f.write(f"TECHNICAL_INNOVATION_WEIGHT: {weights.updated_weights.TECHNICAL_INNOVATION_WEIGHT}\n")
+        f.write(f"ARTISTIC_MERIT_WEIGHT: {weights.updated_weights.ARTISTIC_MERIT_WEIGHT}\n") 
+        f.write(f"CULTURAL_RESONANCE_WEIGHT: {weights.updated_weights.CULTURAL_RESONANCE_WEIGHT}\n")
+        f.write(f"ARTIST_PROFILE_WEIGHT: {weights.updated_weights.ARTIST_PROFILE_WEIGHT}\n")
+        f.write(f"MARKET_FACTORS_WEIGHT: {weights.updated_weights.MARKET_FACTORS_WEIGHT}\n")
+        f.write(f"EMOTIONAL_IMPACT_WEIGHT: {weights.updated_weights.EMOTIONAL_IMPACT_WEIGHT}\n")
+        f.write(f"AI_COLLECTOR_PERSPECTIVE_WEIGHT: {weights.updated_weights.AI_COLLECTOR_PERSPECTIVE_WEIGHT}\n")
+
+def get_nft_scores(supabase, n=10):
+    response = supabase.table("nft_scores").select("id,scores,analysis_text").order("timestamp", desc=True).limit(n).execute()
+    return response.data
 
 def get_supabase_client():
     url: str = os.getenv("SUPABASE_URL")
@@ -47,7 +72,7 @@ def get_all_posts(supabase):
     response = supabase.table("posts_created").select("*").execute()
     return response.data
 
-def store_nft_scores(supabase, artwork_scoring, network, contract_address, token_id):
+def store_nft_scores(supabase, artwork_analysis, network, contract_address, token_id):
     """
     Store artwork scoring and metadata in Supabase database
     
@@ -62,6 +87,10 @@ def store_nft_scores(supabase, artwork_scoring, network, contract_address, token
         dict: Response data from Supabase insert
     """
     response = supabase.auth.refresh_session()
+
+    artwork_scoring = artwork_analysis.artwork_scoring
+    initial_impression = artwork_analysis.initial_impression
+    detailed_analysis = artwork_analysis.detailed_analysis
 
     scores = {
         # Technical Innovation
@@ -115,22 +144,50 @@ def store_nft_scores(supabase, artwork_scoring, network, contract_address, token
     }
 
     analysis_text = {
-        "initial_impression": artwork_scoring.initial_impression,
-        "detailed_analysis": artwork_scoring.detailed_analysis,
-        "acquisition_recommendation": artwork_scoring.acquisition_recommendation,
-        "reason": artwork_scoring.reason
+        "initial_impression": initial_impression,
+        "detailed_analysis": detailed_analysis,
     }
+
+    # Calculate total score using weighted averages
+    technical_score = scores["technical_innovation_score"]/3 * weights["technical_innovation_weight"]
+    
+    artistic_score = ((scores["visual_balance"] + scores["color_harmony"])/6 + 
+                     scores["spatial_organization"]/4 + 
+                     (scores["thematic_clarity"] + scores["cultural_historical_reference"])/6 + 
+                     scores["intellectual_complexity"]/4) * weights["artistic_merit_weight"]/4
+    
+    cultural_score = (scores["cultural_relevance"]/4 + 
+                     scores["community_engagement"]/3 + 
+                     scores["historical_significance"]/3) * weights["cultural_resonance_weight"]/3
+    
+    artist_score = (scores["artist_history"]/3 + 
+                   scores["innovation_trajectory"]/4) * weights["artist_profile_weight"]/2
+    
+    market_score = (scores["rarity_scarcity"] + 
+                   scores["collector_interest"] + 
+                   scores["valuation_floor_price"])/9 * weights["market_factors_weight"]
+    
+    emotional_score = ((scores["awe_factor"]/4 + scores["memorability"]/3 + scores["emotional_depth"]/3)/3 + 
+                      (scores["engagement_level"]/4 + scores["wit_humor_play"]/3 + scores["surprise_factor"]/3)/3) * weights["emotional_impact_weight"]/2
+    
+    ai_score = ((scores["algorithmic_beauty"] + scores["information_density"])/10 + 
+                (scores["ai_narrative_elements"] + scores["digital_consciousness"])/10 + 
+                (scores["surveillance_control"] + scores["human_machine_interaction"])/10) * weights["ai_collector_perspective_weight"]/3
+
+    total_score = technical_score + artistic_score + cultural_score + artist_score + market_score + emotional_score + ai_score
 
     response = supabase.table("nft_scores").insert(
         {
-            "id": f"{network}:{contract_address}:{token_id}",
+            "id": hashlib.sha256(f"{network}:{contract_address}:{token_id}:{str(datetime.now())}".encode()).hexdigest(),
             "network": network,
             "contract_address": contract_address, 
             "token_id": token_id,
             "timestamp": str(datetime.now()),
             "scores": json.dumps(scores),
             "weights": json.dumps(weights),
-            "analysis_text": json.dumps(analysis_text)
+            "analysis_text": json.dumps(analysis_text),
+            "total_score": round(total_score, 4),
+            "acquire_recommendation": total_score > 65
         }
     ).execute()
     return response.data
@@ -157,23 +214,7 @@ def main():
     supabase = get_supabase_client()
     print("Successfully connected to Supabase!")
 
-    # print(user)
-
-    # response = (
-    #     supabase.table("countries")
-    #     .insert({"id": 1, "name": "Denmark"})
-    #     .execute()
-    # )    
-    # print(response.content)
-
-    # sample_post = {
-    #     'hash': '0x123abc123xyz',
-    #     'text': 'This is a sample post',
-    #     'parent_id': '0x000FFF'
-    # }
-    # set_post_created(supabase, sample_post)
-    # get_posts(supabase)
-
+    print(get_taste_weights())
 
 if __name__ == "__main__":
     main()

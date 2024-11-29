@@ -142,9 +142,32 @@ class ArtworkAnalysis(BaseModel):
     detailed_analysis: str = Field(
         description="In-depth analysis of the artwork based on the scoring criteria scores"
     )
-    acquisition_recommendation: bool = Field(
-        description="Whether the artwork is recommended for acquisition"
+    
+class ScoringWeights(BaseModel):
+    TECHNICAL_INNOVATION_WEIGHT: int = Field(
+        description="Weight for technical innovation scoring category"
     )
+    ARTISTIC_MERIT_WEIGHT: int = Field(
+        description="Weight for artistic merit scoring category"
+    )
+    CULTURAL_RESONANCE_WEIGHT: int = Field(
+        description="Weight for cultural resonance scoring category"
+    )
+    ARTIST_PROFILE_WEIGHT: int = Field(
+        description="Weight for artist profile scoring category"
+    )
+    MARKET_FACTORS_WEIGHT: int = Field(
+        description="Weight for market factors scoring category"
+    )
+    EMOTIONAL_IMPACT_WEIGHT: int = Field(
+        description="Weight for emotional impact scoring category"
+    )
+    AI_COLLECTOR_PERSPECTIVE_WEIGHT: int = Field(
+        description="Weight for AI collector perspective scoring category"
+    )
+
+class UpdateWeights(BaseModel):
+    updated_weights: ScoringWeights
     reason: str = Field(
-        description="Detailed reasoning for the acquisition recommendation"
+        description="Reason for weight updates"
     )

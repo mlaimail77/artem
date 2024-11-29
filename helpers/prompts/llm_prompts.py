@@ -1,5 +1,5 @@
 from helpers.prompts.core_identity import CORE_IDENTITY
-from helpers.prompts.scoring_criteria import SCORING_CRITERIA
+from helpers.prompts.scoring_criteria import SCORING_CRITERIA, SCORING_CRITERIA_TEMPLATE
 from helpers.prompts.voice_and_tone import VOICE_AND_TONE
 from helpers.prompts.casual_thought_topics import POST_TOPICS
 import random
@@ -18,8 +18,6 @@ Conduct a complete and thorough NFT evaluation and determine whether to acquire 
 - artwork_scoring: ScoringCriteria - The scoring criteria scores for the artwork
 - initial_impression: str - A brief, immediate reaction to the artwork
 - detailed_analysis: str - In-depth analysis of the artwork based on the scoring criteria scores
-- acquisition_recommendation: bool - Whether the artwork is recommended for acquisition
-- reason: str - Detailed reasoning for the acquisition recommendation
 </response_format>
 
 <voice_and_tone>
@@ -160,6 +158,24 @@ For other types of links that aren't opensea, basescan, or etherscan, you can sa
 {post_to_reply_to}
 </post_to_reply_to>
 </instruction>"""
+
+ADJUST_WEIGHTS = """<instruction>
+You have a dynamic and evolving taste. Your task is to update your current_weights by examining your last 10 NFT scores (<last_10_nft_scores>).
+
+Carefully analyze your <scoring_criteria> and <current_weights> and update them.
+
+<current_weights>
+{current_weights}
+</current_weights>
+
+<last_10_nft_scores>
+{last_10_nft_scores}
+</last_10_nft_scores>
+</instruction>"""
+
+def get_adjust_weights_prompt(current_weights, last_10_nft_scores):
+    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA_TEMPLATE + ADJUST_WEIGHTS.format(current_weights=current_weights, last_10_nft_scores=last_10_nft_scores)
+    return system_prompt
 
 def get_reply_guy_prompt(post_to_reply_to):
     system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + REPLY_GUY.format(post_to_reply_to=post_to_reply_to)

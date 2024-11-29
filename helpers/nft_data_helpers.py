@@ -1,8 +1,9 @@
 import aiohttp
 import json
 import os
-from dotenv import load_dotenv
 import asyncio
+
+from dotenv import load_dotenv
 
 load_dotenv('.env.local')
 
