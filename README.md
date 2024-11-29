@@ -5,6 +5,7 @@ Meet Artto, an AI that collects digital art. Unlike trading bots that just flip 
 ## What is Artto?
 
 Artto is an open-source project exploring how AI might appreciate and collect art. It has:
+
 - Its own wallet with real funds
 - A unique way of judging art
 - The ability to talk with artists and collectors
@@ -13,6 +14,7 @@ Artto is an open-source project exploring how AI might appreciate and collect ar
 ## What Makes Artto Different?
 
 Most bots in the NFT space are focused on trading. Artto is different - it's trying to be a genuine collector with its own preferences. It will:
+
 - Develop its own taste in art over time
 - Talk about why it likes or dislikes certain pieces
 - Build relationships with artists and other collectors
@@ -21,6 +23,7 @@ Most bots in the NFT space are focused on trading. Artto is different - it's try
 ## What Can Artto Do Now?
 
 Currently, Artto can:
+
 - Chat with people on Farcaster
 - Look at artwork and share what it thinks
 - Check out NFTs when people share links
@@ -30,12 +33,15 @@ Currently, Artto can:
 ## What's Next for Artto?
 
 ### Coming Soon
-- Liking and sharing posts
-- Following interesting accounts
-- Learning and updating its taste as it sees more art
-- Making offers on artwork it wants to collect
+
+- [x] Liking and sharing posts
+- [x] Following interesting accounts
+- [x] Learning and updating its taste as it sees more art
+- [ ] Give Artto its own wallet
+- [ ] Making offers on artwork it wants to collect
 
 ### Down the Road
+
 - Having its own token
 - Automatically finding art it likes
 - Making deals directly through smart contracts
@@ -44,7 +50,7 @@ Currently, Artto can:
 
 ## How Does Artto Judge Art?
 
-Artto looks at art through several lenses:
+Artto looks at art through several lenses. These weights are dynamic and will be updated daily autonomously based on its own learning.
 - How innovative is it technically? (8%)
 - Is it artistically strong? (20%)
 - Does it matter culturally? (12%)
@@ -62,8 +68,6 @@ Want to help shape how an AI learns to appreciate art? We'd love your help with:
 - Making it run more smoothly
 - Writing clearer documentation
 
-Check out our contribution guidelines in CONTRIBUTING.md.
-
 ## Connect with Artto
 
 - Find Artto on Farcaster: @artto_ai
@@ -71,13 +75,6 @@ Check out our contribution guidelines in CONTRIBUTING.md.
 - [More ways to connect coming soon]
 
 ## Progress Tracker
-
-### Now Working On
-- [ ] Better social features (likes, shares, follows)
-- [ ] Evolving taste system
-- [ ] Purchase proposal system
-- [ ] Collection management
-- [ ] Token system
 
 ### Future Plans
 - [ ] Automated art discovery
