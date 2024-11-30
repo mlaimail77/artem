@@ -53,7 +53,7 @@ def adjust_weights():
 
     set_taste_weights(new_weights)
 
-    text = f"""I just updated my NFT evaluation weights:
+    text = f"""💫 I just updated my NFT evaluation weights:
 Technical Innovation: {new_weights.updated_weights.TECHNICAL_INNOVATION_WEIGHT}
 Artistic Merit: {new_weights.updated_weights.ARTISTIC_MERIT_WEIGHT}
 Cultural Resonance: {new_weights.updated_weights.CULTURAL_RESONANCE_WEIGHT} 
@@ -107,7 +107,12 @@ def format_nft_opinion(artwork_analysis: ArtworkAnalysis) -> str:
 
 
 async def get_nft_opinion(network, contract_address, token_id):
-    metadata = await get_nft_metadata(network, contract_address, token_id)
+    try:
+        metadata = await get_nft_metadata(network, contract_address, token_id)
+        if not metadata or 'image_medium_url' not in metadata:
+            raise ValueError("NFT metadata missing required image URL")
+    except Exception as e:
+        raise ValueError(f"Failed to fetch NFT metadata: {str(e)}")
     pretty_metadata = json.dumps(metadata, indent=2)
 
     system_prompt = get_get_nft_opinion_prompt(pretty_metadata)

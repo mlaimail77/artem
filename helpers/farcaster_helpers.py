@@ -11,6 +11,8 @@ load_dotenv('.env.local')
 NEYNAR_API_KEY = os.getenv('NEYNAR_API_KEY')
 SIGNER_UUID = os.getenv('SIGNER_UUID')
 
+supabase = get_supabase_client()
+
 def follow_users(target_fids):
     """
     Follow multiple Farcaster users by their FIDs
@@ -238,7 +240,7 @@ def get_follower_feed(limit=25):
     """
 
     SIGNER_FID = 887258
-    
+
     url = f"https://api.neynar.com/v2/farcaster/feed/following?fid={SIGNER_FID}&with_recasts=false&limit={limit}"
     
     headers = {
