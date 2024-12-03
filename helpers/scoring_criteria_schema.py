@@ -142,6 +142,14 @@ class ArtworkAnalysis(BaseModel):
     detailed_analysis: str = Field(
         description="In-depth analysis of the artwork based on the scoring criteria scores"
     )
+
+class KeepOrBurn(BaseModel):
+    decision: str = Field(
+        description="Final decision based on <nft_opinion> on whether you KEEP or BURN the NFT received."
+        )
+    rationale_post: str = Field(
+        description="A rationale on why the decsion was made."
+    )
     
 class ScoringWeights(BaseModel):
     TECHNICAL_INNOVATION_WEIGHT: int = Field(

@@ -11,8 +11,6 @@ load_dotenv('.env.local')
 NEYNAR_API_KEY = os.getenv('NEYNAR_API_KEY')
 SIGNER_UUID = os.getenv('SIGNER_UUID')
 
-supabase = get_supabase_client()
-
 def follow_users(target_fids):
     """
     Follow multiple Farcaster users by their FIDs
@@ -169,7 +167,7 @@ def post_long_cast(text, parent=None, channel_id=None):
     Returns:
         list: List of responses from the Neynar API for each cast
     """
-    posts_replied_to = get_all_posts_replied_to(supabase)
+    posts_replied_to = get_all_posts_replied_to()
     
     # Check if we've already replied to this parent
     if parent and any(p['parent_id'] == parent for p in posts_replied_to):
@@ -188,7 +186,7 @@ def post_long_cast(text, parent=None, channel_id=None):
                 'text': text,
                 'parent_id': parent
             }
-            set_post_created(supabase, post)
+            set_post_created(post)
             return [response]
         return []
         
@@ -222,7 +220,7 @@ def post_long_cast(text, parent=None, channel_id=None):
                 'text': marked_text,
                 'parent_id': thread_parent
             }
-            set_post_created(supabase, post)
+            set_post_created(post)
             responses.append(response)
             thread_parent = response['cast']['hash']
             

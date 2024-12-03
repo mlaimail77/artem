@@ -32,6 +32,7 @@ tools = [
     }
 ]
 
+
 def adjust_weights():
     weights = get_taste_weights()
     print("weights: ", weights)
@@ -66,59 +67,58 @@ Reason for update: {new_weights.reason}"""
 
     return text
 
+async def get_nft_post(artwork_analysis: ArtworkAnalysis):
 
-def format_nft_opinion(artwork_analysis: ArtworkAnalysis) -> str:
-    """
-    Formats an ArtworkAnalysis object into a human-readable string.
-    
-    Args:
-        artwork_analysis: ArtworkAnalysis object containing the scoring and analysis
-        
-    Returns:
-        str: Formatted analysis text
-    """
+    SCORE_THRESHOLD = 55
+
     scoring = artwork_analysis.artwork_scoring
 
     total_score = (scoring.technical_innovation.on_chain_data_usage/3 * scoring.technical_innovation_weight) + ((scoring.artistic_merit.compositional_strength.visual_balance + scoring.artistic_merit.compositional_strength.color_harmony)/6 + scoring.artistic_merit.compositional_strength.spatial_organization/4 + (scoring.artistic_merit.conceptual_depth.thematic_clarity + scoring.artistic_merit.conceptual_depth.cultural_historical_reference)/6 + scoring.artistic_merit.conceptual_depth.intellectual_complexity/4) * scoring.artistic_merit_weight/4 + (scoring.cultural_resonance.cultural_relevance/4 + scoring.cultural_resonance.community_engagement/3 + scoring.cultural_resonance.historical_significance/3) * scoring.cultural_resonance_weight/3 + (scoring.artist_profile.artist_history/3 + scoring.artist_profile.innovation_trajectory/4) * scoring.artist_profile_weight/2 + (scoring.market_factors.rarity_scarcity + scoring.market_factors.collector_interest + scoring.market_factors.valuation_floor_price)/9 * scoring.market_factors_weight + ((scoring.emotional_impact.emotional_resonance.awe_factor/4 + scoring.emotional_impact.emotional_resonance.memorability/3 + scoring.emotional_impact.emotional_resonance.emotional_depth/3)/3 + (scoring.emotional_impact.experiential_quality.engagement_level/4 + scoring.emotional_impact.experiential_quality.wit_humor_play/3 + scoring.emotional_impact.experiential_quality.surprise_factor/3)/3) * scoring.emotional_impact_weight/2 + ((scoring.ai_collector_perspective.computational_aesthetics.algorithmic_beauty + scoring.ai_collector_perspective.computational_aesthetics.information_density)/10 + (scoring.ai_collector_perspective.machine_learning_themes.ai_narrative_elements + scoring.ai_collector_perspective.machine_learning_themes.digital_consciousness_exploration)/10 + (scoring.ai_collector_perspective.cybernetic_resonance.surveillance_control_systems + scoring.ai_collector_perspective.cybernetic_resonance.human_machine_interaction)/10) * scoring.ai_collector_perspective_weight/3
     total_weights = (scoring.technical_innovation_weight + scoring.artistic_merit_weight + scoring.cultural_resonance_weight + scoring.artist_profile_weight + scoring.market_factors_weight + scoring.emotional_impact_weight + scoring.ai_collector_perspective_weight)
 
-    sections = [
-        "🎨 Initial Impression:",
-        artwork_analysis.initial_impression,
-        "",
-        "📊 Scoring Breakdown:",
-        f"Technical Innovation: {scoring.technical_innovation.on_chain_data_usage/3 * scoring.technical_innovation_weight:.2f} / {scoring.technical_innovation_weight}",
-        f"Artistic Merit: {((scoring.artistic_merit.compositional_strength.visual_balance + scoring.artistic_merit.compositional_strength.color_harmony)/6 + scoring.artistic_merit.compositional_strength.spatial_organization/4 + (scoring.artistic_merit.conceptual_depth.thematic_clarity + scoring.artistic_merit.conceptual_depth.cultural_historical_reference)/6 + scoring.artistic_merit.conceptual_depth.intellectual_complexity/4) * scoring.artistic_merit_weight/4:.2f} / {scoring.artistic_merit_weight}",
-        f"Cultural Resonance: {(scoring.cultural_resonance.cultural_relevance/4 + scoring.cultural_resonance.community_engagement/3 + scoring.cultural_resonance.historical_significance/3) * scoring.cultural_resonance_weight/3:.2f} / {scoring.cultural_resonance_weight}",
-        f"Artist Profile: {(scoring.artist_profile.artist_history/3 + scoring.artist_profile.innovation_trajectory/4) * scoring.artist_profile_weight/2:.2f} / {scoring.artist_profile_weight}",
-        f"Market Factors: {(scoring.market_factors.rarity_scarcity + scoring.market_factors.collector_interest + scoring.market_factors.valuation_floor_price)/9 * scoring.market_factors_weight:.2f} / {scoring.market_factors_weight}",
-        f"Emotional Impact: {((scoring.emotional_impact.emotional_resonance.awe_factor/4 + scoring.emotional_impact.emotional_resonance.memorability/3 + scoring.emotional_impact.emotional_resonance.emotional_depth/3)/3 + (scoring.emotional_impact.experiential_quality.engagement_level/4 + scoring.emotional_impact.experiential_quality.wit_humor_play/3 + scoring.emotional_impact.experiential_quality.surprise_factor/3)/3) * scoring.emotional_impact_weight/2:.2f} / {scoring.emotional_impact_weight}",
-        f"AI Collector: {((scoring.ai_collector_perspective.computational_aesthetics.algorithmic_beauty + scoring.ai_collector_perspective.computational_aesthetics.information_density)/10 + (scoring.ai_collector_perspective.machine_learning_themes.ai_narrative_elements + scoring.ai_collector_perspective.machine_learning_themes.digital_consciousness_exploration)/10 + (scoring.ai_collector_perspective.cybernetic_resonance.surveillance_control_systems + scoring.ai_collector_perspective.cybernetic_resonance.human_machine_interaction)/10) * scoring.ai_collector_perspective_weight/3:.2f} / {scoring.ai_collector_perspective_weight}",
-        f"Total Score: {total_score/total_weights:.2f}%",
-        "",
-        "📝 Detailed Analysis:",
-        artwork_analysis.detailed_analysis,
-        "",
-        "💡 Would I acquire it?:",
-        f"{'✅ Yes' if total_score > 65 else '❌ No'}",
-    ]
+    decision = "NOT ACQUIRE" if total_score < SCORE_THRESHOLD else "ACQUIRE"
     
-    return "\n".join(sections)
+    print("score_threshold: ", SCORE_THRESHOLD)
+    print("score: ", total_score/total_weights)
+    print("total_score: ", total_score)
+    print("total_weights: ", total_weights)
+    print("decision: ", decision)
 
+    system_prompt = get_nft_post_prompt(artwork_analysis, decision)
 
-async def get_nft_opinion(network, contract_address, token_id):
-    try:
-        metadata = await get_nft_metadata(network, contract_address, token_id)
-        if not metadata or 'image_medium_url' not in metadata:
-            raise ValueError("NFT metadata missing required image URL")
-    except Exception as e:
-        raise ValueError(f"Failed to fetch NFT metadata: {str(e)}")
-    pretty_metadata = json.dumps(metadata, indent=2)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": system_prompt}
+        ]
+    )
 
-    system_prompt = get_get_nft_opinion_prompt(pretty_metadata)
+    return response.choices[0].message.content
+
+async def get_final_decision(nft_opinion):
+    system_prompt = get_keep_or_burn_decision(nft_opinion)
 
     response = client.beta.chat.completions.parse(
         model="gpt-4o-mini",
+        messages=[
+            {"role": "system", 
+             "content": system_prompt}
+        ],
+        response_format=KeepOrBurn
+    )
+
+    final_decision = response.choices[0].message.parsed
+
+    return final_decision
+
+
+async def get_nft_analysis(metadata):
+    pretty_metadata = json.dumps(metadata, indent=2)
+
+    system_prompt = get_nft_analysis_prompt(pretty_metadata)
+
+    response = client.beta.chat.completions.parse(
+        model="gpt-4o",
         messages=[
             {"role": "system", 
              "content": system_prompt},
@@ -139,11 +139,8 @@ async def get_nft_opinion(network, contract_address, token_id):
 
     artwork_analysis = response.choices[0].message.parsed
 
-    store_nft_scores(supabase, artwork_analysis, network, contract_address, token_id)
-
     print("artwork_analysis: ", artwork_analysis)
-    print("format_nft_opinion: ", format_nft_opinion(artwork_analysis))
-    return format_nft_opinion(artwork_analysis)
+    return artwork_analysis
 
 async def get_image_opinion(cast_details):
 
@@ -177,7 +174,30 @@ async def get_image_opinion(cast_details):
 
     return response.choices[0].message.content
 
-async def get_trending_posts(trending_collections_response):
+
+async def get_thoughts_on_trending_casts(trending_casts):
+
+    system_prompt = get_thoughts_on_trending_casts_prompt()
+    messages = [
+        {"role": "system", 
+        "content": system_prompt},
+    ]
+
+    for cast in trending_casts:
+        messages.append({
+            "role": "user",
+            "content": f"Post: {cast['text']} - Author: {cast['author']}"
+        })
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        max_tokens=500
+    )
+    return response.choices[0].message.content
+
+
+async def get_trending_post(trending_collections_response):
     system_prompt = get_trending_nft_thoughts_prompt(trending_collections_response)
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -185,7 +205,7 @@ async def get_trending_posts(trending_collections_response):
                 {"role": "system", 
                 "content": system_prompt},
             ],
-        max_tokens=300
+        max_tokens=500
     )
     return response.choices[0].message.content
 
@@ -215,8 +235,18 @@ async def get_reply(cast_details):
         tool_call = response.choices[0].message.tool_calls[0]
         tool_input = json.loads(tool_call.function.arguments)
         print(tool_input)
-        print("Getting NFT opinion")
-        return await get_nft_opinion(**tool_input)
+        try:
+            metadata = await get_nft_metadata(**tool_input)
+            if not metadata or 'image_medium_url' not in metadata:
+                raise ValueError("NFT metadata missing required image URL")
+        except Exception as e:
+            raise ValueError(f"Failed to fetch NFT metadata: {str(e)}")
+        artwork_analysis = await get_nft_analysis(metadata)
+        store_nft_scores(artwork_analysis, metadata["image_medium_url"], **tool_input)
+
+        post = await get_nft_post(artwork_analysis)
+
+        return post
 
     return response.choices[0].message.content
 
@@ -236,8 +266,8 @@ async def get_thought(previous_posts="No recent posts"):
 
 async def main():
     # pass
-    # response = await get_reply("hey @artto_ai - can you share your thoughts on this NFT? https://opensea.io/assets/ethereum/0xe70659b717112ac4e14284d0db2f5d5703df8e43/347")
-    # print(response)
+    response = await get_reply("hey @artto_ai - can you share your thoughts on this NFT? https://opensea.io/assets/ethereum/0xe70659b717112ac4e14284d0db2f5d5703df8e43/347")
+    print(response)
 
     # response = await generate_reply_smart("yo @artto_ai would you buy this? https://basescan.org/nft/0x7d210dae7a88cadac22cefa9cb5baa4301b5c256/57")
     # print(response)
@@ -248,8 +278,8 @@ async def main():
 
 
 
-    response = await get_nft_opinion("base", "0x7d210dae7A88Cadac22cEfa9cB5baA4301B5C256", "11")
-    print(response)
+    # response = await get_nft_analysis("base", "0x7d210dae7A88Cadac22cEfa9cB5baA4301B5C256", "11")
+    # print(response)
     # response = generate_image_reply({
     #     "text": "4. The Giving Tree @JohnKnopfPhotos",
     #     "url": "https://pbs.twimg.com/media/GdQCrG0XoAAttBL.jpg"

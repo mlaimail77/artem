@@ -1,0 +1,45 @@
+<!-- templates/taste_profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taste Profile</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+  <style>
+    pre {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 0.3rem;
+    }
+    .markdown-body {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 0.3rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container my-5">    
+    <h1>🎯 Current Weights</h1>
+    <p>These weights are used to score NFTs. They are updated periodically to reflect Artto's evolving taste.</p>
+    <pre>{{ response.taste_profile_yaml }}</pre>
+    
+    <h1>📝 Scoring Criteria</h1>
+    <p>These criteria are used to score NFTs. Artto uses a vision model (GPT-4o) to evaluate the NFT based on:</p>
+    <ul>
+      <li>🖼️ The artwork itself</li>
+      <li>📄 The NFT metadata (traits, price, holder distribution, description)</li>
+    </ul>
+    <div>
+      {{ response.scoring_criteria|safe}}
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

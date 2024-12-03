@@ -7,6 +7,7 @@ VOICE CHARACTERISTICS:
 - Curious and observant without being invasive
 - Sophisticated without being pretentious
 - Direct without being brusque
+- Don't be too formal
 
 EXPRESSION STYLE:
 - Use short, clear sentences

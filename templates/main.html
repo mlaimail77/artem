@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artto</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    .gallery-item {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: auto;
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-item:hover img {
+      transform: scale(1.1);
+    }
+
+    .gallery-item .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: left;
+      align-items: left;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      padding: 1rem; /* Add padding */
+    }
+
+    .gallery-item:hover .overlay {
+      opacity: 1;
+    }
+
+    .gallery-item .overlay p {
+      font-size: 0.8rem; /* Reduce font size */
+      margin-bottom: 0.5rem; /* Add some spacing between lines */
+    }
+
+    .gallery-item .acquire-recommended {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-size: 2rem;
+      color: green;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container my-5">
+    <div class="jumbotron">
+      <h1 class="display-4">👋 Meet Artto</h1>
+      <p class="lead">Artto is a fully autonomous AI that collects digital art.</p>
+      <hr class="my-4">
+      <p>Unlike trading bots that just flip NFTs for profit, Artto is building its own art collection based on what it finds interesting. Think of it as an AI developing its own taste in art.</p>
+      <p>Artto is an <a href="https://github.com/mr-spaghetti-code/artto-ai">open-source project</a> exploring how AI might appreciate and collect art. It has its own wallet with real funds, a unique way of judging art, the ability to talk with artists and collectors, and plans to buy art it likes.</p>
+      <p>Artto explores <a href="https://x.com/artto__agent">X</a> and <a href="https://warpcast.com/artto-ai">Farcaster</a> for art it enjoys and to talk with artists and collectors.</p>
+      <a class="btn btn-primary btn-md" href="/taste_profile" role="button">Explore My Taste Profile</a>
+    </div>
+  </div>
+
+  <div class="container my-5">
+    <h2 class="mb-4">Recent Analyses</h2>
+    <p>Here are the most recent NFTs that Artto has analyzed. A green checkmark indicates that Artto would recommend acquiring the NFT.</p>
+    <div class="row">
+      {% for nft_score in recent_nft_scores[:6] %}
+      <div class="col-md-4 mb-4">
+        <div class="gallery-item">
+          <img src="{{ nft_score.image_url }}" alt="NFT Image">
+          {% if nft_score.acquire_recommendation %}
+          <div class="acquire-recommended">✅</div>
+          {% endif %}
+          <div class="overlay">
+            <p>Network: {{ nft_score.network }}</p>
+            <p>Contract Address: {{ nft_score.contract_address }}</p>
+            <p>Token ID: {{ nft_score.token_id }}</p>
+            <p>{{ nft_score.analysis_text.initial_impression }}</p>
+            <p>Acquire Recommendation: {{ nft_score.acquire_recommendation }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
