@@ -12,9 +12,8 @@ services:
           name: celery-redis
           type: redis
           property: connectionString
-services:
   - type: worker
-    name: celery-worker
+    name: celery-cron-worker
     region: ohio
     runtime: python
     buildCommand: "pip install -r requirements.txt"
