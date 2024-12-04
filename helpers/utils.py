@@ -22,16 +22,19 @@ print("Successfully connected to Supabase!")
 
 def refresh_or_get_supabase_client(supabase=supabase):
     try:
+        print("Refreshing session")
         response = supabase.auth.refresh_session()
     except Exception as e:
+        print(f"Error refreshing session: {str(e)}")
         if 'Invalid Refresh Token' in str(e):
             url: str = os.getenv("SUPABASE_URL")
             key: str = os.getenv("SUPABASE_KEY")
-            supabase: Client = create_client(url, key)
+            supabase = create_client(url, key) # Assign a new Supabase client instance
             supabase.auth.sign_in_with_password({ "email": os.getenv("SUPABASE_USER"), "password": os.getenv("SUPABASE_PASSWORD") })
         else:
             raise e
     return supabase
+
 
 def get_full_scoring_criteria():
     from helpers.prompts.scoring_criteria import SCORING_CRITERIA
@@ -55,17 +58,18 @@ def set_taste_weights(weights):
         f.write(f"EMOTIONAL_IMPACT_WEIGHT: {weights.updated_weights.EMOTIONAL_IMPACT_WEIGHT}\n")
         f.write(f"AI_COLLECTOR_PERSPECTIVE_WEIGHT: {weights.updated_weights.AI_COLLECTOR_PERSPECTIVE_WEIGHT}\n")
 
-def get_nft_scores(supabase=supabase, n=10):
+def get_nft_scores(n=10):
     response = refresh_or_get_supabase_client(supabase)
     response = supabase.table("nft_scores").select("id,scores,analysis_text").order("timestamp", desc=True).limit(n).execute()
     return response.data
 
-def get_recent_nft_scores(supabase=supabase, n=6):
+def get_recent_nft_scores(n=6):
     response = refresh_or_get_supabase_client(supabase)
     response = supabase.table("nft_scores").select("network,contract_address,token_id,analysis_text,image_url,acquire_recommendation").order("timestamp", desc=True).limit(n).execute()
     return response.data
 
-def get_last_n_posts(supabase=supabase, n=10):
+def get_last_n_posts(n=10):
+    print("Fetching last n posts")
     response = refresh_or_get_supabase_client(supabase)
 
     """
@@ -88,24 +92,27 @@ def get_last_n_posts(supabase=supabase, n=10):
     posts_text = "\n".join([post["content"] for post in response.data])
     return posts_text
 
-def get_all_posts_replied_to(supabase=supabase):
+def get_all_posts_replied_to():
+    print("Fetching posts replied to")
     response = refresh_or_get_supabase_client(supabase)
     response = supabase.table("posts_created").select("parent_id").execute()
     return response.data
 
 
-def get_all_posts(supabase=supabase):
+def get_all_posts():
+    print("Fetching all posts")
     response = refresh_or_get_supabase_client(supabase)
     response = supabase.table("posts_created").select("*").execute()
     return response.data
 
-def store_nft_scores(artwork_analysis, image_url, network, contract_address, token_id, supabase=supabase):
+def store_nft_scores(artwork_analysis, image_url, network, contract_address, token_id):
     """
     Store artwork scoring and metadata in Supabase database
     
     Args:
         supabase: Supabase client instance
         artwork_scoring: ScoringCriteria object containing artwork analysis
+        image_url: URL of the image medium
         network: Blockchain network (e.g. 'ethereum')
         contract_address: NFT contract address
         token_id: NFT token ID
@@ -203,25 +210,36 @@ def store_nft_scores(artwork_analysis, image_url, network, contract_address, tok
 
     total_score = technical_score + artistic_score + cultural_score + artist_score + market_score + emotional_score + ai_score
 
-    response = supabase.table("nft_scores").insert(
-        {
-            "id": hashlib.sha256(f"{network}:{contract_address}:{token_id}:{str(datetime.now())}".encode()).hexdigest(),
-            "network": network,
-            "contract_address": contract_address, 
-            "token_id": token_id,
-            "image_url": image_url,
-            "timestamp": str(datetime.now()),
-            "scores": json.dumps(scores),
-            "weights": json.dumps(weights),
-            "analysis_text": json.dumps(analysis_text),
-            "total_score": round(total_score, 4),
-            "acquire_recommendation": total_score > os.getenv('SCORE_THRESHOLD', 55)
-        }
-    ).execute()
+    print(f"Total score: {total_score}")
+
+    # Check if artwork exists
+    existing = supabase.table("nft_scores").select("*").eq("network", network).eq("contract_address", contract_address).eq("token_id", token_id).execute()
+
+    artwork_data = {
+        "network": network,
+        "contract_address": contract_address,
+        "token_id": token_id,
+        "image_url": image_url,
+        "timestamp": str(datetime.now()),
+        "scores": json.dumps(scores),
+        "weights": json.dumps(weights), 
+        "analysis_text": json.dumps(analysis_text),
+        "total_score": round(total_score, 4),
+        "acquire_recommendation": total_score > os.getenv('SCORE_THRESHOLD', 55)
+    }
+
+    if existing.data:
+        # Update existing record
+        response = supabase.table("nft_scores").update(artwork_data).eq("network", network).eq("contract_address", contract_address).eq("token_id", token_id).execute()
+    else:
+        # Insert new record
+        artwork_data["id"] = hashlib.sha256(f"{network}:{contract_address}:{token_id}:{str(datetime.now())}".encode()).hexdigest()
+        response = supabase.table("nft_scores").insert(artwork_data).execute()
     return response.data
 
 
-def set_post_created(post, supabase=supabase):
+def set_post_created(post):
+    print("Setting post created")
     response = refresh_or_get_supabase_client(supabase)
     hash = post['hash']
     text = post['text']

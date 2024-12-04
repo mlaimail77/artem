@@ -10,13 +10,6 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from asgiref.sync import async_to_sync
 
-
-from helpers.utils import *
-from helpers.llm_helpers import *
-from helpers.nft_data_helpers import *
-from helpers.farcaster_helpers import *
-from helpers.coinbase_helpers import *
-
 from cron_tasks import *
 from webhook_tasks import *
 
@@ -54,7 +47,9 @@ def sync_process_webhook(webhook_data):
 def sync_process_neynar_webhook(webhook_data):
     async_to_sync(process_neynar_webhook)(webhook_data)
 
-
+@shared_task(ignore_result=False, name="adjust_weights")
+def sync_adjust_weights():
+    async_to_sync(process_adjust_weights)()
 
 @shared_task(ignore_result=False, name="add")
 def add(x, y):

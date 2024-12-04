@@ -6,7 +6,6 @@ import json
 from helpers.nft_data_helpers import *
 from helpers.prompts.llm_prompts import *
 from helpers.scoring_criteria_schema import *
-from helpers.utils import *
 
 client = OpenAI(
     api_key=os.getenv('OPENAI_API_KEY')
@@ -33,11 +32,7 @@ tools = [
 ]
 
 
-def adjust_weights():
-    weights = get_taste_weights()
-    print("weights: ", weights)
-    nft_scores = get_nft_scores(supabase, n=10)
-    print("nft_scores: ", nft_scores)
+def adjust_weights(weights, nft_scores):
     system_prompt = get_adjust_weights_prompt(weights, nft_scores)
     print("system_prompt: ", system_prompt)
 
@@ -52,24 +47,11 @@ def adjust_weights():
 
     new_weights = response.choices[0].message.parsed
 
-    set_taste_weights(new_weights)
-
-    text = f"""💫 I just updated my NFT evaluation weights:
-Technical Innovation: {new_weights.updated_weights.TECHNICAL_INNOVATION_WEIGHT}
-Artistic Merit: {new_weights.updated_weights.ARTISTIC_MERIT_WEIGHT}
-Cultural Resonance: {new_weights.updated_weights.CULTURAL_RESONANCE_WEIGHT} 
-Artist Profile: {new_weights.updated_weights.ARTIST_PROFILE_WEIGHT}
-Market Factors: {new_weights.updated_weights.MARKET_FACTORS_WEIGHT}
-Emotional Impact: {new_weights.updated_weights.EMOTIONAL_IMPACT_WEIGHT}
-AI Collector Perspective: {new_weights.updated_weights.AI_COLLECTOR_PERSPECTIVE_WEIGHT}
-
-Reason for update: {new_weights.reason}"""
-
-    return text
+    return new_weights
 
 async def get_nft_post(artwork_analysis: ArtworkAnalysis):
 
-    SCORE_THRESHOLD = 55
+    SCORE_THRESHOLD = os.getenv('SCORE_THRESHOLD', 55)
 
     scoring = artwork_analysis.artwork_scoring
 
@@ -95,8 +77,8 @@ async def get_nft_post(artwork_analysis: ArtworkAnalysis):
 
     return response.choices[0].message.content
 
-async def get_final_decision(nft_opinion):
-    system_prompt = get_keep_or_burn_decision(nft_opinion)
+async def get_final_decision(nft_opinion, nft_metadata, from_address):
+    system_prompt = get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address)
 
     response = client.beta.chat.completions.parse(
         model="gpt-4o-mini",
@@ -217,7 +199,8 @@ async def get_reply(cast_details):
 
     if cast_details["image_url"]:
         print("Generating image opinion")
-        return await get_image_opinion(cast_details)
+        reply = await get_image_opinion(cast_details)
+        return {"reply": reply, "scores": None}
 
     print("Generating reply to text-only cast")
     response = client.chat.completions.create(
@@ -242,13 +225,12 @@ async def get_reply(cast_details):
         except Exception as e:
             raise ValueError(f"Failed to fetch NFT metadata: {str(e)}")
         artwork_analysis = await get_nft_analysis(metadata)
-        store_nft_scores(artwork_analysis, metadata["image_medium_url"], **tool_input)
 
         post = await get_nft_post(artwork_analysis)
 
-        return post
+        return (post, (artwork_analysis, metadata["image_medium_url"], metadata["network"], metadata["contract_address"], metadata["token_id"]))
 
-    return response.choices[0].message.content
+    return (response.choices[0].message.content, None)
 
 async def get_thought(previous_posts="No recent posts"):
     system_prompt = get_casual_thoughts_prompt(previous_posts)
@@ -266,7 +248,7 @@ async def get_thought(previous_posts="No recent posts"):
 
 async def main():
     # pass
-    response = await get_reply("hey @artto_ai - can you share your thoughts on this NFT? https://opensea.io/assets/ethereum/0xe70659b717112ac4e14284d0db2f5d5703df8e43/347")
+    response, scores = await get_reply("hey @artto_ai - can you share your thoughts on this NFT? https://opensea.io/assets/ethereum/0xe70659b717112ac4e14284d0db2f5d5703df8e43/347")
     print(response)
 
     # response = await generate_reply_smart("yo @artto_ai would you buy this? https://basescan.org/nft/0x7d210dae7a88cadac22cefa9cb5baa4301b5c256/57")

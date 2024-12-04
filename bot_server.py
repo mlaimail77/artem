@@ -11,7 +11,6 @@ from helpers.utils import *
 from helpers.llm_helpers import *
 from helpers.nft_data_helpers import *
 from helpers.farcaster_helpers import *
-from helpers.coinbase_helpers import *
 
 from dotenv import load_dotenv
 
@@ -25,14 +24,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-wallet = fetch_wallet(os.getenv('WALLET_ID_SEPOLIA'), "artto_sepolia_seed.json")
-
-BURN_ADDRESS = "0x0000000000000000000000000000000000000000"
-
 @flask_app.route('/')
 def home():
     recent_nft_scores = get_recent_nft_scores()
-    print("recent_nft_scores: ", recent_nft_scores)
     # Parse the analysis_text JSON string for each score
     for score in recent_nft_scores:
         if score.get('analysis_text'):
@@ -107,8 +101,6 @@ async def neynar_webhook():
 
 if __name__ == '__main__':
     flask_app.run(
-        debug=True,
-        # host='0.0.0.0',
-        port=8000
-        # port=int(os.getenv('PORT', 3000))
-        )
+        host='0.0.0.0',
+        port=int(os.getenv('PORT', 3000))
+    )

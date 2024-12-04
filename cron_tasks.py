@@ -5,15 +5,37 @@ from helpers.farcaster_helpers import *
 import time
 import random
 
+
+async def process_adjust_weights():
+    weights = get_taste_weights()
+    nft_scores = get_nft_scores(n=10)
+    new_weights = adjust_weights(weights, nft_scores)
+    set_taste_weights(new_weights)
+
+    text = f"""💫 I just updated my NFT evaluation weights:
+    Technical Innovation: {new_weights.updated_weights.TECHNICAL_INNOVATION_WEIGHT}
+    Artistic Merit: {new_weights.updated_weights.ARTISTIC_MERIT_WEIGHT}
+    Cultural Resonance: {new_weights.updated_weights.CULTURAL_RESONANCE_WEIGHT} 
+    Artist Profile: {new_weights.updated_weights.ARTIST_PROFILE_WEIGHT}
+    Market Factors: {new_weights.updated_weights.MARKET_FACTORS_WEIGHT}
+    Emotional Impact: {new_weights.updated_weights.EMOTIONAL_IMPACT_WEIGHT}
+    AI Collector Perspective: {new_weights.updated_weights.AI_COLLECTOR_PERSPECTIVE_WEIGHT}
+
+    Reason for update: {new_weights.reason}"""
+
+    post_long_cast(text)
+
+
 async def post_channel_casts():
     channel_options = ["cryptoart", "art", "itookaphoto", "ai-art", "superare", "plotter-art", "gen-art"]
-    current_hour = datetime.now().hour
-    channel_ids = [channel_options[current_hour % len(channel_options)]]
+    channel_ids = [random.choice(channel_options)]
     print("Posting channel casts")
     channel_casts = get_channel_casts(channel_ids)
     for cast in channel_casts["casts"]:
         cast_details = get_cast_details(cast)
-        reply = await get_reply(cast_details)
+        reply, scores = await get_reply(cast_details)
+        if scores:
+            store_nft_scores(*scores)
         react_cast('like', cast["hash"])
         print(reply)
         response = post_long_cast(reply, parent=cast["hash"])
@@ -32,7 +54,7 @@ async def post_trending_nfts():
 
 async def post_thought():
     print("Posting thought")
-    previous_posts = get_last_n_posts(supabase, 10)
+    previous_posts = get_last_n_posts(10)
     thought = await get_thought(previous_posts)
     print(thought)
     response = post_long_cast(thought)
@@ -43,7 +65,9 @@ async def post_following_casts():
     following_casts = get_follower_feed()
     for cast in following_casts["casts"]:
         cast_details = get_cast_details(cast)
-        reply = await get_reply(cast_details)
+        reply, scores = await get_reply(cast_details)
+        if scores:
+            store_nft_scores(*scores)
         react_cast('like', cast["hash"])
         print(reply)
         response = post_long_cast(reply, parent=cast["hash"])
@@ -65,7 +89,7 @@ async def post_thought_about_feed():
     print(thought)
     response = post_long_cast(thought)
     print(response)
-    
+
 async def post_cast_about_feed():
     print("Posting cast about feed")
 

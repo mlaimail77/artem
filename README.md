@@ -84,6 +84,7 @@ Want to help shape how an AI learns to appreciate art? We'd love your help with:
 ## License
 
 MIT
+
 ---
 
-Want to learn more? DM @jaywooow.eth on Farcaster.
+Want to learn more? DM @jaywooow.eth on Farcaster or @jay_wooow on X.

@@ -9,6 +9,37 @@ load_dotenv('.env.local')
 
 SIMPLEHASH_API_KEY = os.getenv('SIMPLEHASH_API_KEY')
 
+async def get_wallet_nfts(wallet_address: str, networks: list = ['ethereum', 'base'], limit: int = 20, api_key: str = SIMPLEHASH_API_KEY):
+    """
+    Fetches NFTs owned by a specific wallet address from the SimpleHash API.
+
+    Args:
+        wallet_address (str): The wallet address to fetch NFTs for
+        networks (list): List of blockchain networks to include. Default: ['ethereum', 'base']
+        limit (int): Maximum number of NFTs to return. Default: 20
+        api_key (str): The SimpleHash API key to use. Default: SIMPLEHASH_API_KEY
+
+    Returns:
+        dict: The response from the SimpleHash API containing the wallet's NFTs
+    """
+    # Join networks with comma for URL parameter
+    networks_param = ','.join(networks)
+    
+    # Construct the API endpoint URL
+    url = f"https://api.simplehash.com/api/v0/nfts/owners_v2?chains={networks_param}&wallet_addresses={wallet_address}&limit={limit}&order_by=transfer_time__desc"
+
+    headers = {
+        "accept": "application/json",
+        "X-API-KEY": api_key
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                return None
+
 def filter_nft_metadata(response):
     if not response:
         return None

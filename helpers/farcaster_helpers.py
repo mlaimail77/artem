@@ -37,7 +37,7 @@ def follow_users(target_fids):
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
 
-def get_trending_casts(channel_id=None, time_window="24h", limit=10):
+def get_trending_casts(channel_id=None, time_window="6h", limit=10):
     """
     Get trending casts from Farcaster
     
@@ -167,8 +167,12 @@ def post_long_cast(text, parent=None, channel_id=None):
     Returns:
         list: List of responses from the Neynar API for each cast
     """
+    print("Posting long cast", text)
+
+    print("Fetching posts replied to")
     posts_replied_to = get_all_posts_replied_to()
-    
+    print("Posts replied to:", posts_replied_to)
+
     # Check if we've already replied to this parent
     if parent and any(p['parent_id'] == parent for p in posts_replied_to):
         print("Already replied to this parent")
@@ -251,6 +255,7 @@ def get_follower_feed(limit=25):
 
 
 def post_cast(text, parent=None, channel_id=None):
+    print("Posting cast:", text)
     url = "https://api.neynar.com/v2/farcaster/cast"
     
     payload = {

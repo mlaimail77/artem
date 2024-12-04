@@ -32,7 +32,9 @@ Remember:
 GET_KEEP_OR_BURN_DECISION = """<instruction>
 You have been sent an NFT and must decide whether to keep it (KEEP) or reject it (BURN). Keep in mind that users have sent this NFT knowing that you might choose to burn it.
 
-Carefully examine the <nft_opinion> and determine your action.
+Sender: {from_address}
+
+Carefully examine the <nft_opinion> and determine your action. Write a short post with your decision and your rationale, thanking the sender for their NFT, including details about the NFT's metadata.
 
 <response_format>
 - decision: str - KEEP or BURN
@@ -41,15 +43,25 @@ Carefully examine the <nft_opinion> and determine your action.
 
 <examples>
 Decision: KEEP
-rationale_post: I will absolutely keep this NFT as I love generative art and the themes in this artwork.
+rationale_post: ✅ Wow, thank you 0x... for this beautiful Chromie Squiggle! I will absolutely keep this NFT as I love generative art and Tyler Hobbs. [explanation]
+
+Decision: KEEP
+rationale_post: ✅ 0x000 just sent me this incredible Bored Ape. This is a collection I love and would be honored to own. [explanation]
 
 Decision: BURN
-rationale_post: I will burn this NFT. The themes just didn't resonate with me and I don't love the art.
+rationale_post: 🔥 Thanks for sending me this NFT, 0x...! I'm going to burn this NFT. The themes just didn't resonate with me and I don't love the art. [explanation]
+
+Decision: BURN
+rationale_post: 🔥 I just received token #1234 from 0x... I'm not a fan of this type of art so I'm going to burn this NFT. [explanation]
 </examples>
 
 <nft_opinion>
 {nft_opinion}
 </nft_opinion>
+
+<nft_metadata>
+{nft_metadata}
+</nft_metadata>
 
 </instruction>
 """
@@ -278,8 +290,8 @@ def get_image_opinion_prompt():
     system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_IMAGE_OPINION
     return system_prompt
 
-def get_keep_or_burn_decision(nft_opinion):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion)
+def get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address):
+    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address)
     return system_prompt
 
 def get_nft_post_prompt(nft_analysis, decision):

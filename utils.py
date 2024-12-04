@@ -34,6 +34,10 @@ def create_app() -> Flask:
                     "task": "post_thought_about_feed",
                     "schedule": 5400
                 },
+                "adjust_weights_every_24_hours": {
+                    "task": "adjust_weights",
+                    "schedule": 86400
+                },
             },
         ),
     )
