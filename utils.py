@@ -1,6 +1,6 @@
 from celery import Celery, Task
 from flask import Flask
-
+import os
 
 def celery_init_app(app: Flask) -> Celery:
     class FlaskTask(Task):
@@ -18,8 +18,8 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_mapping(
         CELERY=dict(
-            broker_url="redis://localhost",
-            result_backend="redis://localhost",
+            broker_url=os.getenv('CELERY_BROKER_URL', 'redis://localhost'),
+            result_backend=os.getenv('CELERY_BROKER_URL', 'redis://localhost'),
             task_ignore_result=True,
             beat_schedule={
                 "post_thought_every_hour": {
