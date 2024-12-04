@@ -258,7 +258,7 @@ def main():
     supabase = get_supabase_client()
     print("Successfully connected to Supabase!")
 
-    print(get_taste_weights())
+    print(get_last_n_posts(n=10))
 
 if __name__ == "__main__":
     main()
