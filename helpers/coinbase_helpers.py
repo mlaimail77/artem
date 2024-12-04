@@ -2,16 +2,16 @@ import os
 
 from cdp import *
 
-# Zora WOW Token Actions
-from cdp_agentkit_core.actions.wow.create_token import *
-from cdp_agentkit_core.actions.wow.buy_token import *
-from cdp_agentkit_core.actions.wow.sell_token import *
+# # Zora WOW Token Actions
+# from cdp_agentkit_core.actions.wow.create_token import *
+# from cdp_agentkit_core.actions.wow.buy_token import *
+# from cdp_agentkit_core.actions.wow.sell_token import *
 
-# Core actions
-from cdp_agentkit_core.actions.deploy_token import *
-from cdp_agentkit_core.actions.register_basename import *
-from cdp_agentkit_core.actions.trade import *
-from cdp_agentkit_core.actions.transfer import *
+# # Core actions
+# from cdp_agentkit_core.actions.deploy_token import *
+# from cdp_agentkit_core.actions.register_basename import *
+# from cdp_agentkit_core.actions.trade import *
+# from cdp_agentkit_core.actions.transfer import *
 
 
 from dotenv import load_dotenv

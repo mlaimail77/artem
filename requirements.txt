@@ -1,16 +1,12 @@
-aiocron==1.8
-aiohttp==3.10.5
 asgiref==3.8.1
-cdp_agentkit_core==0.0.5
-cdp_sdk==0.10.4
+cdp_sdk==0.11.0 --no-deps
 celery==5.4.0
 Flask==3.1.0
+grequests==0.7.0
 Markdown==3.7
-flower
-openai==1.56.0
+openai==1.56.2
+pydantic==2.10.3
 python-dotenv==1.0.1
 PyYAML==6.0.2
 Requests==2.32.3
-supabase==2.10.0
-redis
-web3
+supabase==2.10.0 --no-deps

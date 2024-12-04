@@ -1,4 +1,4 @@
-import aiohttp
+import grequests
 import json
 import os
 import asyncio
@@ -33,12 +33,13 @@ async def get_wallet_nfts(wallet_address: str, networks: list = ['ethereum', 'ba
         "X-API-KEY": api_key
     }
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            if response.status == 200:
-                return await response.json()
-            else:
-                return None
+    
+    req = grequests.get(url, headers=headers)
+    response = grequests.map([req])[0]
+    if response and response.status_code == 200:
+        return response.json()
+    else:
+        return None
 
 def filter_nft_metadata(response):
     if not response:
@@ -90,16 +91,13 @@ async def get_trending_collections(time_period='24h', chains=['ethereum', 'base'
         "X-API-KEY": api_key
     }
 
-    # Send the GET request
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            # Check if the response is valid
-            if response.status == 200:
-                return await response.json()
-            else:
-                # Handle the case where the API response is invalid
-                print(f"Error fetching trending collections: {response.status}")
-                return None
+    req = grequests.get(url, headers=headers)
+    response = grequests.map([req])[0]
+    if response and response.status_code == 200:
+        return response.json()
+    else:
+        return None
+
 
 async def get_nft_metadata(network, contract_address, token_id, api_key=SIMPLEHASH_API_KEY):
     """
@@ -122,18 +120,13 @@ async def get_nft_metadata(network, contract_address, token_id, api_key=SIMPLEHA
         "X-API-KEY": api_key
     }
 
-    # Send the GET request
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            # Check if the response is valid
-            if response.status == 200:
-                response_data = await response.json()
-                print(response_data)
-                return filter_nft_metadata(response_data)
-            else:
-                # Handle the case where the API response is invalid
-                print(f"Error fetching NFT metadata: {response.status}")
-                return None
+    req = grequests.get(url, headers=headers)
+    response = grequests.map([req])[0]
+    if response and response.status_code == 200:
+        return response.json()
+    else:
+        return None
+
 
 
 async def main():
