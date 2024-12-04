@@ -1,5 +1,5 @@
 asgiref==3.8.1
-cdp_sdk==0.11.0 --install-option="--no-deps"
+cdp_sdk==0.11.0
 celery==5.4.0
 Flask==3.1.0
 grequests==0.7.0
