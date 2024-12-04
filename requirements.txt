@@ -8,9 +8,7 @@ Flask==3.1.0
 Markdown==3.7
 flower
 openai==1.56.0
-pydantic==2.10.2
 python-dotenv==1.0.1
-PyYAML==6.0.2
 PyYAML==6.0.2
 Requests==2.32.3
 supabase==2.10.0
