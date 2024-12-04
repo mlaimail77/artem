@@ -1,7 +1,7 @@
 aiocron
 aiohttp
 asgiref
-cdp_agentkit_core=
+cdp_agentkit_core
 cdp_sdk
 celery
 Flask
@@ -10,7 +10,7 @@ flower
 openai
 pydantic
 python-dotenv
-PyYAML==6.0.2
+PyYAML
 Requests
 supabase
 web3
