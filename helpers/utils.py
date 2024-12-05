@@ -242,7 +242,7 @@ def store_nft_scores(scores_object):
         "weights": json.dumps(weights), 
         "analysis_text": json.dumps(analysis_text),
         "total_score": round(total_score, 4),
-        "acquire_recommendation": total_score > os.getenv('SCORE_THRESHOLD', 55)
+        "acquire_recommendation": total_score > int(os.getenv('SCORE_THRESHOLD', 55))
     }
 
     if existing.data:
