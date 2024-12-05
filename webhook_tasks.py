@@ -63,7 +63,7 @@ async def process_webhook(webhook_data):
             "token_id": token_id
         }
         store_nft_scores(scores_object)
-
+        refreshed_token = refresh_token()
         if decision == "BURN":
             print("BURN THAT SHIT!")
             try:
@@ -71,7 +71,7 @@ async def process_webhook(webhook_data):
             except Exception as e:
                 print(f"Error posting to Farcaster: {str(e)}")
             try:
-                post_tweet({"text": rationale_post})
+                post_tweet({"text": rationale_post}, refreshed_token, parent=None)
             except Exception as e:
                 print(f"Error posting to Twitter: {str(e)}")
             response = transfer_nft(wallet,
@@ -87,7 +87,7 @@ async def process_webhook(webhook_data):
             except Exception as e:
                 print(f"Error posting to Farcaster: {str(e)}")
             try:
-                post_tweet({"text": rationale_post})
+                post_tweet({"text": rationale_post}, refreshed_token, parent=None)
             except Exception as e:
                 print(f"Error posting to Twitter: {str(e)}")
             print("KEEP!")
