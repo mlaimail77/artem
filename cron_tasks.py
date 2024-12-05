@@ -1,10 +1,14 @@
 from helpers.utils import *
 from helpers.llm_helpers import *
 from helpers.farcaster_helpers import *
+from helpers.twitter_helpers import *
 
 import time
 import random
 
+
+def refresh_twitter_token():
+    refresh_token()
 
 async def process_adjust_weights():
     weights = get_taste_weights()
@@ -57,8 +61,18 @@ async def post_thought():
     previous_posts = get_last_n_posts(10)
     thought = await get_thought(previous_posts)
     print(thought)
-    response = post_long_cast(thought)
-    print(response)
+    try:
+        response = post_long_cast(thought)
+        print(response)
+    except Exception as e:
+        print(f"Error posting to Farcaster: {str(e)}")
+    try:
+        refreshed_token = refresh_token()
+        post_tweet({"text": thought}, refreshed_token)
+    except Exception as e:
+        print(f"Error posting to Twitter: {str(e)}")
+
+
 
 async def post_following_casts():
     print("Posting following casts")
@@ -75,6 +89,7 @@ async def post_following_casts():
         print("Waiting 10-30 seconds")
         time.sleep(random.randint(10, 30))
 
+
 async def post_thought_about_feed():
     trending_casts = get_trending_casts()
     print("Getting trending casts")
@@ -89,7 +104,3 @@ async def post_thought_about_feed():
     print(thought)
     response = post_long_cast(thought)
     print(response)
-
-async def post_cast_about_feed():
-    print("Posting cast about feed")
-

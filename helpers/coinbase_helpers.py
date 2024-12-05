@@ -87,6 +87,20 @@ def get_implementation_address(network_id, contract_address):
     invoke_contract.wait()
     print(invoke_contract)
 
+def register_llc(wallet, network_id, contract_address, proxy_address):
+    abi = get_abi(network_id, proxy_address)
+    invoke_contract = wallet.invoke_contract(
+        contract_address=contract_address,
+        method="createSeries", 
+        abi=abi,
+        amount=0.01312070788843195,
+        args={"jurisdiction":"1", 
+              "controller":wallet.default_address.address_id,
+              "name": "ArttoLLC"}
+        )
+    invoke_contract.wait()
+    return invoke_contract
+
 def transfer_nft(wallet, network_id, contract_address, from_address, to_address, token_id):
     try:
         print("Trying to transfer NFT")
@@ -134,6 +148,13 @@ if __name__ == "__main__":
     # artto_setup()
     wallet = fetch_wallet(os.getenv('WALLET_ID_MAINNET'), "artto_mainnet_seed.json")
 
+    response = register_llc(wallet=wallet,
+                 network_id="base-mainnet", 
+                 contract_address="0x0d3BC598F0F75590CD75D60D40e0510F515EBE51", 
+                 proxy_address="0x66ef60f480A269F5e1e358699DD774180B2Fa8eE")
+    
+    print(response)
+    
     # response = transfer_nft(wallet=wallet,
     #              network_id="base-mainnet", 
     #              contract_address="0x3d8683Bbf9CaE7ad0441b65ddCadEC3850d1256E", 

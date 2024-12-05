@@ -22,9 +22,9 @@ def create_app() -> Flask:
             result_backend=os.getenv('CELERY_BROKER_URL', 'redis://localhost'),
             task_ignore_result=True,
             beat_schedule={
-                "post_thought_every_hour": {
+                "post_thought_every_2_hours": {
                     "task": "post_thought",
-                    "schedule": 3000
+                    "schedule": 7200
                 },
                 "post_channel_casts_every_2_hours": {
                     "task": "post_channel_casts",
@@ -37,6 +37,10 @@ def create_app() -> Flask:
                 "adjust_weights_every_24_hours": {
                     "task": "adjust_weights",
                     "schedule": 86400
+                },
+                "refresh_twitter_token_every_2_hours": {
+                    "task": "refresh_twitter_token",
+                    "schedule": 7200
                 },
             },
         ),

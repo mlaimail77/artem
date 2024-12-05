@@ -1,6 +1,6 @@
 
 
-from flask import request, jsonify, render_template
+from flask import request, jsonify, render_template, session, redirect
 from tasks import flask_app, add, sync_process_webhook, sync_process_neynar_webhook
 
 import logging
@@ -11,6 +11,7 @@ from helpers.utils import *
 from helpers.llm_helpers import *
 from helpers.nft_data_helpers import *
 from helpers.farcaster_helpers import *
+from helpers.twitter_helpers import *
 
 from dotenv import load_dotenv
 
@@ -98,6 +99,32 @@ async def neynar_webhook():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@flask_app.route("/twitter-auth")
+def twitter_auth():
+    global twitter
+    twitter = make_token()
+    authorization_url, state = twitter.authorization_url(
+        auth_url, code_challenge=code_challenge, code_challenge_method="S256"
+    )
+    session["oauth_state"] = state
+    return redirect(authorization_url)
+
+
+@flask_app.route("/oauth/callback", methods=["GET"])
+def callback():
+    code = request.args.get("code")
+    token = twitter.fetch_token(
+        token_url=token_url,
+        client_secret=client_secret,
+        code_verifier=code_verifier,
+        code=code
+    )
+    st_token = '"{}"'.format(token)
+    j_token = json.loads(st_token)
+    r.set("token", j_token)
+    print(j_token)
+    return jsonify({'status': 'success', 'message': 'Token set'}), 200
 
 if __name__ == '__main__':
     flask_app.run(

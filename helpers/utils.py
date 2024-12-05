@@ -20,19 +20,16 @@ def get_supabase_client():
 supabase = get_supabase_client()
 print("Successfully connected to Supabase!")
 
-def refresh_or_get_supabase_client(supabase=supabase):
+def refresh_or_get_supabase_client():
     try:
         print("Refreshing session")
-        response = supabase.auth.refresh_session()
+        global supabase
+        response = supabase.auth.get_session()
     except Exception as e:
-        print(f"Error refreshing session: {str(e)}")
-        if 'Invalid Refresh Token' in str(e):
-            url: str = os.getenv("SUPABASE_URL")
-            key: str = os.getenv("SUPABASE_KEY")
-            supabase = create_client(url, key) # Assign a new Supabase client instance
-            supabase.auth.sign_in_with_password({ "email": os.getenv("SUPABASE_USER"), "password": os.getenv("SUPABASE_PASSWORD") })
-        else:
-            raise e
+        try:
+            supabase = get_supabase_client()
+        except Exception as e:
+            print(f"Error getting new session: {str(e)}")
     return supabase
 
 
@@ -59,18 +56,18 @@ def set_taste_weights(weights):
         f.write(f"AI_COLLECTOR_PERSPECTIVE_WEIGHT: {weights.updated_weights.AI_COLLECTOR_PERSPECTIVE_WEIGHT}\n")
 
 def get_nft_scores(n=10):
-    response = refresh_or_get_supabase_client(supabase)
+    response = refresh_or_get_supabase_client()
     response = supabase.table("nft_scores").select("id,scores,analysis_text").order("timestamp", desc=True).limit(n).execute()
     return response.data
 
 def get_recent_nft_scores(n=6):
-    response = refresh_or_get_supabase_client(supabase)
+    response = refresh_or_get_supabase_client()
     response = supabase.table("nft_scores").select("network,contract_address,token_id,analysis_text,image_url,acquire_recommendation").order("timestamp", desc=True).limit(n).execute()
     return response.data
 
 def get_last_n_posts(n=10):
     print("Fetching last n posts")
-    response = refresh_or_get_supabase_client(supabase)
+    response = refresh_or_get_supabase_client()
 
     """
     Get the N most recent posts ordered by timestamp in descending order.
@@ -94,14 +91,14 @@ def get_last_n_posts(n=10):
 
 def get_all_posts_replied_to():
     print("Fetching posts replied to")
-    response = refresh_or_get_supabase_client(supabase)
+    response = refresh_or_get_supabase_client()
     response = supabase.table("posts_created").select("parent_id").execute()
     return response.data
 
 
 def get_all_posts():
     print("Fetching all posts")
-    response = refresh_or_get_supabase_client(supabase)
+    response = refresh_or_get_supabase_client()
     response = supabase.table("posts_created").select("*").execute()
     return response.data
 
@@ -120,7 +117,7 @@ def store_nft_scores(artwork_analysis, image_url, network, contract_address, tok
     Returns:
         dict: Response data from Supabase insert
     """
-    response = refresh_or_get_supabase_client(supabase)
+    response = refresh_or_get_supabase_client()
 
     artwork_scoring = artwork_analysis.artwork_scoring
     initial_impression = artwork_analysis.initial_impression
@@ -240,7 +237,7 @@ def store_nft_scores(artwork_analysis, image_url, network, contract_address, tok
 
 def set_post_created(post):
     print("Setting post created")
-    response = refresh_or_get_supabase_client(supabase)
+    response = refresh_or_get_supabase_client()
     hash = post['hash']
     text = post['text']
     parent_id = post['parent_id']
