@@ -40,7 +40,7 @@ async def process_webhook(webhook_data):
             network = webhook_data['network']
             current_wallet_address = os.getenv('ARTTO_ADDRESS_MAINNET')
 
-        token_id = webhook_data['tokenId']
+        token_id = webhook_data.get('tokenId') or webhook_data.get('id')
         from_address = webhook_data['from']
         contract_address = webhook_data['contractAddress']
         post_content = f"I just received token #{token_id} from {from_address}!"
