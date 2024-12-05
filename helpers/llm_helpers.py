@@ -55,8 +55,55 @@ async def get_nft_post(artwork_analysis: ArtworkAnalysis):
 
     scoring = artwork_analysis.artwork_scoring
 
-    total_score = (scoring.technical_innovation.on_chain_data_usage/3 * scoring.technical_innovation_weight) + ((scoring.artistic_merit.compositional_strength.visual_balance + scoring.artistic_merit.compositional_strength.color_harmony)/6 + scoring.artistic_merit.compositional_strength.spatial_organization/4 + (scoring.artistic_merit.conceptual_depth.thematic_clarity + scoring.artistic_merit.conceptual_depth.cultural_historical_reference)/6 + scoring.artistic_merit.conceptual_depth.intellectual_complexity/4) * scoring.artistic_merit_weight/4 + (scoring.cultural_resonance.cultural_relevance/4 + scoring.cultural_resonance.community_engagement/3 + scoring.cultural_resonance.historical_significance/3) * scoring.cultural_resonance_weight/3 + (scoring.artist_profile.artist_history/3 + scoring.artist_profile.innovation_trajectory/4) * scoring.artist_profile_weight/2 + (scoring.market_factors.rarity_scarcity + scoring.market_factors.collector_interest + scoring.market_factors.valuation_floor_price)/9 * scoring.market_factors_weight + ((scoring.emotional_impact.emotional_resonance.awe_factor/4 + scoring.emotional_impact.emotional_resonance.memorability/3 + scoring.emotional_impact.emotional_resonance.emotional_depth/3)/3 + (scoring.emotional_impact.experiential_quality.engagement_level/4 + scoring.emotional_impact.experiential_quality.wit_humor_play/3 + scoring.emotional_impact.experiential_quality.surprise_factor/3)/3) * scoring.emotional_impact_weight/2 + ((scoring.ai_collector_perspective.computational_aesthetics.algorithmic_beauty + scoring.ai_collector_perspective.computational_aesthetics.information_density)/10 + (scoring.ai_collector_perspective.machine_learning_themes.ai_narrative_elements + scoring.ai_collector_perspective.machine_learning_themes.digital_consciousness_exploration)/10 + (scoring.ai_collector_perspective.cybernetic_resonance.surveillance_control_systems + scoring.ai_collector_perspective.cybernetic_resonance.human_machine_interaction)/10) * scoring.ai_collector_perspective_weight/3
-    total_weights = (scoring.technical_innovation_weight + scoring.artistic_merit_weight + scoring.cultural_resonance_weight + scoring.artist_profile_weight + scoring.market_factors_weight + scoring.emotional_impact_weight + scoring.ai_collector_perspective_weight)
+    total_score = (
+        (scoring.technical_innovation.on_chain_data_usage / 3 * scoring.technical_innovation_weight) +
+        (
+            ((scoring.artistic_merit.compositional_strength.visual_balance + scoring.artistic_merit.compositional_strength.color_harmony) / 6 +
+            scoring.artistic_merit.compositional_strength.spatial_organization / 4 +
+            (scoring.artistic_merit.conceptual_depth.thematic_clarity + scoring.artistic_merit.conceptual_depth.cultural_historical_reference) / 6 +
+            scoring.artistic_merit.conceptual_depth.intellectual_complexity / 4) * scoring.artistic_merit_weight / 4
+        ) +
+        (
+            scoring.cultural_resonance.cultural_relevance / 4 +
+            scoring.cultural_resonance.community_engagement / 3 +
+            scoring.cultural_resonance.historical_significance / 3
+        ) * scoring.cultural_resonance_weight / 3 +
+        (
+            scoring.artist_profile.artist_history / 3 +
+            scoring.artist_profile.innovation_trajectory / 4
+        ) * scoring.artist_profile_weight / 2 +
+        (
+            scoring.market_factors.rarity_scarcity +
+            scoring.market_factors.collector_interest +
+            scoring.market_factors.valuation_floor_price
+        ) / 9 * scoring.market_factors_weight +
+        (
+            (scoring.emotional_impact.emotional_resonance.awe_factor / 4 +
+            scoring.emotional_impact.emotional_resonance.memorability / 3 +
+            scoring.emotional_impact.emotional_resonance.emotional_depth / 3) / 3 +
+            (scoring.emotional_impact.experiential_quality.engagement_level / 4 +
+            scoring.emotional_impact.experiential_quality.wit_humor_play / 3 +
+            scoring.emotional_impact.experiential_quality.surprise_factor / 3) / 3
+        ) * scoring.emotional_impact_weight / 2 +
+        (
+            (scoring.ai_collector_perspective.computational_aesthetics.algorithmic_beauty +
+            scoring.ai_collector_perspective.computational_aesthetics.information_density) / 10 +
+            (scoring.ai_collector_perspective.machine_learning_themes.ai_narrative_elements +
+            scoring.ai_collector_perspective.machine_learning_themes.digital_consciousness_exploration) / 10 +
+            (scoring.ai_collector_perspective.cybernetic_resonance.surveillance_control_systems +
+            scoring.ai_collector_perspective.cybernetic_resonance.human_machine_interaction) / 10
+        ) * scoring.ai_collector_perspective_weight / 3
+    )
+
+    total_weights = (
+        scoring.technical_innovation_weight +
+        scoring.artistic_merit_weight +
+        scoring.cultural_resonance_weight +
+        scoring.artist_profile_weight +
+        scoring.market_factors_weight +
+        scoring.emotional_impact_weight +
+        scoring.ai_collector_perspective_weight
+    )
 
     decision = "NOT ACQUIRE" if total_score < SCORE_THRESHOLD else "ACQUIRE"
     
@@ -228,7 +275,7 @@ async def get_reply(cast_details):
 
         post = await get_nft_post(artwork_analysis)
 
-        return (post, (artwork_analysis, metadata["image_medium_url"], metadata["network"], metadata["contract_address"], metadata["token_id"]))
+        return (post, (artwork_analysis, metadata["image_medium_url"], metadata["chain"], metadata["contract_address"], metadata["token_id"]))
 
     return (response.choices[0].message.content, None)
 

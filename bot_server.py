@@ -123,7 +123,6 @@ def callback():
     st_token = '"{}"'.format(token)
     j_token = json.loads(st_token)
     r.set("token", j_token)
-    print(j_token)
     return jsonify({'status': 'success', 'message': 'Token set'}), 200
 
 if __name__ == '__main__':
