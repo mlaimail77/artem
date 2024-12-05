@@ -28,13 +28,15 @@
     <pre>{{ response.taste_profile_yaml }}</pre>
     
     <h1>📝 Scoring Criteria</h1>
-    <p>These criteria are used to score NFTs. Artto uses a vision model (GPT-4o) to evaluate the NFT based on:</p>
-    <ul>
-      <li>🖼️ The artwork itself</li>
-      <li>📄 The NFT metadata (traits, price, holder distribution, description)</li>
-    </ul>
-    <div>
-      {{ response.scoring_criteria|safe}}
+    <div style="background-color: #e9ecef; padding: 1rem; border-radius: 0.3rem;">
+      <p>These criteria are used to score NFTs. Artto uses a vision model (GPT-4o) to evaluate the NFT based on:</p>
+      <ul>
+        <li>🖼️ The artwork itself</li>
+        <li>📄 The NFT metadata (traits, price, holder distribution, description)</li>
+      </ul>
+      <div style="font-size: 0.9rem;">
+        {{ response.scoring_criteria|safe}}
+      </div>
     </div>
   </div>
 

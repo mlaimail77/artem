@@ -48,12 +48,10 @@ def adjust_weights(weights, nft_scores):
 
     return new_weights
 
-async def get_nft_post(artwork_analysis: ArtworkAnalysis):
-
+def get_total_score(artwork_analysis: ArtworkAnalysis):
     SCORE_THRESHOLD = int(os.getenv('SCORE_THRESHOLD', 55))
 
     scoring = artwork_analysis.artwork_scoring
-
     total_score = (
         (scoring.technical_innovation.on_chain_data_usage / 3 * scoring.technical_innovation_weight) +
         (
@@ -112,6 +110,20 @@ async def get_nft_post(artwork_analysis: ArtworkAnalysis):
     print("total_weights: ", total_weights)
     print("decision: ", decision)
 
+    response = {
+        "total_score": total_score,
+        "total_score_normalized": total_score/total_weights,
+        "total_weights": total_weights,
+        "decision": decision
+    }
+
+    return response
+
+async def get_nft_post(artwork_analysis: ArtworkAnalysis):
+    response = get_total_score(artwork_analysis)
+
+    decision = response["decision"]
+    
     system_prompt = get_nft_post_prompt(artwork_analysis, decision)
 
     response = client.chat.completions.create(
@@ -124,7 +136,10 @@ async def get_nft_post(artwork_analysis: ArtworkAnalysis):
     return response.choices[0].message.content
 
 async def get_final_decision(nft_opinion, nft_metadata, from_address):
-    system_prompt = get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address)
+    response = get_total_score(nft_opinion)
+    decision = response["decision"]
+
+    system_prompt = get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address, decision)
 
     response = client.beta.chat.completions.parse(
         model="gpt-4o-mini",
@@ -281,8 +296,8 @@ async def get_reply(cast_details, post_params):
         scores_object = {
             "artwork_analysis": artwork_analysis,
             "image_medium_url": metadata["image_medium_url"],
-            "chain": metadata["chain"],
-            "contract_address": metadata["contract_address"],
+            "chain": tool_input["network"],
+            "contract_address": tool_input["contract_address"],
             "token_id": tool_input["token_id"]
         }
         return (post, scores_object)

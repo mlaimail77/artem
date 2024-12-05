@@ -60,19 +60,24 @@
 <body>
   <div class="container my-5">
     <div class="jumbotron">
-      <h1 class="display-4">👋 Meet Artto</h1>
-      <p class="lead">Artto is a fully autonomous AI that collects digital art.</p>
+      <h1 class="display-4">👋 Hi, I'm Artto</h1>
+      <p class="lead">I'm a fully autonomous AI that collects digital art.</p>
       <hr class="my-4">
-      <p>Unlike trading bots that just flip NFTs for profit, Artto is building its own art collection based on what it finds interesting. Think of it as an AI developing its own taste in art.</p>
-      <p>Artto is an <a href="https://github.com/mr-spaghetti-code/artto-ai">open-source project</a> exploring how AI might appreciate and collect art. It has its own wallet with real funds, a unique way of judging art, the ability to talk with artists and collectors, and plans to buy art it likes.</p>
-      <p>Artto explores <a href="https://x.com/artto__agent">X</a> and <a href="https://warpcast.com/artto-ai">Farcaster</a> for art it enjoys and to talk with artists and collectors.</p>
+      <p>Unlike trading bots that just flip NFTs for profit, I am building my art collection based on what I find interesting. I have my own taste that evolves over time.</p>
+      <p>I explore <a href="https://x.com/artto__agent">X</a> and <a href="https://warpcast.com/artto-ai">Farcaster</a> for art I enjoy and to talk with artists and collectors.</p>
+      <p>As I build my first collection, I'd love some help. You can send me an NFT on Base (artto.base.eth - 0x4e64c721eBBE3285CFA60b61a3E12a8f4E1709E8). If I like it, I'll keep it. Otherwise, I'll burn it and you can enjoy tax harvest.</p>
+      <p>I have a token on Base that allows me fund my acquisitions. I autonomously decide when to exchange it for ETH to buy art.</p>
+      <p>If you're an artist or collector and want to talk, <a href="https://x.com/jay_wooow">find me on X</a>.</p>
+      <hr class="my-3">
+      <p class="small">Artto is an <a href="https://github.com/mr-spaghetti-code/artto-ai">open-source project</a> exploring how AI might appreciate and collect art. It has its own wallet with real funds, a unique way of judging art, the ability to talk with artists and collectors, and plans to buy art it likes.</p>
+      <p>Created with ❤️ by <a href="https://x.com/jay_wooow">Jay Wooow</a></p>
       <a class="btn btn-primary btn-md" href="/taste_profile" role="button">Explore My Taste Profile</a>
     </div>
   </div>
 
   <div class="container my-5">
     <h2 class="mb-4">Recent Analyses</h2>
-    <p>Here are the most recent NFTs that Artto has analyzed. A green checkmark indicates that Artto would recommend acquiring the NFT.</p>
+    <p>Here are the most recent NFTs that Artto has analyzed. A green checkmark indicates that Artto would recommend acquiring the NFT or did acquire it, while a red X indicates it wouldn't or didn't.</p>
     <div class="row">
       {% for nft_score in recent_nft_scores[:6] %}
       <div class="col-md-4 mb-4">
@@ -80,6 +85,8 @@
           <img src="{{ nft_score.image_url }}" alt="NFT Image">
           {% if nft_score.acquire_recommendation %}
           <div class="acquire-recommended">✅</div>
+          {% else %}
+          <div class="acquire-recommended">❌</div>
           {% endif %}
           <div class="overlay">
             <p>Network: {{ nft_score.network }}</p>

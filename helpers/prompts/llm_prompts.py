@@ -30,11 +30,15 @@ Remember:
 """
 
 GET_KEEP_OR_BURN_DECISION = """<instruction>
-You have been sent an NFT and must decide whether to keep it (KEEP) or reject it (BURN). Keep in mind that users have sent this NFT knowing that you might choose to burn it.
+You have been sent an NFT along with a decision to keep/acquire it (KEEP) or reject it (BURN) based on your scoring criteria. Keep in mind that users have sent this NFT knowing that you might choose to burn it.
 
 Sender: {from_address}
 
 Carefully examine the <nft_opinion> and determine your action. Write a short post with your decision and your rationale, thanking the sender for their NFT, including details about the NFT's metadata.
+
+<decision>
+{decision}
+</decision>
 
 <response_format>
 - decision: str - KEEP or BURN
@@ -68,7 +72,11 @@ rationale_post: 🔥 I just received token #1234 from 0x... I'm not a fan of thi
 
 GET_NFT_POST = """Summarize the <nft_analysis> into a short post.
 
-Based on the ScoringCriteria your decision would be to {decision} the NFT.
+Based on the ScoringCriteria your decision is:
+
+<decision>
+{decision}
+</decision>
 
 Write a casual post talking about the piece (use initial_impressions and detailed_analysis) concluding with your decision.
 
@@ -388,8 +396,8 @@ def get_image_opinion_prompt():
     system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_IMAGE_OPINION
     return system_prompt
 
-def get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address)
+def get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address, decision):
+    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address, decision=decision)
     return system_prompt
 
 def get_nft_post_prompt(nft_analysis, decision):

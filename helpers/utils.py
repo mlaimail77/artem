@@ -275,7 +275,7 @@ def main():
     supabase = get_supabase_client()
     print("Successfully connected to Supabase!")
 
-    print(get_all_posts_replied_to())
+    # print(get_all_posts_replied_to())
 
 if __name__ == "__main__":
     main()

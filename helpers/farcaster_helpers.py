@@ -181,7 +181,6 @@ def post_long_cast(text, parent=None, channel_id=None):
 
     print("Fetching posts replied to")
     posts_replied_to = get_all_posts_replied_to()
-    print("Posts replied to:", posts_replied_to)
 
     # Check if we've already replied to this parent
     if parent and any(p['parent_id'] == parent for p in posts_replied_to):
