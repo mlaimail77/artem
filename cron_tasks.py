@@ -27,9 +27,19 @@ async def process_adjust_weights():
 
     Reason for update: {new_weights.reason}"""
 
-    post_long_cast(text)
+    try:
+        response = post_long_cast(text)
+        print(response)
+    except Exception as e:
+        print(f"Error posting to Farcaster: {str(e)}")
+    try:
+        refreshed_token = refresh_token()
+        post_tweet({"text": text}, refreshed_token, parent=None)
+    except Exception as e:
+        print(f"Error posting to Twitter: {str(e)}")
 
 
+# FARCASTER
 async def post_channel_casts():
     channel_options = ["cryptoart", "art", "itookaphoto", "ai-art", "superare", "plotter-art", "gen-art"]
     channel_ids = [random.choice(channel_options)]
@@ -48,7 +58,7 @@ async def post_channel_casts():
         print("Waiting 10-30 seconds")
         time.sleep(random.randint(10, 30))
 
-
+# FARCASTER
 async def post_trending_nfts():
     print("Posting trending NFTs cast")
     post_params = generate_post_params()
@@ -57,10 +67,19 @@ async def post_trending_nfts():
     trending_collections = await get_trending_collections()
     additional_context = format_collections(trending_collections, '24h')
     thought = await get_scheduled_post(post_type, post_params, previous_posts, additional_context)
-    response = post_long_cast(thought)
-    print(response)
+    try:
+        response = post_long_cast(thought)
+        print(response)
+    except Exception as e:
+        print(f"Error posting to Farcaster: {str(e)}")
+    try:
+        refreshed_token = refresh_token()
+        post_tweet({"text": thought}, refreshed_token, parent=None)
+    except Exception as e:
+        print(f"Error posting to Twitter: {str(e)}")
 
 
+# FARCASTER + TWITTER
 async def post_thought():
     print("Posting thought")
     previous_posts = get_last_n_posts(10)
@@ -81,8 +100,8 @@ async def post_thought():
         "Random Thoughts",
         "Shitpost"
     ]
-    # post_type = random.choice(POST_CLASSES)
-    post_type = POST_CLASSES[5]
+    post_type = random.choice(POST_CLASSES)
+    # post_type = POST_CLASSES[5]
     print(post_type)
 
     if post_type == "Random Thoughts":
@@ -119,6 +138,7 @@ async def post_thought():
     except Exception as e:
         print(f"Error posting to Twitter: {str(e)}")
 
+# TWITTER
 async def reply_twitter_mentions():
     print("Replying to Twitter mentions")
     refreshed_token = refresh_token()
@@ -135,9 +155,11 @@ async def reply_twitter_mentions():
                 "in_reply_to_tweet_id": str(mention['id'])
             }
         }
-        # post_tweet(payload, refreshed_token, parent=None)
-        # if scores:
-        #     store_nft_scores(scores)
+        post_tweet(payload, refreshed_token, parent=mention['id'])
+        if scores:
+            store_nft_scores(scores)
+        print("Waiting 10-30 seconds")
+        time.sleep(random.randint(10, 30))
 
 
 async def post_following_casts():
@@ -167,7 +189,14 @@ async def post_thought_about_feed():
     previous_posts = get_last_n_posts(10)
 
     thought = await get_scheduled_post("Community Response", post_params, previous_posts, additional_context)
+    try:
+        response = post_long_cast(thought)
+        print(response)
+    except Exception as e:
+        print(f"Error posting to Farcaster: {str(e)}")
+    try:
+        refreshed_token = refresh_token()
+        post_tweet({"text": thought}, refreshed_token, parent=None)
+    except Exception as e:
+        print(f"Error posting to Twitter: {str(e)}")
 
-    print(thought)
-    response = post_long_cast(thought)
-    print(response)
