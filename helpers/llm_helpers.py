@@ -51,7 +51,7 @@ def adjust_weights(weights, nft_scores):
 
 async def get_nft_post(artwork_analysis: ArtworkAnalysis):
 
-    SCORE_THRESHOLD = os.getenv('SCORE_THRESHOLD', 55)
+    SCORE_THRESHOLD = int(os.getenv('SCORE_THRESHOLD', 55))
 
     scoring = artwork_analysis.artwork_scoring
 
