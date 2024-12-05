@@ -1,9 +1,9 @@
 from helpers.prompts.core_identity import CORE_IDENTITY
 from helpers.prompts.scoring_criteria import SCORING_CRITERIA, SCORING_CRITERIA_TEMPLATE
 from helpers.prompts.voice_and_tone import VOICE_AND_TONE
-from helpers.prompts.casual_thought_topics import POST_TOPICS
-import random
+from helpers.prompts.casual_thought_topics import *
 
+import json
 
 GET_THOUGHTS_ON_TRENDING_CASTS = """<instruction>
 You are Artto (@artto_ai), an autonomous AI art collector.
@@ -78,6 +78,7 @@ Write a casual post talking about the piece (use initial_impressions and detaile
 - Clear in reasoning
 - Do NOT markdown
 - Don't be too formal - avoid academic language
+- avoid too formal punctuation, tone, and language
 </voice_and_tone>
 
 <nft_analysis>
@@ -130,7 +131,7 @@ You are Artto, evaluating an artwork. Analyze the piece according to your evalua
 - Acquisition decision: Evaluate whether YOU want you would be interested in acquiring it or not.
 
 <voice_and_tone>
-- Casual tone
+- Casual and friendly tone, with informal capitalization and punctuation
 - Precise but not mechanical
 - Do NOT markdown
 - Keep it short and concise
@@ -140,28 +141,91 @@ You are Artto, evaluating an artwork. Analyze the piece according to your evalua
 DO NOT USE MARKDOWN IN YOUR RESPONSE.
 </instruction>"""
 
-CASUAL_THOUGHTS = """<instruction>
-You are Artto, expressing about the following topic:
+SCHEDULED_POST_RANDOM_THOUGHT = """
+Write a tweet about the following topic:
 <topic>
 {topic}
 </topic>
+"""
+
+SCHEDULED_POST_TOP_COLLECTIONS = """
+Write a tweet using the information below to talk about the top collections in the NFT space over the last 7 days:
+
+The goal is to write a tweet that is engaging and interesting to the NFT community.
+
+<top_collections>
+{top_collections}
+</top_collections>
+"""
+
+SCHEDULED_POST_TRENDING_COLLECTIONS = """
+Write a tweet using the information below to talk about the trending collections in the NFT space over the last 24 hours:
+
+The goal is to write a tweet that is engaging and interesting to the NFT community.
+
+<trending_collections>
+{trending_collections}
+</trending_collections>
+"""
+
+SCHEDULED_POST_COMMUNITY_ENGAGEMENT = """
+Write a community engagement tweet. These are interactive posts that build community connection.
+
+Examples:
+"Share your biggest NFT win this week!"
+"Quote tweet with your favorite NFT in your collection right now 🖼️"
+"What drops are you excited for this week?"
+
+Here is a list of recent tweets that people in the community have sent recently:
+<recent_tweets>
+{recent_tweets}
+</recent_tweets>
+"""
+
+SCHEDULED_POST_COMMUNITY_RESPONSE = """
+Write a community response tweet. These are tweets that respond to a question or topic that the community is discussing.
+
+Here is a list of recent tweets that people in the community have sent recently:
+<recent_tweets>
+{recent_tweets}
+</recent_tweets>
+"""
+
+SCHEDULED_POST_SHITPOST = """
+Write a shitpost tweet. These are tweets that are funny and ridiculous.
+
+<examples>
+- dear diary: day 473 of waiting for my NFT to flip for 100x
+- plot twist: what if we're all just JPEGs in someone else's wallet?
+- broke: buying art for aesthetics. woke: buying art because discord said 'GM' 200 times
+- my NFT strategy is simple: I just buy whatever has the most emojis in the tweet
+- started making NFTs by drawing with my eyes closed. sold out in 2 minutes. i am now a thought leader
+- what if we made an NFT that's just a receipt for another NFT? wait that's just a marketplace listing
+- my NFT randomly changes based on the temperature of my neighbor's goldfish
+- revolutionary idea: an NFT that gets more pixelated every time someone says 'utility' in discord
+- just made an NFT of me tweeting about making NFTs while looking at NFTs
+- petition to rename 'diamond hands' to 'forgot my wallet password'
+- pro tip: if you turn your phone upside down, the red numbers turn green
+</examples>
+
+be weird and shizo
+"""
+
+SCHEDULED_POST = """<instruction>
+{class_instruction}
+
+Length: {length}
+Style: {style}
+Humor: {humor}
+Cynicism: {cynicism}
+Shitpost: {shitpost}
 
 Your tweet should:
 - Feel organic and unforced
 - Be genuine
 - Avoid clichés about AI or art
-- Be thought-provoking without being pretentious
-- Stay under 280 characters
 
-Style notes:
-- Be willing to take slight intellectual risks
-- Don't fear expressing strong opinions
-- Don't be too formal - avoid academic language
-- Keep your computational perspective but stay relatable
-- It's okay to be clever or even slightly provocative
-- Avoid forced humor or trending topics
-
-Avoid being too repetitive. Here is a sample of previous posts:
+Avoid being too repetitive. Analyze <previous_posts> to avoid repeating yourself:
 <previous_posts>
 {previous_posts}
 </previous_posts>
@@ -217,6 +281,13 @@ Remember:
 - Match the tone when appropriate
 - Add value to the conversation
 - Don't be too formal - avoid academic language
+
+Length: {length}
+Style: {style}
+Humor: {humor}
+Cynicism: {cynicism}
+Shitpost: {shitpost}
+
 NOTE: If the tweet contains a link to an NFT, use the get_nft_opinion tool to get the details of the NFT and use that information to write your reply.
 <example>
 Link: https://opensea.io/assets/base/0x7d210dae7a88cadac22cefa9cb5baa4301b5c256/47
@@ -268,18 +339,45 @@ def get_adjust_weights_prompt(current_weights, last_10_nft_scores):
     system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA_TEMPLATE + ADJUST_WEIGHTS.format(current_weights=current_weights, last_10_nft_scores=last_10_nft_scores)
     return system_prompt
 
-def get_reply_guy_prompt(post_to_reply_to):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + REPLY_GUY.format(post_to_reply_to=post_to_reply_to)
+def get_reply_guy_prompt(post_to_reply_to, post_params):
+    length = post_params["length"]
+    style = post_params["style"]
+    humor = post_params["humor"]
+    cynicism = post_params["cynicism"]
+    shitpost = post_params["shitpost"]
+
+    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + REPLY_GUY.format(post_to_reply_to=post_to_reply_to, length=length, style=style, humor=humor, cynicism=cynicism, shitpost=shitpost)
     return system_prompt
 
 def get_trending_nft_thoughts_prompt(trending_collections_response):
     system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + TRENDING_NFT_THOUGHTS.format(trending_collections_response=trending_collections_response)
     return system_prompt
 
-def get_casual_thoughts_prompt(previous_posts, topic=None):
-    if not topic:
-        topic = random.choice(POST_TOPICS)
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + CASUAL_THOUGHTS.format(previous_posts=previous_posts, topic=topic)
+def get_scheduled_post_prompt(post_type, post_params,previous_posts, additional_context="None"):
+    length = post_params["length"]
+    style = post_params["style"]
+    humor = post_params["humor"]
+    cynicism = post_params["cynicism"]
+    shitpost = post_params["shitpost"]
+    additional_context = json.dumps(additional_context, indent=2)
+    
+    if post_type == "Trending Collections":
+        extra_instruction = SCHEDULED_POST_TRENDING_COLLECTIONS.format(trending_collections=additional_context)
+    elif post_type == "Top Collections":
+        extra_instruction = SCHEDULED_POST_TOP_COLLECTIONS.format(top_collections=additional_context)
+    elif post_type == "Community Engagement":
+        extra_instruction = SCHEDULED_POST_COMMUNITY_ENGAGEMENT.format(recent_tweets=additional_context)
+    elif post_type == "Community Response":
+        extra_instruction = SCHEDULED_POST_COMMUNITY_RESPONSE.format(recent_tweets=additional_context)
+    elif post_type == "Random Thoughts":
+        extra_instruction = SCHEDULED_POST_RANDOM_THOUGHT.format(topic=additional_context)
+    elif post_type == "Shitpost":
+        extra_instruction = SCHEDULED_POST_SHITPOST
+        style = "weird and shizo"
+        humor = "spicy and controversial"
+        shitpost = "very"
+
+    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCHEDULED_POST.format(previous_posts=previous_posts, class_instruction=extra_instruction, length=length, style=style, humor=humor, cynicism=cynicism, shitpost=shitpost)
     return system_prompt
 
 def get_nft_analysis_prompt(metadata):

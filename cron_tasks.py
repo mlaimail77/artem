@@ -37,9 +37,10 @@ async def post_channel_casts():
     channel_casts = get_channel_casts(channel_ids)
     for cast in channel_casts["casts"]:
         cast_details = get_cast_details(cast)
-        reply, scores = await get_reply(cast_details)
+        post_params = generate_post_params()
+        reply, scores = await get_reply(cast_details, post_params)
         if scores:
-            store_nft_scores(*scores)
+            store_nft_scores(scores)
         react_cast('like', cast["hash"])
         print(reply)
         response = post_long_cast(reply, parent=cast["hash"])
@@ -50,16 +51,62 @@ async def post_channel_casts():
 
 async def post_trending_nfts():
     print("Posting trending NFTs cast")
+    post_params = generate_post_params()
+    previous_posts = get_last_n_posts(10)
+    post_type = "Trending Collections"
     trending_collections = await get_trending_collections()
-    trending_post = await get_trending_post(trending_collections)
-    response = post_long_cast(trending_post)
+    additional_context = format_collections(trending_collections, '24h')
+    thought = await get_scheduled_post(post_type, post_params, previous_posts, additional_context)
+    response = post_long_cast(thought)
     print(response)
 
 
 async def post_thought():
     print("Posting thought")
     previous_posts = get_last_n_posts(10)
-    thought = await get_thought(previous_posts)
+    post_params = generate_post_params()
+
+    print("Post params:")
+    print(f"Length: {post_params['length']}")
+    print(f"Style: {post_params['style']}")
+    print(f"Humor: {post_params['humor']}")
+    print(f"Cynicism: {post_params['cynicism']}")
+    print(f"Shitpost: {post_params['shitpost']}")
+
+    POST_CLASSES = [
+        "Trending Collections",
+        "Top Collections",
+        "Community Engagement",
+        "Community Response",
+        "Random Thoughts",
+        "Shitpost"
+    ]
+    # post_type = random.choice(POST_CLASSES)
+    post_type = POST_CLASSES[5]
+    print(post_type)
+
+    if post_type == "Random Thoughts":
+        additional_context = random.choice(POST_TOPICS)
+    elif post_type == "Community Engagement":
+        trending_casts = get_trending_casts(limit=10)
+        print(trending_casts)
+        additional_context = filter_trending_casts(trending_casts)
+    elif post_type == "Community Response":
+        additional_context = filter_trending_casts(get_trending_casts(limit=10))
+    elif post_type == "Trending Collections":
+        time_period = '24h'
+        chains = ['ethereum', 'base']
+        trending_collections = await get_trending_collections(time_period=time_period, chains=chains)
+        additional_context = format_collections(trending_collections, time_period)
+    elif post_type == "Top Collections":
+        time_period = '7d'
+        chains = ['ethereum', 'base']
+        top_collections = await get_top_collections(time_period=time_period, chains=chains)
+        additional_context = format_collections(top_collections, time_period)
+    elif post_type == "Shitpost":
+        additional_context = "None"
+
+    thought = await get_scheduled_post(post_type, post_params, previous_posts, additional_context)
     print(thought)
     try:
         response = post_long_cast(thought)
@@ -68,10 +115,23 @@ async def post_thought():
         print(f"Error posting to Farcaster: {str(e)}")
     try:
         refreshed_token = refresh_token()
-        post_tweet({"text": thought}, refreshed_token)
+        post_tweet({"text": thought}, refreshed_token, parent=None)
     except Exception as e:
         print(f"Error posting to Twitter: {str(e)}")
 
+async def reply_twitter_mentions():
+    print("Replying to Twitter mentions")
+    refreshed_token = refresh_token()
+    mentions = get_twitter_mentions(refreshed_token["access_token"], max_results=10)
+    for mention in mentions:
+        print(f"Replying to mention: {mention}")
+        post_params = generate_post_params()
+        reply, scores = await get_reply(mention, post_params)
+        print(f"Reply: {reply}")
+        print(f"Scores: {scores}")
+        # if scores:
+        #     store_nft_scores(scores)
+        # post_tweet({"text": reply}, refreshed_token, parent=mention["id"])
 
 
 async def post_following_casts():
@@ -79,9 +139,10 @@ async def post_following_casts():
     following_casts = get_follower_feed()
     for cast in following_casts["casts"]:
         cast_details = get_cast_details(cast)
-        reply, scores = await get_reply(cast_details)
+        post_params = generate_post_params()
+        reply, scores = await get_reply(cast_details, post_params)
         if scores:
-            store_nft_scores(*scores)
+            store_nft_scores(scores)
         react_cast('like', cast["hash"])
         print(reply)
         response = post_long_cast(reply, parent=cast["hash"])
@@ -93,14 +154,14 @@ async def post_following_casts():
 async def post_thought_about_feed():
     trending_casts = get_trending_casts()
     print("Getting trending casts")
-    filtered_casts = []
-    for cast in trending_casts["casts"]:
-        filtered_cast = {
-            "author": cast["author"]['username'],
-            "text": cast["text"]
-        }
-        filtered_casts.append(filtered_cast)
-    thought = await get_thoughts_on_trending_casts(filtered_casts)
+    filtered_casts = filter_trending_casts(trending_casts)
+    additional_context = filtered_casts
+
+    post_params = generate_post_params()
+    previous_posts = get_last_n_posts(10)
+
+    thought = await get_scheduled_post("Community Response", post_params, previous_posts, additional_context)
+
     print(thought)
     response = post_long_cast(thought)
     print(response)

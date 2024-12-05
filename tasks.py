@@ -19,6 +19,11 @@ celery_app = flask_app.extensions["celery"] #-Line 3
 
 logger = get_task_logger(__name__)
 
+
+@shared_task(ignore_result=False, name="reply_twitter_mentions")
+def sync_reply_twitter_mentions():
+    async_to_sync(reply_twitter_mentions)()
+
 @shared_task(ignore_result=False, name="refresh_twitter_token")
 def sync_refresh_twitter_token():
     refresh_twitter_token()

@@ -3,6 +3,7 @@ from helpers.llm_helpers import *
 from helpers.nft_data_helpers import *
 from helpers.farcaster_helpers import *
 from helpers.coinbase_helpers import *
+from helpers.twitter_helpers import *
 
 import logging
 
@@ -54,11 +55,25 @@ async def process_webhook(webhook_data):
         if 'image_medium_url' in metadata:
             rationale_post += f" {metadata['image_medium_url']}"
 
-        store_nft_scores(artwork_analysis, metadata["image_medium_url"], network, contract_address, token_id)
+        scores_object = {
+            "artwork_analysis": artwork_analysis,
+            "image_medium_url": metadata["image_medium_url"],
+            "chain": network,
+            "contract_address": contract_address,
+            "token_id": token_id
+        }
+        store_nft_scores(scores_object)
 
         if decision == "BURN":
             print("BURN THAT SHIT!")
-            post_long_cast(rationale_post)
+            try:
+                post_long_cast(rationale_post)
+            except Exception as e:
+                print(f"Error posting to Farcaster: {str(e)}")
+            try:
+                post_tweet({"text": rationale_post})
+            except Exception as e:
+                print(f"Error posting to Twitter: {str(e)}")
             response = transfer_nft(wallet,
                  network_id=webhook_data['network'], 
                  contract_address=contract_address, 
@@ -67,12 +82,15 @@ async def process_webhook(webhook_data):
                  token_id=token_id)
             print(response)
         else:
-            post_long_cast(rationale_post)
+            try:
+                post_long_cast(rationale_post)
+            except Exception as e:
+                print(f"Error posting to Farcaster: {str(e)}")
+            try:
+                post_tweet({"text": rationale_post})
+            except Exception as e:
+                print(f"Error posting to Twitter: {str(e)}")
             print("KEEP!")
-            
-
-        #TODO(should be a cast)
-        print("rationale_post", rationale_post)
 
         return {
             'status': 'success',
@@ -96,7 +114,8 @@ async def process_neynar_webhook(webhook_data):
     cast = data.get('data', {})
 
     cast_details = get_cast_details(cast)
-    reply, scores = await get_reply(cast_details)
+    post_params = generate_post_params()
+    reply, scores = await get_reply(cast_details, post_params)
     react_cast('like', cast["hash"])
     print(reply)
     response = post_long_cast(reply, parent=cast["hash"])

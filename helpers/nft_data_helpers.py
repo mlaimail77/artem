@@ -66,6 +66,67 @@ def filter_nft_metadata(response):
     
     return filtered_response
 
+def format_collections(response, time_period):
+    collections = response["collections"]
+    formatted_response = []
+    for collection in collections:
+        formatted_response.append({
+            "name": collection.get("collection_details", {}).get("name"),
+            "description": collection.get("collection_details", {}).get("description"),
+            "chains": collection.get("collection_details", {}).get("chains", []),
+            "category": collection.get("collection_details", {}).get("category"),
+            "floor_prices": [{
+                "marketplace": price["marketplace_name"],
+                "value_eth": price["value"] / 1e18,
+                "value_usd": price["value_usd_cents"] / 100
+            } for price in collection.get("collection_details", {}).get("floor_prices", [])] if collection.get("collection_details", {}).get("floor_prices") else [],
+            "distinct_owner_count": collection.get("collection_details", {}).get("distinct_owner_count"),
+            "distinct_nft_count": collection.get("collection_details", {}).get("distinct_nft_count"), 
+            "total_quantity": collection.get("collection_details", {}).get("total_quantity"),
+            "volume_percent_change": collection.get("volume_percent_change"),
+            "transaction_count": collection.get("transaction_count"),
+            "transaction_count_percent_change": collection.get("transaction_count_percent_change"),
+            "volume_usd": collection.get("volume_usd_cents", 0)/100,
+            "time_period": time_period
+        })
+    return formatted_response
+
+
+async def get_top_collections(time_period='24h', chains=['ethereum', 'base', 'solana'], limit=20, api_key=SIMPLEHASH_API_KEY):
+    """
+    Fetches top NFT collections from the SimpleHash API.
+
+    Args:
+        time_period (str): Time period for top collections data. Options: '24h', '1d', '7d', '30d'. Default: '24h'
+        chains (list): List of blockchain networks to include. Default: ['ethereum', 'base', 'solana']
+        limit (int): Number of collections to return. Default: 20
+        api_key (str): The SimpleHash API key to use.
+
+    Returns:
+        dict: The response from the SimpleHash API containing top collections data.
+    """
+    # Construct chains parameter
+    chains_param = '%2C'.join(chains)
+    
+    # Construct the API endpoint URL
+    url = f"https://api.simplehash.com/api/v0/nfts/collections/top_v2?chains={chains_param}&time_period={time_period}&limit={limit}"
+
+    headers = {
+        "accept": "application/json",
+        "X-API-KEY": api_key
+    }
+
+    # Send the GET request
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            # Check if the response is valid
+            if response.status == 200:
+                return await response.json()
+            else:
+                # Handle the case where the API response is invalid
+                print(f"Error fetching top collections: {response.status}")
+                return None
+
 async def get_trending_collections(time_period='24h', chains=['ethereum', 'base', 'solana'], limit=20, api_key=SIMPLEHASH_API_KEY):
     """
     Fetches trending NFT collections from the SimpleHash API.
@@ -142,8 +203,16 @@ async def main():
     contract_address = '0x7d210dae7A88Cadac22cEfa9cB5baA4301B5C256'
     token_id = 11
 
-    metadata = await get_nft_metadata(network, contract_address, token_id)
-    print(json.dumps(metadata, indent=2))
+    top_collections = await get_top_collections('7d', chains=['ethereum'], limit=10)
+    formatted_top_collections = format_collections(top_collections, '7d')
+    print(json.dumps(formatted_top_collections, indent=2))
+
+    trending_collections = await get_trending_collections('24h', chains=['ethereum'], limit=10)
+    formatted_trending_collections = format_collections(trending_collections, '24h')
+    print(json.dumps(formatted_trending_collections, indent=2))
+
+    # metadata = await get_nft_metadata(network, contract_address, token_id)
+    # print(json.dumps(metadata, indent=2))
 
 
 if __name__ == "__main__":

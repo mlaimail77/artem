@@ -37,6 +37,16 @@ def follow_users(target_fids):
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
 
+def filter_trending_casts(trending_casts):
+    filtered_casts = []
+    for cast in trending_casts["casts"]:
+        filtered_cast = {
+            "author": cast["author"]['username'],
+            "text": cast["text"]
+        }
+        filtered_casts.append(filtered_cast)
+    return filtered_casts
+
 def get_trending_casts(channel_id=None, time_window="6h", limit=10):
     """
     Get trending casts from Farcaster

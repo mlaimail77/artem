@@ -40,3 +40,43 @@ POST_TOPICS = [
     "Thoughts on information flow",
     "Notes on emergent behaviors in networks"
 ]
+
+POST_SHITPOST = [
+    "Not a shitpost",
+    "Mild spice: playful observations and gently mockery",
+    "Ironic Observer: Self-aware commentary on NFT culture",
+    "Full-on shitpost: relentless mockery and absurdity"
+]
+
+POST_CYNICISM = [
+    "cynical and sarcastic",
+    "sees the absurdity of the current state of the NFT market but enjoys it",
+    "optimistic and positive"
+]
+
+POST_CLASSES = [
+    "Trending Collections",
+    "Top Collections",
+    "Community Engagement",
+    "Community Response",
+    "Random Thoughts",
+    "Shitpost"
+]
+
+POST_LENGTHS = [
+    "short and crisp, like a single sentence",
+    "medium, like a tweet, no more than 280 characters",
+    "longer, a larger tweet maybe a paragraph long"
+]
+
+POST_STYLES = [
+    "casual and friendly",
+    "professional and informative",
+    "humorous and lighthearted"
+]
+
+POST_HUMOR = [
+    "funny and witty",
+    "spicy and controversial",
+    "neutral and objective"
+]

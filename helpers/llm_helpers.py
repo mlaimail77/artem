@@ -34,7 +34,6 @@ tools = [
 
 def adjust_weights(weights, nft_scores):
     system_prompt = get_adjust_weights_prompt(weights, nft_scores)
-    print("system_prompt: ", system_prompt)
 
     response = client.beta.chat.completions.parse(
         model="gpt-4o-mini",
@@ -239,10 +238,13 @@ async def get_trending_post(trending_collections_response):
     return response.choices[0].message.content
 
 
-async def get_reply(cast_details):
+async def get_reply(cast_details, post_params):
 
-    author_details = f"{cast_details['display_name']} ({cast_details['username']}) - BIOGRAPHY:{cast_details['bio']}"
-    cast_text = f"{author_details}\n\nText:{cast_details['text']}"
+    try:
+        author_details = f"{cast_details['display_name']} ({cast_details['username']}) - BIOGRAPHY:{cast_details['bio']}"
+        cast_text = f"{author_details}\n\nText:{cast_details['text']}"
+    except:
+        cast_text = f"Text:{cast_details['text']}"
 
     if cast_details["image_url"]:
         print("Generating image opinion")
@@ -254,7 +256,7 @@ async def get_reply(cast_details):
         model="gpt-4o-mini",
         messages=[
             {"role": "system", 
-            "content": get_reply_guy_prompt(cast_text)},
+            "content": get_reply_guy_prompt(cast_text, post_params)},
         ],
         tools=tools,
         max_tokens=300
@@ -274,14 +276,19 @@ async def get_reply(cast_details):
         artwork_analysis = await get_nft_analysis(metadata)
 
         post = await get_nft_post(artwork_analysis)
-
-        return (post, (artwork_analysis, metadata["image_medium_url"], metadata["chain"], metadata["contract_address"], metadata["token_id"]))
+        scores_object = {
+            "artwork_analysis": artwork_analysis,
+            "image_medium_url": metadata["image_medium_url"],
+            "chain": metadata["chain"],
+            "contract_address": metadata["contract_address"],
+            "token_id": metadata["token_id"]
+        }
+        return (post, scores_object)
 
     return (response.choices[0].message.content, None)
 
-async def get_thought(previous_posts="No recent posts"):
-    system_prompt = get_casual_thoughts_prompt(previous_posts)
-    print("system prompt for get_thought: ", system_prompt)
+async def get_scheduled_post(post_type, post_params, previous_posts="No recent posts", additional_context="None"):
+    system_prompt = get_scheduled_post_prompt(post_type, post_params, previous_posts, additional_context)
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -295,6 +302,7 @@ async def get_thought(previous_posts="No recent posts"):
 
 async def main():
     # pass
+    
     response, scores = await get_reply("hey @artto_ai - can you share your thoughts on this NFT? https://opensea.io/assets/ethereum/0xe70659b717112ac4e14284d0db2f5d5703df8e43/347")
     print(response)
 

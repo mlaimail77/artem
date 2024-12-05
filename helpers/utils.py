@@ -1,14 +1,33 @@
 import os
 import json
+import random
 import yaml
 from datetime import datetime
 from supabase import create_client, Client
+from helpers.prompts.casual_thought_topics import *
 
 import hashlib
 
 from dotenv import load_dotenv
 
 load_dotenv('.env.local')
+
+def generate_post_params():
+    length = random.choice(POST_LENGTHS)
+    style = random.choice(POST_STYLES)
+    humor = random.choice(POST_HUMOR)
+    cynicism = random.choice(POST_CYNICISM)
+    shitpost = random.choice(POST_SHITPOST)
+
+    post_params = {
+        "length": length,
+        "style": style,
+        "humor": humor,
+        "cynicism": cynicism,
+        "shitpost": shitpost
+    }
+
+    return post_params
 
 def get_supabase_client():
     url: str = os.getenv("SUPABASE_URL")
@@ -102,22 +121,23 @@ def get_all_posts():
     response = supabase.table("posts_created").select("*").execute()
     return response.data
 
-def store_nft_scores(artwork_analysis, image_url, network, contract_address, token_id):
+def store_nft_scores(scores_object):
     """
     Store artwork scoring and metadata in Supabase database
     
     Args:
         supabase: Supabase client instance
-        artwork_scoring: ScoringCriteria object containing artwork analysis
-        image_url: URL of the image medium
-        network: Blockchain network (e.g. 'ethereum')
-        contract_address: NFT contract address
-        token_id: NFT token ID
-        
+        scores_object: Dictionary containing artwork analysis, image URL, chain, contract address, and token ID
     Returns:
         dict: Response data from Supabase insert
     """
     response = refresh_or_get_supabase_client()
+
+    artwork_analysis = scores_object["artwork_analysis"]
+    image_url = scores_object["image_medium_url"]
+    network = scores_object["chain"]
+    contract_address = scores_object["contract_address"]
+    token_id = scores_object["token_id"]
 
     artwork_scoring = artwork_analysis.artwork_scoring
     initial_impression = artwork_analysis.initial_impression
@@ -255,7 +275,7 @@ def main():
     supabase = get_supabase_client()
     print("Successfully connected to Supabase!")
 
-    print(get_last_n_posts(n=10))
+    print(get_all_posts_replied_to())
 
 if __name__ == "__main__":
     main()
