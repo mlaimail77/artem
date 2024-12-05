@@ -105,7 +105,7 @@ def search_twitter(query, bearer_token, max_results=50):
     return response.json()
 
 def get_twitter_mentions(bearer_token, max_results=50):
-    query = "to:@artto__agent"
+    query = "@artto__agent"
     return search_twitter(query, bearer_token, max_results)
 
 

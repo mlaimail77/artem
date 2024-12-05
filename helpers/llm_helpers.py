@@ -276,12 +276,14 @@ async def get_reply(cast_details, post_params):
         artwork_analysis = await get_nft_analysis(metadata)
 
         post = await get_nft_post(artwork_analysis)
+        print(f"metadata: {metadata}")
+
         scores_object = {
             "artwork_analysis": artwork_analysis,
             "image_medium_url": metadata["image_medium_url"],
             "chain": metadata["chain"],
             "contract_address": metadata["contract_address"],
-            "token_id": metadata["token_id"]
+            "token_id": tool_input["token_id"]
         }
         return (post, scores_object)
 

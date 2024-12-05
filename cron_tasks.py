@@ -129,9 +129,15 @@ async def reply_twitter_mentions():
         reply, scores = await get_reply(mention, post_params)
         print(f"Reply: {reply}")
         print(f"Scores: {scores}")
+        payload = {
+            "text": reply,
+            "reply": {
+                "in_reply_to_tweet_id": str(mention['id'])
+            }
+        }
+        # post_tweet(payload, refreshed_token, parent=None)
         # if scores:
         #     store_nft_scores(scores)
-        # post_tweet({"text": reply}, refreshed_token, parent=mention["id"])
 
 
 async def post_following_casts():
