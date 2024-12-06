@@ -280,7 +280,7 @@ async def get_reply(cast_details, post_params):
     except:
         cast_text = f"Text:{cast_details['text']}"
 
-    if cast_details["image_url"] or cast_details["url"]:
+    if cast_details.get("image_url") or cast_details.get("url"):
         print("Generating image opinion")
         reply = await get_image_opinion(cast_details)
         return (reply, None)
