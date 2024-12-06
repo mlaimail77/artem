@@ -147,7 +147,7 @@ async def reply_twitter_mentions():
         print(mention)
         print(f"Replying to mention: {mention['text']}")
         post_params = generate_post_params()
-        reply, scores = await get_reply(mention['text'], post_params)
+        reply, scores = await get_reply(mention, post_params)
         print(f"Reply: {reply}")
         print(f"Scores: {scores}")
         payload = {

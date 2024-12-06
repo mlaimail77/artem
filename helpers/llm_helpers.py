@@ -203,8 +203,11 @@ async def get_nft_analysis(metadata):
 
 async def get_image_opinion(cast_details):
 
-    author_details = f"{cast_details['display_name']} ({cast_details['username']}) - BIOGRAPHY:{cast_details['bio']}"
-    cast_text = f"{author_details}\n\nText:{cast_details['text']}"
+    try:
+        author_details = f"{cast_details['display_name']} ({cast_details['username']}) - BIOGRAPHY:{cast_details['bio']}"
+        cast_text = f"{author_details}\n\nText:{cast_details['text']}"
+    except:
+        cast_text = f"Text:{cast_details['text']}"
 
 
     response = client.chat.completions.create(
@@ -277,7 +280,7 @@ async def get_reply(cast_details, post_params):
     except:
         cast_text = f"Text:{cast_details['text']}"
 
-    if cast_details["image_url"]:
+    if cast_details["image_url"] or cast_details["url"]:
         print("Generating image opinion")
         reply = await get_image_opinion(cast_details)
         return (reply, None)
