@@ -46,8 +46,11 @@ async def process_webhook(webhook_data):
         post_content = f"I just received token #{token_id} from {from_address}!"
         print(post_content)
 
+        print("Getting NFT metadata")
         metadata = await get_nft_metadata(network, contract_address, token_id)
+        print("Getting NFT analysis")
         artwork_analysis = await get_nft_analysis(metadata)
+        print("Getting final decision")
         final_decision = await get_final_decision(artwork_analysis, metadata, from_address)
 
         decision = final_decision.decision
