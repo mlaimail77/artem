@@ -5,7 +5,8 @@ from tasks import flask_app, add, sync_process_webhook, sync_process_neynar_webh
 
 import logging
 import os
-
+import hmac
+import hashlib
 
 from helpers.utils import *
 from helpers.llm_helpers import *
@@ -57,10 +58,36 @@ def trigger_task():
 @flask_app.route('/wallet-webhook', methods=['POST'])
 async def wallet_webhook():
     try:
-        # Get the webhook payload
+        # Get the webhook payload and signature
         webhook_data = request.get_json()
-        logger.info(f"Received webhook callback: {webhook_data}")
+        # Get signature from request headers
+        signature = request.headers.get('X-Alchemy-Signature')
+
+        # Get webhook secret from environment
+        webhook_secret = os.getenv('ALCHEMY_WEBHOOK_SECRET')
+        if not webhook_secret:
+            logger.error("Missing ALCHEMY_WEBHOOK_SECRET environment variable")
+            return jsonify({
+                'status': 'error',
+                'message': 'Server configuration error'
+            }), 500
+
+        # Calculate expected signature
+        expected_signature = hmac.new(
+            webhook_secret.encode(),
+            request.get_data(),
+            hashlib.sha256
+        ).hexdigest()
+
+        # Verify signature matches
+        if not signature or not hmac.compare_digest(signature, expected_signature):
+            logger.warning("Invalid webhook signature")
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid signature'
+            }), 401
         
+        print("Valid webhook signature")
         timestamp = datetime.now().isoformat()
         sync_process_webhook.delay(webhook_data)
 
