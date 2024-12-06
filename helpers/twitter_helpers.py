@@ -179,7 +179,7 @@ def search_twitter_images(query, bearer_token, max_results=50):
 
     # Extract media URLs from the response
     media_dict = {}
-    if 'media' in json_response['includes']:
+    if 'includes' in json_response and 'media' in json_response['includes']:
         media_dict = {media['media_key']: media.get('url', '') for media in json_response['includes']['media']}
 
     # Create tweet objects with id, text, and media URL
