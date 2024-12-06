@@ -6,6 +6,9 @@ from helpers.twitter_helpers import *
 import time
 import random
 
+from dotenv import load_dotenv
+
+load_dotenv('.env.local')
 
 def refresh_twitter_token():
     refresh_token()
@@ -150,6 +153,9 @@ async def reply_twitter_mentions():
         posts_replied_to = get_all_posts_replied_to()
         if any(p['parent_id'] == mention['id'] for p in posts_replied_to):
             print("Already replied to this parent")
+            continue
+        if mention['author_id'] == os.getenv('X_USER_ID'):
+            print("Skipping self-mention")
             continue
         try:
             reply, scores = await get_reply(mention, post_params)

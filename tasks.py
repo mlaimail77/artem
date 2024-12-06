@@ -13,6 +13,8 @@ from asgiref.sync import async_to_sync
 from cron_tasks import *
 from webhook_tasks import *
 
+import time
+
 
 flask_app = create_app()  #-Line 2
 celery_app = flask_app.extensions["celery"] #-Line 3
@@ -41,6 +43,7 @@ def sync_post_thought_about_feed():
 
 @shared_task(ignore_result=False, name="post_thought")
 def sync_post_thought():
+    time.sleep(random.randint(0, 600))
     async_to_sync(post_thought)()
 
 @shared_task(ignore_result=False, name="post_following_casts")
