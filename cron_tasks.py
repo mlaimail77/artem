@@ -151,21 +151,25 @@ async def reply_twitter_mentions():
         if any(p['parent_id'] == mention['id'] for p in posts_replied_to):
             print("Already replied to this parent")
             continue
-        reply, scores = await get_reply(mention, post_params)
-        print(f"Reply: {reply}")
-        print(f"Scores: {scores}")
-        payload = {
-            "text": reply,
-            "reply": {
-                "in_reply_to_tweet_id": str(mention['id'])
+        try:
+            reply, scores = await get_reply(mention, post_params)
+            print(f"Reply: {reply}")
+            print(f"Scores: {scores}")
+            payload = {
+                "text": reply,
+                "reply": {
+                    "in_reply_to_tweet_id": str(mention['id'])
+                }
             }
-        }
-        post_tweet(payload, refreshed_token, parent=mention['id'])
-        if scores:
-            score_calcs = get_total_score(scores["artwork_analysis"])
-            store_nft_scores(scores, score_calcs)
-        print("Waiting 10-30 seconds")
-        time.sleep(random.randint(10, 30))
+            post_tweet(payload, refreshed_token, parent=mention['id'])
+            if scores:
+                score_calcs = get_total_score(scores["artwork_analysis"])
+                store_nft_scores(scores, score_calcs)
+            print("Waiting 10-30 seconds")
+            time.sleep(random.randint(10, 30))
+        except Exception as e:
+            print(f"Error processing Twitter mention: {str(e)}")
+            continue
 
 
 async def post_following_casts():
