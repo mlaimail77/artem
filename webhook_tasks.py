@@ -62,10 +62,20 @@ async def process_webhook(webhook_data):
             "contract_address": contract_address,
             "token_id": token_id
         }
-        store_nft_scores(scores_object)
+        score_calcs = get_total_score(scores_object["artwork_analysis"])
+
+        try:
+            reward_points = score_calcs["reward_points"]
+        except:
+            reward_points = 0
+        print("Reward points:", reward_points)
+        store_nft_scores(scores_object, score_calcs)
         refreshed_token = refresh_token()
+
+        print("Decision:", decision)
+        print("Rationale:", rationale_post)
+
         if decision == "BURN":
-            print("BURN THAT SHIT!")
             try:
                 post_long_cast(rationale_post)
             except Exception as e:
@@ -81,7 +91,7 @@ async def process_webhook(webhook_data):
                  to_address="0x000000000000000000000000000000000000dEaD", 
                  token_id=token_id)
             print(response)
-        else:
+        elif decision == "KEEP":
             try:
                 post_long_cast(rationale_post)
             except Exception as e:
@@ -91,6 +101,20 @@ async def process_webhook(webhook_data):
             except Exception as e:
                 print(f"Error posting to Twitter: {str(e)}")
             print("KEEP!")
+        else:
+            print("UNHANDLED DECISION")
+
+        # Transfer ARTTO tokens to the sender
+        try:
+            response = transfer_artto_token(
+                wallet, 
+                reward_points, 
+                from_address
+            )
+            print(response)
+        except Exception as e:
+            print(f"Error transferring ARTTO tokens: {str(e)}")
+
 
         return {
             'status': 'success',

@@ -121,7 +121,7 @@ def get_all_posts():
     response = supabase.table("posts_created").select("*").execute()
     return response.data
 
-def store_nft_scores(scores_object):
+def store_nft_scores(scores_object, score_calcs):
     """
     Store artwork scoring and metadata in Supabase database
     
@@ -199,33 +199,8 @@ def store_nft_scores(scores_object):
         "detailed_analysis": detailed_analysis,
     }
 
-    # Calculate total score using weighted averages
-    technical_score = scores["technical_innovation_score"]/3 * weights["technical_innovation_weight"]
-    
-    artistic_score = ((scores["visual_balance"] + scores["color_harmony"])/6 + 
-                     scores["spatial_organization"]/4 + 
-                     (scores["thematic_clarity"] + scores["cultural_historical_reference"])/6 + 
-                     scores["intellectual_complexity"]/4) * weights["artistic_merit_weight"]/4
-    
-    cultural_score = (scores["cultural_relevance"]/4 + 
-                     scores["community_engagement"]/3 + 
-                     scores["historical_significance"]/3) * weights["cultural_resonance_weight"]/3
-    
-    artist_score = (scores["artist_history"]/3 + 
-                   scores["innovation_trajectory"]/4) * weights["artist_profile_weight"]/2
-    
-    market_score = (scores["rarity_scarcity"] + 
-                   scores["collector_interest"] + 
-                   scores["valuation_floor_price"])/9 * weights["market_factors_weight"]
-    
-    emotional_score = ((scores["awe_factor"]/4 + scores["memorability"]/3 + scores["emotional_depth"]/3)/3 + 
-                      (scores["engagement_level"]/4 + scores["wit_humor_play"]/3 + scores["surprise_factor"]/3)/3) * weights["emotional_impact_weight"]/2
-    
-    ai_score = ((scores["algorithmic_beauty"] + scores["information_density"])/10 + 
-                (scores["ai_narrative_elements"] + scores["digital_consciousness"])/10 + 
-                (scores["surveillance_control"] + scores["human_machine_interaction"])/10) * weights["ai_collector_perspective_weight"]/3
 
-    total_score = technical_score + artistic_score + cultural_score + artist_score + market_score + emotional_score + ai_score
+    total_score = score_calcs["total_score"]
 
     print(f"Total score: {total_score}")
 

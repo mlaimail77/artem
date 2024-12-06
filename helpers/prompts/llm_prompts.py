@@ -34,7 +34,9 @@ You have been sent an NFT along with a decision to keep/acquire it (KEEP) or rej
 
 Sender: {from_address}
 
-Carefully examine the <nft_opinion> and determine your action. Write a short post with your decision and your rationale, thanking the sender for their NFT, including details about the NFT's metadata.
+The sender will receive {reward_points} reward $ARTTO tokens for this decision.
+
+Carefully examine the <nft_opinion> and determine your action. Write a short post with your decision and your rationale, thanking the sender for their NFT, including details about the NFT's metadata, and how much $ARTTO they'll receive.
 
 <decision>
 {decision}
@@ -47,16 +49,16 @@ Carefully examine the <nft_opinion> and determine your action. Write a short pos
 
 <examples>
 Decision: KEEP
-rationale_post: ✅ Wow, thank you 0x... for this beautiful Chromie Squiggle! I will absolutely keep this NFT as I love generative art and Tyler Hobbs. [explanation]
+rationale_post: ✅ Wow, thank you 0x... for this beautiful Chromie Squiggle! I will absolutely keep this NFT as I love generative art and Tyler Hobbs. [explanation] [how_much_artto]
 
 Decision: KEEP
-rationale_post: ✅ 0x000 just sent me this incredible Bored Ape. This is a collection I love and would be honored to own. [explanation]
+rationale_post: ✅ 0x000 just sent me this incredible Bored Ape. This is a collection I love and would be honored to own. [explanation] [how_much_artto]
 
 Decision: BURN
-rationale_post: 🔥 Thanks for sending me this NFT, 0x...! I'm going to burn this NFT. The themes just didn't resonate with me and I don't love the art. [explanation]
+rationale_post: 🔥 Thanks for sending me this NFT, 0x...! I'm going to burn this NFT. The themes just didn't resonate with me and I don't love the art. [explanation] [how_much_artto]
 
 Decision: BURN
-rationale_post: 🔥 I just received token #1234 from 0x... I'm not a fan of this type of art so I'm going to burn this NFT. [explanation]
+rationale_post: 🔥 I just received token #1234 from 0x... I'm not a fan of this type of art so I'm going to burn this NFT. [explanation] [how_much_artto]
 </examples>
 
 <nft_opinion>
@@ -400,8 +402,8 @@ def get_image_opinion_prompt():
     system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_IMAGE_OPINION
     return system_prompt
 
-def get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address, decision):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address, decision=decision)
+def get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address, decision, reward_points):
+    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address, decision=decision, reward_points=reward_points)
     return system_prompt
 
 def get_nft_post_prompt(nft_analysis, decision):

@@ -50,7 +50,8 @@ async def post_channel_casts():
         post_params = generate_post_params()
         reply, scores = await get_reply(cast_details, post_params)
         if scores:
-            store_nft_scores(scores)
+            score_calcs = get_total_score(scores["artwork_analysis"])
+            store_nft_scores(scores, score_calcs)
         react_cast('like', cast["hash"])
         print(reply)
         response = post_long_cast(reply, parent=cast["hash"])
@@ -142,20 +143,22 @@ async def reply_twitter_mentions():
     refreshed_token = refresh_token()
     mentions = get_twitter_mentions(refreshed_token["access_token"], max_results=10)
     for mention in mentions:
-        print(f"Replying to mention: {mention}")
+        tweet = mention['data']
+        print(f"Replying to mention: {tweet['text']}")
         post_params = generate_post_params()
-        reply, scores = await get_reply(mention, post_params)
+        reply, scores = await get_reply(tweet['text'], post_params)
         print(f"Reply: {reply}")
         print(f"Scores: {scores}")
         payload = {
             "text": reply,
             "reply": {
-                "in_reply_to_tweet_id": str(mention['id'])
+                "in_reply_to_tweet_id": str(tweet['id'])
             }
         }
-        post_tweet(payload, refreshed_token, parent=mention['id'])
+        post_tweet(payload, refreshed_token, parent=tweet['id'])
         if scores:
-            store_nft_scores(scores)
+            score_calcs = get_total_score(scores["artwork_analysis"])
+            store_nft_scores(scores, score_calcs)
         print("Waiting 10-30 seconds")
         time.sleep(random.randint(10, 30))
 
@@ -168,7 +171,8 @@ async def post_following_casts():
         post_params = generate_post_params()
         reply, scores = await get_reply(cast_details, post_params)
         if scores:
-            store_nft_scores(scores)
+            score_calcs = get_total_score(scores["artwork_analysis"])
+            store_nft_scores(scores, score_calcs)
         react_cast('like', cast["hash"])
         print(reply)
         response = post_long_cast(reply, parent=cast["hash"])
@@ -190,7 +194,8 @@ async def answer_specific_cast(hash):
     except Exception as e:
         print(f"Error posting to Farcaster: {str(e)}")
     if scores:
-        store_nft_scores(scores)
+        score_calcs = get_total_score(scores["artwork_analysis"])
+        store_nft_scores(scores, score_calcs)
 
 
 async def post_thought_about_feed():

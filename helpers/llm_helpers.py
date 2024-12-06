@@ -104,17 +104,27 @@ def get_total_score(artwork_analysis: ArtworkAnalysis):
 
     decision = "NOT ACQUIRE" if total_score < SCORE_THRESHOLD else "ACQUIRE"
     
+    if total_score > SCORE_THRESHOLD + 10:
+        multiplier = 2
+    elif total_score > SCORE_THRESHOLD:
+        multiplier = 1.5
+    else:
+        multiplier = 1
+
     print("score_threshold: ", SCORE_THRESHOLD)
     print("score: ", total_score/total_weights)
     print("total_score: ", total_score)
     print("total_weights: ", total_weights)
     print("decision: ", decision)
+    print("multiplier: ", multiplier)
 
     response = {
         "total_score": total_score,
         "total_score_normalized": total_score/total_weights,
         "total_weights": total_weights,
-        "decision": decision
+        "decision": decision,
+        "multiplier": multiplier,
+        "reward_points": total_score * multiplier
     }
 
     return response
@@ -123,7 +133,8 @@ async def get_nft_post(artwork_analysis: ArtworkAnalysis):
     response = get_total_score(artwork_analysis)
 
     decision = response["decision"]
-    
+
+
     system_prompt = get_nft_post_prompt(artwork_analysis, decision)
 
     response = client.chat.completions.create(
@@ -138,8 +149,9 @@ async def get_nft_post(artwork_analysis: ArtworkAnalysis):
 async def get_final_decision(nft_opinion, nft_metadata, from_address):
     response = get_total_score(nft_opinion)
     decision = response["decision"]
+    reward_points = response["reward_points"]
 
-    system_prompt = get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address, decision)
+    system_prompt = get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address, decision, reward_points)
 
     response = client.beta.chat.completions.parse(
         model="gpt-4o-mini",

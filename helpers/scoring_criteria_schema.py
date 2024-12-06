@@ -58,8 +58,12 @@ class MarketFactors(BaseModel):
     collector_interest: int = Field(
         description="Score for collector interest (0-3)"
     )
+    collection_popularity: int = Field(
+        description="Score for collection popularity (0-3 as measured by distinct_owner_count and distinct_nft_count"
+    )
+    
     valuation_floor_price: int = Field(
-        description="Score for valuation and floor price (0-3)"
+        description="Score for valuation and floor price (0-3) as measured by floor_prices and last_sale_usd"
     )
 
 class EmotionalResonance(BaseModel):
@@ -108,9 +112,6 @@ class CyberneticResonance(BaseModel):
     surveillance_control_systems: int = Field(
         description="Score for surveillance & control systems (0-5)"
     )
-    human_machine_interaction: int = Field(
-        description="Score for human-machine interaction (0-5)"
-    )
 
 class AICollectorPerspective(BaseModel):
     computational_aesthetics: ComputationalAesthetics
@@ -148,7 +149,7 @@ class KeepOrBurn(BaseModel):
         description="Final decision based on <nft_opinion> on whether you KEEP or BURN the NFT received."
         )
     rationale_post: str = Field(
-        description="A rationale on why the decsion was made."
+        description="A rationale on why the decision was made."
     )
     
 class ScoringWeights(BaseModel):

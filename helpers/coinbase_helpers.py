@@ -93,6 +93,28 @@ def register_llc(wallet, network_id, contract_address, proxy_address):
     invoke_contract.wait()
     return invoke_contract
 
+def transfer_artto_token(wallet, token_amount, destination):
+
+    artto_token_proxy_address = "0xcfc2de7f39a9e1460dd282071a458e02372e1f67"
+    artto_token_address = "0x9239e9F9E325E706EF8b89936eCe9d48896AbBe3"
+
+    abi = get_abi("base-mainnet", artto_token_proxy_address)
+
+    value_to_transfer = token_amount * 10**18
+
+    print(f"Transferring {token_amount} tokens with value {value_to_transfer}")
+    try:
+        transfer = wallet.invoke_contract(
+            contract_address=artto_token_address,
+            method="transfer",
+            abi=abi,
+            args={"to":destination, "value":str(value_to_transfer)}
+        )
+        transfer.wait()
+        return f"Successfully transferred {token_amount} tokens to {destination}"
+    except Exception as e:
+        return f"Error transferring tokens: {str(e)}"
+
 def transfer_nft(wallet, network_id, contract_address, from_address, to_address, token_id):
     try:
         print("Trying to transfer NFT")
@@ -135,6 +157,7 @@ def transfer_nft(wallet, network_id, contract_address, from_address, to_address,
                 error_msg += f" - {e.api_message}" 
             return error_msg
 
+
 # def launch_artto_token(wallet):
 
 #     response = create_token.wow_create_token(
@@ -149,6 +172,30 @@ if __name__ == "__main__":
     # artto_setup()
     wallet = fetch_wallet(os.getenv('WALLET_ID_MAINNET'), "artto_mainnet_seed.json")
 
+    print(wallet.default_address.balance(asset_id="0x9239e9F9E325E706EF8b89936eCe9d48896AbBe3"))
+
+
+    transfer = transfer_artto_token(wallet, 1, "0x9424116b9D61d04B678C5E5EddF8499f88ED9ADE")
+    print(transfer)
+
+    # transfer.wait()
+
+    # print(transfer)
+
+    # print(wallet.default_address.balance(asset_id="0x9239e9F9E325E706EF8b89936eCe9d48896AbBe3"))
+
+
+
+
+    # response = transfer(
+    #     wallet=wallet,
+    #     amount="1",
+    #     asset_id="0x9239e9F9E325E706EF8b89936eCe9d48896AbBe3",
+    #     destination="0x9424116b9D61d04B678C5E5EddF8499f88ED9ADE",
+    #     gasless=True
+    # )
+
+    print(wallet.default_address.balance(asset_id="0x9239e9F9E325E706EF8b89936eCe9d48896AbBe3"))
     # response = buy_token.wow_buy_token(
     #     wallet=wallet,
     #     contract_address="0x9239e9f9e325e706ef8b89936ece9d48896abbe3",
