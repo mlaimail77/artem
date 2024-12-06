@@ -141,21 +141,21 @@ async def post_thought():
 async def reply_twitter_mentions():
     print("Replying to Twitter mentions")
     refreshed_token = refresh_token()
-    mentions = get_twitter_mentions(refreshed_token["access_token"], max_results=10)
-    for mention in mentions:
-        tweet = mention['data']
-        print(f"Replying to mention: {tweet['text']}")
+    tweets = search_twitter_images("@artto_ai -is:retweet", refreshed_token["access_token"], 10)
+    for mention in tweets:
+        print(mention)
+        print(f"Replying to mention: {mention['text']}")
         post_params = generate_post_params()
-        reply, scores = await get_reply(tweet['text'], post_params)
+        reply, scores = await get_reply(mention['text'], post_params)
         print(f"Reply: {reply}")
         print(f"Scores: {scores}")
         payload = {
             "text": reply,
             "reply": {
-                "in_reply_to_tweet_id": str(tweet['id'])
+                "in_reply_to_tweet_id": str(mention['id'])
             }
         }
-        post_tweet(payload, refreshed_token, parent=tweet['id'])
+        post_tweet(payload, refreshed_token, parent=mention['id'])
         if scores:
             score_calcs = get_total_score(scores["artwork_analysis"])
             store_nft_scores(scores, score_calcs)
