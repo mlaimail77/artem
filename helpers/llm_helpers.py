@@ -102,6 +102,10 @@ def get_total_score(artwork_analysis: ArtworkAnalysis):
         scoring.ai_collector_perspective_weight
     )
 
+    if total_score < 1:
+        total_score*=100
+        total_weights*=100
+        
     decision = "NOT ACQUIRE" if total_score < SCORE_THRESHOLD else "ACQUIRE"
     
     if total_score > SCORE_THRESHOLD + 10:

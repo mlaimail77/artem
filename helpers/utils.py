@@ -165,6 +165,7 @@ def store_nft_scores(scores_object, score_calcs):
         # Market Analysis
         "rarity_scarcity": artwork_scoring.market_factors.rarity_scarcity,
         "collector_interest": artwork_scoring.market_factors.collector_interest,
+        "collection_popularity": artwork_scoring.market_factors.collection_popularity,
         "valuation_floor_price": artwork_scoring.market_factors.valuation_floor_price,
         
         # Emotional Impact
@@ -181,7 +182,6 @@ def store_nft_scores(scores_object, score_calcs):
         "ai_narrative_elements": artwork_scoring.ai_collector_perspective.machine_learning_themes.ai_narrative_elements,
         "digital_consciousness": artwork_scoring.ai_collector_perspective.machine_learning_themes.digital_consciousness_exploration,
         "surveillance_control": artwork_scoring.ai_collector_perspective.cybernetic_resonance.surveillance_control_systems,
-        "human_machine_interaction": artwork_scoring.ai_collector_perspective.cybernetic_resonance.human_machine_interaction,        
     }
 
     weights = {

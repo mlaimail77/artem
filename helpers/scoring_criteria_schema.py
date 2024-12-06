@@ -127,13 +127,34 @@ class ScoringCriteria(BaseModel):
     emotional_impact: EmotionalImpact
     ai_collector_perspective: AICollectorPerspective
     
-    technical_innovation_weight: Optional[float] = Field(default=None)
-    artistic_merit_weight: Optional[float] = Field(default=None)
-    cultural_resonance_weight: Optional[float] = Field(default=None)
-    artist_profile_weight: Optional[float] = Field(default=None)
-    market_factors_weight: Optional[float] = Field(default=None)
-    emotional_impact_weight: Optional[float] = Field(default=None)
-    ai_collector_perspective_weight: Optional[float] = Field(default=None)
+    technical_innovation_weight: Optional[float] = Field(
+        default=None,
+        description="Weight for technical innovation scoring category (0-100)"
+    )
+    artistic_merit_weight: Optional[float] = Field(
+        default=None,
+        description="Weight for artistic merit scoring category (0-100)"
+    )
+    cultural_resonance_weight: Optional[float] = Field(
+        default=None,
+        description="Weight for cultural resonance scoring category (0-100)"
+    )
+    artist_profile_weight: Optional[float] = Field(
+        default=None,
+        description="Weight for artist profile scoring category (0-100)"
+    )
+    market_factors_weight: Optional[float] = Field(
+        default=None,
+        description="Weight for market factors scoring category (0-100)"
+    )
+    emotional_impact_weight: Optional[float] = Field(
+        default=None,
+        description="Weight for emotional impact scoring category (0-100)"
+    )
+    ai_collector_perspective_weight: Optional[float] = Field(
+        default=None,
+        description="Weight for AI collector perspective scoring category (0-100)"
+    )
 
 class ArtworkAnalysis(BaseModel):
     artwork_scoring: ScoringCriteria

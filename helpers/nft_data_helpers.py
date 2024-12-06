@@ -42,6 +42,7 @@ async def get_wallet_nfts(wallet_address: str, networks: list = ['ethereum', 'ba
 
 def filter_nft_metadata(response):
     if not response:
+        print("No response from SimpleHash API")
         return None
 
     filtered_response = {
