@@ -154,7 +154,7 @@ async def reply_twitter_mentions():
         if any(p['parent_id'] == mention['id'] for p in posts_replied_to):
             print("Already replied to this parent")
             continue
-        if mention['author_id'] == os.getenv('X_USER_ID'):
+        if mention.get('author_id', None) == os.getenv('X_USER_ID'):
             print("Skipping self-mention")
             continue
         try:

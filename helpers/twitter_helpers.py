@@ -147,7 +147,8 @@ def search_twitter_images(query, bearer_token, max_results=50):
             tweet_obj = {
                 'id': tweet['id'],
                 'text': tweet['text'],
-                'url': media_url
+                'url': media_url,
+                'author_id': tweet.get('author_id', None)
             }
             tweets.append(tweet_obj)
 
