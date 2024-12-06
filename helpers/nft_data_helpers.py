@@ -198,7 +198,6 @@ async def get_nft_metadata(network, contract_address, token_id, api_key=SIMPLEHA
             # Check if the response is valid
             if response.status == 200:
                 response_data = await response.json()
-                print(json.dumps(response_data, indent=8))
                 return filter_nft_metadata(response_data)
             else:
                 # Handle the case where the API response is invalid

@@ -72,8 +72,9 @@ def get_total_score(artwork_analysis: ArtworkAnalysis):
         (
             scoring.market_factors.rarity_scarcity +
             scoring.market_factors.collector_interest +
+            scoring.market_factors.collection_popularity +
             scoring.market_factors.valuation_floor_price
-        ) / 9 * scoring.market_factors_weight +
+        ) / 12 * scoring.market_factors_weight +
         (
             (scoring.emotional_impact.emotional_resonance.awe_factor / 4 +
             scoring.emotional_impact.emotional_resonance.memorability / 3 +
@@ -87,8 +88,7 @@ def get_total_score(artwork_analysis: ArtworkAnalysis):
             scoring.ai_collector_perspective.computational_aesthetics.information_density) / 10 +
             (scoring.ai_collector_perspective.machine_learning_themes.ai_narrative_elements +
             scoring.ai_collector_perspective.machine_learning_themes.digital_consciousness_exploration) / 10 +
-            (scoring.ai_collector_perspective.cybernetic_resonance.surveillance_control_systems +
-            scoring.ai_collector_perspective.cybernetic_resonance.human_machine_interaction) / 10
+            (scoring.ai_collector_perspective.cybernetic_resonance.surveillance_control_systems) / 5
         ) * scoring.ai_collector_perspective_weight / 3
     )
 
