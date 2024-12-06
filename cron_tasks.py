@@ -142,6 +142,7 @@ async def reply_twitter_mentions():
     print("Replying to Twitter mentions")
     refreshed_token = refresh_token()
     tweets = search_twitter_images("@artto_ai -is:retweet", refreshed_token["access_token"], 10)
+    print(tweets)
     for mention in tweets:
         print(mention)
         print(f"Replying to mention: {mention['text']}")
