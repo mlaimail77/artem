@@ -50,7 +50,16 @@ async def process_webhook(webhook_data):
         print(post_content)
 
         print("Getting NFT metadata")
-        metadata = await get_nft_metadata(network, contract_address, token_id)
+        print(network, contract_address, token_id)
+
+        try:
+            metadata = await get_nft_metadata(network, contract_address, token_id)
+        except Exception as e:
+            print(f"Error getting NFT metadata: {str(e)}")
+            return {
+                'status': 'error',
+                'error': str(e)
+            }
         print("Getting NFT analysis")
         artwork_analysis = await get_nft_analysis(metadata)
         print("Getting final decision")
