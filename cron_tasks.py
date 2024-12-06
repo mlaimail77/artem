@@ -147,6 +147,10 @@ async def reply_twitter_mentions():
         print(mention)
         print(f"Replying to mention: {mention['text']}")
         post_params = generate_post_params()
+        posts_replied_to = get_all_posts_replied_to()
+        if any(p['parent_id'] == mention['id'] for p in posts_replied_to):
+            print("Already replied to this parent")
+            continue
         reply, scores = await get_reply(mention, post_params)
         print(f"Reply: {reply}")
         print(f"Scores: {scores}")

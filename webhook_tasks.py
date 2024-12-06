@@ -139,7 +139,14 @@ async def process_neynar_webhook(webhook_data):
 
     cast_details = get_cast_details(cast)
     post_params = generate_post_params()
+    posts_replied_to = get_all_posts_replied_to()
+    if any(p['parent_id'] == cast["hash"] for p in posts_replied_to):
+        print("Already replied to this parent")
+        return
     reply, scores = await get_reply(cast_details, post_params)
     react_cast('like', cast["hash"])
     print(reply)
     response = post_long_cast(reply, parent=cast["hash"])
+    if scores:
+        score_calcs = get_total_score(scores["artwork_analysis"])
+        store_nft_scores(scores, score_calcs)
