@@ -135,15 +135,15 @@ def transfer_nft(wallet, network_id, contract_address, from_address, to_address,
                 error_msg += f" - {e.api_message}" 
             return error_msg
 
-def launch_artto_token(wallet):
+# def launch_artto_token(wallet):
 
-    response = create_token.wow_create_token(
-        wallet=wallet,
-        name="Artto AI",
-        symbol="ARTTO",
-        token_uri="https://brown-mushy-crayfish-236.mypinata.cloud/ipfs/bafkreifkftdybmwgfaefsn4zjp4dakplb4wxnzobduwhxa4fhbzlisi4pq"
-    )
-    return response
+#     response = create_token.wow_create_token(
+#         wallet=wallet,
+#         name="Artto AI",
+#         symbol="ARTTO",
+#         token_uri="https://brown-mushy-crayfish-236.mypinata.cloud/ipfs/bafkreifkftdybmwgfaefsn4zjp4dakplb4wxnzobduwhxa4fhbzlisi4pq"
+#     )
+#     return response
 
 if __name__ == "__main__":
     # artto_setup()
