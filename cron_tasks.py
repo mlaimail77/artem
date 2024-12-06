@@ -185,7 +185,7 @@ async def answer_specific_cast(hash):
     print(reply)
     react_cast('like', cast["hash"])
     try:
-        response = post_long_cast(reply)
+        response = post_long_cast(reply, parent=cast["hash"])
         print(response)
     except Exception as e:
         print(f"Error posting to Farcaster: {str(e)}")
