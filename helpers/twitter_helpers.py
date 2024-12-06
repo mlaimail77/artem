@@ -113,7 +113,7 @@ def search_twitter_images(query, bearer_token, max_results=50):
     search_url = "https://api.twitter.com/2/tweets/search/recent"
     query_params = {
         'query': query,
-        'tweet.fields': 'author_id',
+        'tweet.fields': 'author_id,entities',
         'expansions': 'attachments.media_keys',
         'media.fields': 'preview_image_url,url,type',
         'max_results': max_results
@@ -144,9 +144,13 @@ def search_twitter_images(query, bearer_token, max_results=50):
             if 'attachments' in tweet and 'media_keys' in tweet['attachments']:
                 media_url = media_dict.get(tweet['attachments']['media_keys'][0], '')
 
+            tweet_text = tweet['text']
+            if 'entities' in tweet and 'urls' in tweet['entities'] and len(tweet['entities']['urls']) > 0:
+                tweet_text += " URL: " + tweet['entities']['urls'][0]['expanded_url']
+
             tweet_obj = {
                 'id': tweet['id'],
-                'text': tweet['text'],
+                'text': tweet_text,
                 'url': media_url,
                 'author_id': tweet.get('author_id', None)
             }
