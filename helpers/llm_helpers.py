@@ -268,7 +268,7 @@ async def get_reply(cast_details, post_params):
     if cast_details["image_url"]:
         print("Generating image opinion")
         reply = await get_image_opinion(cast_details)
-        return {"reply": reply, "scores": None}
+        return (reply, None)
 
     print("Generating reply to text-only cast")
     response = client.chat.completions.create(

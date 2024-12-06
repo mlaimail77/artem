@@ -101,8 +101,6 @@ async def post_thought():
         "Shitpost"
     ]
     post_type = random.choice(POST_CLASSES)
-    # post_type = POST_CLASSES[5]
-    print(post_type)
 
     if post_type == "Random Thoughts":
         additional_context = random.choice(POST_TOPICS)
@@ -177,6 +175,22 @@ async def post_following_casts():
         print(response)
         print("Waiting 10-30 seconds")
         time.sleep(random.randint(10, 30))
+
+async def answer_specific_cast(hash):
+    cast = get_casts(hash)['cast']
+    print(cast)
+    cast_details = get_cast_details(cast)
+    post_params = generate_post_params()
+    reply, scores = await get_reply(cast_details, post_params)
+    print(reply)
+    react_cast('like', cast["hash"])
+    try:
+        response = post_long_cast(reply)
+        print(response)
+    except Exception as e:
+        print(f"Error posting to Farcaster: {str(e)}")
+    if scores:
+        store_nft_scores(scores)
 
 
 async def post_thought_about_feed():

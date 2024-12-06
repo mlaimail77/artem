@@ -19,6 +19,9 @@ celery_app = flask_app.extensions["celery"] #-Line 3
 
 logger = get_task_logger(__name__)
 
+@shared_task(ignore_result=False, name="answer_specific_cast")
+def sync_answer_specific_cast(hash):
+    async_to_sync(answer_specific_cast)(hash)
 
 @shared_task(ignore_result=False, name="reply_twitter_mentions")
 def sync_reply_twitter_mentions():
