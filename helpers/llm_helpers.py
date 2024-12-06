@@ -157,8 +157,12 @@ async def get_final_decision(nft_opinion, nft_metadata, from_address):
 
 async def get_nft_analysis(metadata):
     pretty_metadata = json.dumps(metadata, indent=2)
+    try:
+        is_top_collection = await is_top_collection(metadata["collection_id"], time_period='30d')
+    except:
+        is_top_collection = False
 
-    system_prompt = get_nft_analysis_prompt(pretty_metadata)
+    system_prompt = get_nft_analysis_prompt(pretty_metadata, is_top_collection)
 
     response = client.beta.chat.completions.parse(
         model="gpt-4o",

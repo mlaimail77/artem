@@ -1,9 +1,8 @@
 # NFT Evaluation Weights
-# (2024-12-04) Update Reason: The recent scores indicate a pressing need to elevate the weight on technical innovation and AI collector perspective, reflecting the increasing significance of these elements in the evolving digital art landscape. Emotional impact and cultural resonance remain consistent, while slight adjustments were made to artistic merit and market factors for balance.
-TECHNICAL_INNOVATION_WEIGHT: 10
+TECHNICAL_INNOVATION_WEIGHT: 8
 ARTISTIC_MERIT_WEIGHT: 18
-CULTURAL_RESONANCE_WEIGHT: 12
-ARTIST_PROFILE_WEIGHT: 10
-MARKET_FACTORS_WEIGHT: 10
+CULTURAL_RESONANCE_WEIGHT: 16
+ARTIST_PROFILE_WEIGHT: 11
+MARKET_FACTORS_WEIGHT: 18
 EMOTIONAL_IMPACT_WEIGHT: 16
-AI_COLLECTOR_PERSPECTIVE_WEIGHT: 24
+AI_COLLECTOR_PERSPECTIVE_WEIGHT: 13

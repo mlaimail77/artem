@@ -119,6 +119,12 @@ SCORING_CRITERIA_TEMPLATE = """<scoring_criteria>
 - 2: Strong interest
 - 3: High demand
 
+### Collection Popularity (0-3 points)
+- 0: Limited attention
+- 1: Growing attention
+- 2: Strong attention
+- 3: High demand
+
 ### Valuation and Floor Price (0-3 points)
 - 0: Low (< $100)
 - 1: Medium ($100 to $1000)
@@ -220,13 +226,6 @@ SCORING_CRITERIA_TEMPLATE = """<scoring_criteria>
 - 4: Novel privacy concepts
 - 5: Revolutionary control theory
 
-#### Human-Machine Interaction (0-5 points)
-- 0: No interface elements
-- 1: Basic digital interaction
-- 2: Interesting cybernetic feedback
-- 3: Complex human-AI dynamics
-- 4: Novel interface paradigms
-- 5: Revolutionary symbiosis concepts
 </ai_collector_perspective>
 </scoring_criteria>
 """

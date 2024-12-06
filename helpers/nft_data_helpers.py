@@ -45,23 +45,28 @@ def filter_nft_metadata(response):
         return None
 
     filtered_response = {
-        'nft_id': response['nft_id'],
-        'chain': response['chain'],
-        'contract_address': response['contract_address'],
-        'name': response['name'],
-        'description': response['description'],
-        'image_medium_url': response['previews']['image_medium_url'],
-        'contract': response['contract'],
-        'collection_name': response['collection']['name'],
-        'collection_slug': response['collection']['collection_id'],
-        'collection_description': response['collection']['description'],
-        'distinct_owner_count': response['collection']['distinct_owner_count'],
-        'distinct_nft_count': response['collection']['distinct_nft_count'], 
-        'total_quantity': response['collection']['total_quantity'],
-        'last_sale': response['last_sale'],
-        'first_created': response['first_created'],
-        'rarity': response['rarity'],
-        'attributes': response['extra_metadata']['attributes']
+        'nft_id': response.get('nft_id'),
+        'chain': response.get('chain'),
+        'contract_address': response.get('contract_address'),
+        'name': response.get('name'),
+        'description': response.get('description'),
+        'image_medium_url': response.get('previews', {}).get('image_medium_url'),
+        'contract': response.get('contract'),
+        'collection_name': response.get('collection', {}).get('name'),
+        'collection_id': response.get('collection', {}).get('collection_id'),
+        'floor_prices': [{
+            'marketplace': price.get('marketplace_name'),
+            'value_eth': price.get('value', 0) / 1e18,
+            'value_usd': price.get('value_usd_cents', 0) / 100
+        } for price in response.get('collection', {}).get('floor_prices', [])] if response.get('collection', {}).get('floor_prices') else [],
+        'collection_description': response.get('collection', {}).get('description'),
+        'distinct_owner_count': response.get('collection', {}).get('distinct_owner_count'),
+        'distinct_nft_count': response.get('collection', {}).get('distinct_nft_count'),
+        'total_quantity': response.get('collection', {}).get('total_quantity'),
+        'last_sale_usd': response.get('last_sale', {}).get('unit_price_usd_cents', 0) / 100,
+        'first_created': response.get('first_created'),
+        'rarity': response.get('rarity'),
+        'attributes': response.get('extra_metadata', {}).get('attributes')
     }
     
     return filtered_response
@@ -91,6 +96,10 @@ def format_collections(response, time_period):
         })
     return formatted_response
 
+
+async def is_top_collection(collection_id, time_period='30d'):
+    top_collections = await get_top_collections(time_period=time_period, chains=['ethereum', 'base'], limit=100)
+    return collection_id in [collection['collection_id'] for collection in top_collections['collections']]
 
 async def get_top_collections(time_period='24h', chains=['ethereum', 'base', 'solana'], limit=20, api_key=SIMPLEHASH_API_KEY):
     """
@@ -189,7 +198,7 @@ async def get_nft_metadata(network, contract_address, token_id, api_key=SIMPLEHA
             # Check if the response is valid
             if response.status == 200:
                 response_data = await response.json()
-                print(response_data)
+                print(json.dumps(response_data, indent=8))
                 return filter_nft_metadata(response_data)
             else:
                 # Handle the case where the API response is invalid
@@ -199,17 +208,30 @@ async def get_nft_metadata(network, contract_address, token_id, api_key=SIMPLEHA
 
 async def main():
     # Load environment variables from .env.local
-    network = 'base'
-    contract_address = '0x7d210dae7A88Cadac22cEfa9cB5baA4301B5C256'
+    network = 'ethereum'
+    contract_address = '0x059EDD72Cd353dF5106D2B9cC5ab83a52287aC3a'
     token_id = 11
 
-    top_collections = await get_top_collections('7d', chains=['ethereum'], limit=10)
-    formatted_top_collections = format_collections(top_collections, '7d')
-    print(json.dumps(formatted_top_collections, indent=2))
+    top_collection = await is_top_collection('6dbbb898be7ee3c05af90199fefce18b', time_period='30d')
+    print(top_collection)
 
-    trending_collections = await get_trending_collections('24h', chains=['ethereum'], limit=10)
-    formatted_trending_collections = format_collections(trending_collections, '24h')
-    print(json.dumps(formatted_trending_collections, indent=2))
+    # top_collections = await get_top_collections('30d', chains=['ethereum'], limit=100)
+    # formatted_top_collections = format_collections(top_collections, '30d')
+    # print(json.dumps(formatted_top_collections, indent=2))
+
+    # nft_metadata = await get_nft_metadata(network, contract_address, token_id)
+    # print("NFT Metadata:")
+    # print(json.dumps(nft_metadata, indent=8))
+    
+
+
+    # top_collections = await get_top_collections('7d', chains=['ethereum'], limit=10)
+    # formatted_top_collections = format_collections(top_collections, '7d')
+    # print(json.dumps(formatted_top_collections, indent=2))
+
+    # trending_collections = await get_trending_collections('24h', chains=['ethereum'], limit=10)
+    # formatted_trending_collections = format_collections(trending_collections, '24h')
+    # print(json.dumps(formatted_trending_collections, indent=2))
 
     # metadata = await get_nft_metadata(network, contract_address, token_id)
     # print(json.dumps(metadata, indent=2))

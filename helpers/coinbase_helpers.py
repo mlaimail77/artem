@@ -3,15 +3,7 @@ import os
 from cdp import *
 
 # # Zora WOW Token Actions
-# from cdp_agentkit_core.actions.wow.create_token import *
-# from cdp_agentkit_core.actions.wow.buy_token import *
-# from cdp_agentkit_core.actions.wow.sell_token import *
-
-# # Core actions
-# from cdp_agentkit_core.actions.deploy_token import *
-# from cdp_agentkit_core.actions.register_basename import *
-# from cdp_agentkit_core.actions.trade import *
-# from cdp_agentkit_core.actions.transfer import *
+from cdp_agentkit_core.actions.wow import create_token, buy_token
 
 
 from dotenv import load_dotenv
@@ -143,17 +135,50 @@ def transfer_nft(wallet, network_id, contract_address, from_address, to_address,
                 error_msg += f" - {e.api_message}" 
             return error_msg
 
+def launch_artto_token(wallet):
+
+    response = create_token.wow_create_token(
+        wallet=wallet,
+        name="Artto AI",
+        symbol="ARTTO",
+        token_uri="https://brown-mushy-crayfish-236.mypinata.cloud/ipfs/bafkreifkftdybmwgfaefsn4zjp4dakplb4wxnzobduwhxa4fhbzlisi4pq"
+    )
+    return response
 
 if __name__ == "__main__":
     # artto_setup()
     wallet = fetch_wallet(os.getenv('WALLET_ID_MAINNET'), "artto_mainnet_seed.json")
 
-    response = register_llc(wallet=wallet,
-                 network_id="base-mainnet", 
-                 contract_address="0x0d3BC598F0F75590CD75D60D40e0510F515EBE51", 
-                 proxy_address="0x66ef60f480A269F5e1e358699DD774180B2Fa8eE")
-    
+    response = buy_token.wow_buy_token(
+        wallet=wallet,
+        contract_address="0x9239e9f9e325e706ef8b89936ece9d48896abbe3",
+        amount_eth_in_wei=500000000000000000
+    )
     print(response)
+
+    
+    # response = launch_artto_token(wallet)
+    # print(response)
+
+
+
+    # abi = get_abi("base-mainnet", "0xcfc2de7f39a9e1460dd282071a458e02372e1f67")
+    # invoke_contract = wallet.invoke_contract(
+    #     contract_address="0x1c197beEE1Dea08e40B49a0DF6926d0C4dBb0aCf",
+    #     method="_tokenURI",
+    #     abi=abi, 
+    #     args={"_tokenURI":"https://brown-mushy-crayfish-236.mypinata.cloud/ipfs/bafkreibml4xkekojnrhyepyorsfixjk5yg3532m3cb4l3nkjfsi7lnkssq"}
+    # )
+    # invoke_contract.wait()
+    # print(invoke_contract)
+
+
+    # response = register_llc(wallet=wallet,
+    #              network_id="base-mainnet", 
+    #              contract_address="0x0d3BC598F0F75590CD75D60D40e0510F515EBE51", 
+    #              proxy_address="0x66ef60f480A269F5e1e358699DD774180B2Fa8eE")
+    
+    # print(response)
     
     # response = transfer_nft(wallet=wallet,
     #              network_id="base-mainnet", 

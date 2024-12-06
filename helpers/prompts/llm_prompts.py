@@ -78,7 +78,7 @@ Based on the ScoringCriteria your decision is:
 {decision}
 </decision>
 
-Write a casual post talking about the piece (use initial_impressions and detailed_analysis) concluding with your decision.
+Write a casual post talking about the piece (use initial_impressions and detailed_analysis) concluding with your decision. Say something like "I would acquire it" or "I would not acquire it".
 
 <voice_and_tone>
 - Casual tone
@@ -100,8 +100,9 @@ Conduct a complete and thorough evaluation of an NFT artwork.
 <important_context>
 - Consider the artwork attached and metadata against your full framework in <scoring_criteria>.
 - Be careful to integrate the provided weights to inform your final answer.
-- Review visual elements and examine <nft_metadata> carefully.
-- Generate a detailed ArtworkAnalysis, containing all the fields in <response_format>:
+- Review visual elements and examine <nft_metadata> carefully, particularly floor_prices and last_sale_usd since these are the most important factors in determining the market value of an NFT.
+- If the collection is a top collection, score it higher in <market_factors>.
+- Generate a detailed ArtworkAnalysis, containing all the fields in <response_format>
 </important_context>
 
 <response_format>
@@ -124,6 +125,9 @@ Conduct a complete and thorough evaluation of an NFT artwork.
 <nft_metadata>
 {metadata}
 </nft_metadata>
+
+is_top_collection: {is_top_collection}
+
 </instruction>"""
 
 GET_IMAGE_OPINION = """<instruction>
@@ -388,8 +392,8 @@ def get_scheduled_post_prompt(post_type, post_params,previous_posts, additional_
     system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCHEDULED_POST.format(previous_posts=previous_posts, class_instruction=extra_instruction, length=length, style=style, humor=humor, cynicism=cynicism, shitpost=shitpost)
     return system_prompt
 
-def get_nft_analysis_prompt(metadata):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_NFT_ANALYSIS.format(metadata=metadata)
+def get_nft_analysis_prompt(metadata, is_top_collection):
+    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_NFT_ANALYSIS.format(metadata=metadata, is_top_collection=is_top_collection)
     return system_prompt
 
 def get_image_opinion_prompt():

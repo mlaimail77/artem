@@ -24,7 +24,7 @@ def create_app() -> Flask:
             beat_schedule={
                 "post_thought_every_1_5_hours": {
                     "task": "post_thought",
-                    "schedule": 5400
+                    "schedule": 5000
                 },
                 "post_channel_casts_every_2_hours": {
                     "task": "post_channel_casts",
