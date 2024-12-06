@@ -3,7 +3,7 @@ import os
 from cdp import *
 
 # # Zora WOW Token Actions
-from cdp_agentkit_core.actions.wow import create_token, buy_token
+# from cdp_agentkit_core.actions.wow import create_token, buy_token
 
 
 from dotenv import load_dotenv
@@ -149,14 +149,14 @@ if __name__ == "__main__":
     # artto_setup()
     wallet = fetch_wallet(os.getenv('WALLET_ID_MAINNET'), "artto_mainnet_seed.json")
 
-    response = buy_token.wow_buy_token(
-        wallet=wallet,
-        contract_address="0x9239e9f9e325e706ef8b89936ece9d48896abbe3",
-        amount_eth_in_wei=500000000000000000
-    )
-    print(response)
+    # response = buy_token.wow_buy_token(
+    #     wallet=wallet,
+    #     contract_address="0x9239e9f9e325e706ef8b89936ece9d48896abbe3",
+    #     amount_eth_in_wei=500000000000000000
+    # )
+    # print(response)
 
-    
+
     # response = launch_artto_token(wallet)
     # print(response)
 
