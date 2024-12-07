@@ -33,7 +33,18 @@ def home():
     for score in recent_nft_scores:
         if score.get('analysis_text'):
             score['analysis_text'] = json.loads(score['analysis_text'])
-    return render_template('main.html', recent_nft_scores=recent_nft_scores)
+    current_valuation = get_wallet_valuation(os.getenv('ARTTO_ADDRESS_MAINNET'))
+    return render_template('main.html', recent_nft_scores=recent_nft_scores, current_valuation=current_valuation)
+
+@flask_app.route('/gallery')
+def gallery():
+    gallery_nft_scores = get_gallery_nft_scores(n=50)
+    for score in gallery_nft_scores:
+        if score.get('analysis_text'):
+            score['analysis_text'] = json.loads(score['analysis_text'])
+        if score.get('scores'):
+            score['scores'] = json.loads(score['scores'])
+    return render_template('gallery.html', gallery_nft_scores=gallery_nft_scores)
 
 @flask_app.route('/taste_profile')
 def taste_profile():

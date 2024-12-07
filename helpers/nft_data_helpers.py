@@ -2,12 +2,39 @@ import aiohttp
 import json
 import os
 import asyncio
+import requests
 
 from dotenv import load_dotenv
 
 load_dotenv('.env.local')
 
 SIMPLEHASH_API_KEY = os.getenv('SIMPLEHASH_API_KEY')
+
+def get_wallet_valuation(wallet_address: str, api_key: str = SIMPLEHASH_API_KEY):
+    """
+    Fetches the total NFT valuation for a specific wallet address from the SimpleHash API.
+
+    Args:
+        wallet_address (str): The wallet address to get valuation for
+        api_key (str): The SimpleHash API key to use. Default: SIMPLEHASH_API_KEY
+
+    Returns:
+        float: The USD value of NFTs in the wallet, or None if request fails
+    """
+    url = f"https://api.simplehash.com/api/v0/nfts/owners/value?wallet_addresses={wallet_address}"
+
+    headers = {
+        "accept": "application/json",
+        "X-API-KEY": api_key
+    }
+
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        if data and "wallets" in data and len(data["wallets"]) > 0:
+            return data["wallets"][0].get("usd_value")
+    return None
+
 
 async def get_wallet_nfts(wallet_address: str, networks: list = ['ethereum', 'base'], limit: int = 20, api_key: str = SIMPLEHASH_API_KEY):
     """

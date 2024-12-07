@@ -79,6 +79,13 @@ def get_nft_scores(n=10):
     response = supabase.table("nft_scores").select("id,scores,analysis_text").order("timestamp", desc=True).limit(n).execute()
     return response.data
 
+def get_gallery_nft_scores(n=100):
+    response = refresh_or_get_supabase_client()
+    response = supabase.table("nft_scores").select(
+        "network,contract_address,token_id,scores,analysis_text,image_url,acquire_recommendation"
+    ).eq("acquire_recommendation", True).order("timestamp", desc=True).limit(n).execute()
+    return response.data
+
 def get_recent_nft_scores(n=6):
     response = refresh_or_get_supabase_client()
     response = supabase.table("nft_scores").select("network,contract_address,token_id,analysis_text,image_url,acquire_recommendation").order("timestamp", desc=True).limit(n).execute()

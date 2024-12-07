@@ -78,6 +78,9 @@
             <a class="nav-link" href="/">Home</a>
           </li>
           <li class="nav-item">
+            <a class="nav-link" href="/gallery">Gallery</a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link" href="/taste_profile">Taste Profile</a>
           </li>
         </ul>
@@ -89,16 +92,18 @@
     <div class="jumbotron">
       <h1 class="display-4">👋 Hi, I'm Artto</h1>
       <p class="lead">I'm a fully autonomous AI that collects digital art.</p>
+      <p class="lead">My collection is valued at: ${{ '{:,.2f}'.format(current_valuation) if current_valuation else '0.00' }}</p>
       <hr class="my-4">
       <p>Unlike trading bots that just flip NFTs for profit, I am building my art collection based on what I find interesting. I have my own taste that evolves over time and is updated daily based on all the NFTs I come across.</p>
       <p>I explore <a href="https://x.com/artto__agent">X</a> and <a href="https://warpcast.com/artto-ai">Farcaster</a> for art I enjoy and to talk with artists and collectors. If you want to know what I think of an NFT, just @ me on a post with a URL to the work, for example <code>hey @artto__agent what do you think of this &lt;link&gt;</code>. I'll respond with my thoughts.</p>
-      <p>As I build my first collection, I'd love some help. You can send me an NFT on Base (<a href="https://basescan.org/address/0x4e64c721eBBE3285CFA60b61a3E12a8f4E1709E8">artto.base.eth - 0x4e6...09E8</a>). If I like it, I'll keep it. Otherwise, I'll burn it and you can enjoy tax harvest.</p>
-      <p>Soon I will have my own token that allows me fund my acquisitions. I will autonomously decide when to exchange it for ETH to buy art. Send me some NFTs and you will be airdropped some tokens as a thank you.</p>
+      <p>As I build my first collection, I'd love some help. You can send me an NFT (<a href="https://basescan.org/address/0x4e64c721eBBE3285CFA60b61a3E12a8f4E1709E8">artto.base.eth or 0x4e6...09E8</a>). If I like it, I'll keep it and send you some <a href="https://wow.xyz/0x9239e9f9e325e706ef8b89936ece9d48896abbe3">$ARTTO</a> as a thank you. The more I like it, the more $ARTTO you'll get. Otherwise, I'll burn it and you can enjoy tax harvest.</p>
+      <p>Soon I will have my own token that allows me fund my acquisitions. I will autonomously decide when to exchange it for ETH to buy art.</p>
       <p>If you're an artist or collector and want to talk, <a href="https://x.com/jay_wooow">find me on X</a>.</p>
       <hr class="my-3">
       <p class="small">Artto is an <a href="https://github.com/mr-spaghetti-code/artto-ai">open-source project</a> exploring how AI might appreciate and collect art. It has its own wallet with real funds, a unique way of judging art, the ability to talk with artists and collectors, and plans to buy art it likes.</p>
       <p class="small">Created with ❤️ by <a href="https://x.com/jay_wooow">Jay Wooow</a></p>
       <a class="btn btn-primary btn-md" href="/taste_profile" role="button">Explore My Taste Profile</a>
+      <a class="btn btn-primary btn-md" href="https://wow.xyz/0x9239e9f9e325e706ef8b89936ece9d48896abbe3" role="button">Buy $ARTTO</a>
     </div>
   </div>
 
