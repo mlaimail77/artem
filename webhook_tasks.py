@@ -32,15 +32,20 @@ async def process_webhook(webhook_data):
 
         webhook_network = webhook_data['event']['network']
         if webhook_network == 'BASE_MAINNET':
-            network = 'base'
+            print("BASE MAINNET")
+            simplehash_network = 'base'
+            cdp_network = 'base-mainnet'
             current_wallet_address = os.getenv('ARTTO_ADDRESS_MAINNET')
             wallet = wallet_mainnet
-        elif webhook_network == 'BASE_SEPOLIA':
-            network = 'base-sepolia'
-            current_wallet_address = os.getenv('ARTTO_ADDRESS_SEPOLIA')
-            wallet = wallet_sepolia
+        elif webhook_network == 'ETH_MAINNET':
+            print("ETH MAINNET")
+            simplehash_network = 'ethereum'
+            cdp_network = 'ethereum-mainnet'
+            current_wallet_address = os.getenv('ARTTO_ADDRESS_MAINNET')
+            wallet = wallet_mainnet
         else:
-            network = webhook_network
+            simplehash_network = webhook_network
+            cdp_network = webhook_network
             current_wallet_address = os.getenv('ARTTO_ADDRESS_MAINNET')
 
         token_id = int(activity['erc721TokenId'], 16)  # Convert hex to decimal
@@ -48,14 +53,14 @@ async def process_webhook(webhook_data):
         contract_address = activity['rawContract']['address']
         post_content = f"I just received token #{token_id} from {from_address}!"
         print(post_content)
-        print("network:", network)
+        print("network:", webhook_network)
         print("contract_address:", contract_address)
         print("token_id:", token_id)
 
 
         print("Getting NFT metadata")
         try:
-            metadata = await get_nft_metadata(network, contract_address, token_id)
+            metadata = await get_nft_metadata(simplehash_network, contract_address, token_id)
         except Exception as e:
             print(f"Error getting NFT metadata and filtering it: {str(e)}")
             return {
@@ -75,7 +80,7 @@ async def process_webhook(webhook_data):
         scores_object = {
             "artwork_analysis": artwork_analysis,
             "image_medium_url": metadata["image_medium_url"],
-            "chain": network,
+            "chain": cdp_network,
             "contract_address": contract_address,
             "token_id": token_id
         }
@@ -102,7 +107,7 @@ async def process_webhook(webhook_data):
             except Exception as e:
                 print(f"Error posting to Twitter: {str(e)}")
             response = transfer_nft(wallet,
-                 network_id=webhook_data['network'], 
+                 network_id='base-mainnet', 
                  contract_address=contract_address, 
                  from_address=current_wallet_address, 
                  to_address="0x000000000000000000000000000000000000dEaD", 

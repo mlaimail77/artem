@@ -59,7 +59,7 @@ class MarketFactors(BaseModel):
         description="Score for collector interest (0-3)"
     )
     collection_popularity: int = Field(
-        description="Score for collection popularity (0-3 as measured by distinct_owner_count and distinct_nft_count"
+        description="Score for collection popularity (0-3) as measured by distinct_owner_count and distinct_nft_count. Note: A high amount of NFTs isn't always better. A 1/1 might be more special."
     )
     
     valuation_floor_price: int = Field(

@@ -72,7 +72,7 @@ def filter_nft_metadata(response):
         'distinct_owner_count': None if not response.get('collection', {}).get('distinct_owner_count') else response.get('collection', {}).get('distinct_owner_count'),
         'distinct_nft_count': None if not response.get('collection', {}).get('distinct_nft_count') else response.get('collection', {}).get('distinct_nft_count'),
         'total_quantity': None if not response.get('collection', {}).get('total_quantity') else response.get('collection', {}).get('total_quantity'),
-        'last_sale_usd': None if not response.get('last_sale', {}).get('unit_price_usd_cents') else response.get('last_sale', {}).get('unit_price_usd_cents'),
+        'last_sale_usd': None if not response.get('last_sale', {}) else response.get('last_sale', {}).get('unit_price_usd_cents'),
         'first_created': None if not response.get('first_created') else response.get('first_created'),
         'rarity': None if not response.get('rarity') else response.get('rarity'),
         'attributes': None if not response.get('extra_metadata', {}).get('attributes') else response.get('extra_metadata', {}).get('attributes')

@@ -40,7 +40,7 @@ def post_tweet(payload, token, parent=None):
         print("Already replied to this parent")
         return json.dumps({"success": False, "reason": "already_replied"})
     
-    print("Tweeting!")
+    print("Attempting to tweet!")
 
     response =requests.request(
         "POST",
@@ -56,6 +56,8 @@ def post_tweet(payload, token, parent=None):
         'text': payload['text'],
         'parent_id': parent
     }
+
+    print(f"Tweeted! {response.json()}")
     set_post_created(post)
     return response.json()
 
