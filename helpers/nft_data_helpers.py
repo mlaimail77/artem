@@ -54,28 +54,28 @@ def filter_nft_metadata(response):
         return None
     
     filtered_response = {
-        'nft_id': response.get('nft_id'),
-        'chain': response.get('chain'),
-        'contract_address': response.get('contract_address'),
-        'name': response.get('name'),
-        'description': response.get('description'),
-        'image_medium_url': response.get('previews', {}).get('image_medium_url'),
-        'contract': response.get('contract'),
-        'collection_name': response.get('collection', {}).get('name'),
-        'collection_id': response.get('collection', {}).get('collection_id'),
-        'floor_prices': [{
+        'nft_id': None if not response.get('nft_id') else response.get('nft_id'),
+        'chain': None if not response.get('chain') else response.get('chain'),
+        'contract_address': None if not response.get('contract_address') else response.get('contract_address'),
+        'name': None if not response.get('name') else response.get('name'),
+        'description': None if not response.get('description') else response.get('description'),
+        'image_medium_url': None if not response.get('previews', {}).get('image_medium_url') else response.get('previews', {}).get('image_medium_url'),
+        'contract': None if not response.get('contract') else response.get('contract'),
+        'collection_name': None if not response.get('collection', {}).get('name') else response.get('collection', {}).get('name'),
+        'collection_id': None if not response.get('collection', {}).get('collection_id') else response.get('collection', {}).get('collection_id'),
+        'floor_prices': [] if not response.get('collection', {}).get('floor_prices') else [{
             'marketplace': price.get('marketplace_name'),
             'value_eth': price.get('value', 0) / 1e18,
             'value_usd': price.get('value_usd_cents', 0) / 100
-        } for price in response.get('collection', {}).get('floor_prices', [])] if response.get('collection', {}).get('floor_prices') else [],
-        'collection_description': response.get('collection', {}).get('description'),
-        'distinct_owner_count': response.get('collection', {}).get('distinct_owner_count'),
-        'distinct_nft_count': response.get('collection', {}).get('distinct_nft_count'),
-        'total_quantity': response.get('collection', {}).get('total_quantity'),
-        'last_sale_usd': response.get('last_sale', {}).get('unit_price_usd_cents', 0) / 100,
-        'first_created': response.get('first_created'),
-        'rarity': response.get('rarity'),
-        'attributes': response.get('extra_metadata', {}).get('attributes')
+        } for price in response.get('collection', {}).get('floor_prices')],
+        'collection_description': None if not response.get('collection', {}).get('description') else response.get('collection', {}).get('description'),
+        'distinct_owner_count': None if not response.get('collection', {}).get('distinct_owner_count') else response.get('collection', {}).get('distinct_owner_count'),
+        'distinct_nft_count': None if not response.get('collection', {}).get('distinct_nft_count') else response.get('collection', {}).get('distinct_nft_count'),
+        'total_quantity': None if not response.get('collection', {}).get('total_quantity') else response.get('collection', {}).get('total_quantity'),
+        'last_sale_usd': None if not response.get('last_sale', {}).get('unit_price_usd_cents') else response.get('last_sale', {}).get('unit_price_usd_cents'),
+        'first_created': None if not response.get('first_created') else response.get('first_created'),
+        'rarity': None if not response.get('rarity') else response.get('rarity'),
+        'attributes': None if not response.get('extra_metadata', {}).get('attributes') else response.get('extra_metadata', {}).get('attributes')
     }
     
     return filtered_response
@@ -85,23 +85,23 @@ def format_collections(response, time_period):
     formatted_response = []
     for collection in collections:
         formatted_response.append({
-            "name": collection.get("collection_details", {}).get("name"),
-            "description": collection.get("collection_details", {}).get("description"),
-            "chains": collection.get("collection_details", {}).get("chains", []),
-            "category": collection.get("collection_details", {}).get("category"),
+            "name": collection.get("collection_details", {}).get("name") if collection.get("collection_details", {}).get("name") else None,
+            "description": collection.get("collection_details", {}).get("description") if collection.get("collection_details", {}).get("description") else None,
+            "chains": collection.get("collection_details", {}).get("chains") if collection.get("collection_details", {}).get("chains") else None,
+            "category": collection.get("collection_details", {}).get("category") if collection.get("collection_details", {}).get("category") else None,
             "floor_prices": [{
-                "marketplace": price["marketplace_name"],
-                "value_eth": price["value"] / 1e18,
-                "value_usd": price["value_usd_cents"] / 100
-            } for price in collection.get("collection_details", {}).get("floor_prices", [])] if collection.get("collection_details", {}).get("floor_prices") else [],
-            "distinct_owner_count": collection.get("collection_details", {}).get("distinct_owner_count"),
-            "distinct_nft_count": collection.get("collection_details", {}).get("distinct_nft_count"), 
-            "total_quantity": collection.get("collection_details", {}).get("total_quantity"),
-            "volume_percent_change": collection.get("volume_percent_change"),
-            "transaction_count": collection.get("transaction_count"),
-            "transaction_count_percent_change": collection.get("transaction_count_percent_change"),
-            "volume_usd": collection.get("volume_usd_cents", 0)/100,
-            "time_period": time_period
+                "marketplace": price.get("marketplace_name"),
+                "value_eth": price.get("value", 0) / 1e18,
+                "value_usd": price.get("value_usd_cents", 0) / 100
+            } for price in collection.get("collection_details", {}).get("floor_prices", [])] if collection.get("collection_details", {}).get("floor_prices") else None,
+            "distinct_owner_count": collection.get("collection_details", {}).get("distinct_owner_count") if collection.get("collection_details", {}).get("distinct_owner_count") else None,
+            "distinct_nft_count": collection.get("collection_details", {}).get("distinct_nft_count") if collection.get("collection_details", {}).get("distinct_nft_count") else None,
+            "total_quantity": collection.get("collection_details", {}).get("total_quantity") if collection.get("collection_details", {}).get("total_quantity") else None,
+            "volume_percent_change": collection.get("volume_percent_change") if collection.get("volume_percent_change") else None,
+            "transaction_count": collection.get("transaction_count") if collection.get("transaction_count") else None,
+            "transaction_count_percent_change": collection.get("transaction_count_percent_change") if collection.get("transaction_count_percent_change") else None,
+            "volume_usd": collection.get("volume_usd_cents")/100 if collection.get("volume_usd_cents") else None,
+            "time_period": time_period if time_period else None
         })
     return formatted_response
 
