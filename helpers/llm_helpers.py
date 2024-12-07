@@ -106,14 +106,17 @@ def get_total_score(artwork_analysis: ArtworkAnalysis):
         total_score*=100
         total_weights*=100
 
+    if total_score > 100:
+        total_score = 100
+
     decision = "REJECT" if total_score < SCORE_THRESHOLD else "ACQUIRE"
     
     if total_score > SCORE_THRESHOLD + 10:
-        multiplier = 2
+        multiplier = 200
     elif total_score > SCORE_THRESHOLD:
-        multiplier = 1.5
+        multiplier = 150
     else:
-        multiplier = 1
+        multiplier = 100
 
     print("score_threshold: ", SCORE_THRESHOLD)
     print("score: ", total_score/total_weights)
@@ -163,7 +166,7 @@ async def get_final_decision(nft_opinion, nft_metadata, from_address):
             {"role": "system", 
              "content": system_prompt}
         ],
-        response_format=KeepOrBurn
+        response_format=AcquireOrReject
     )
 
     final_decision = response.choices[0].message.parsed

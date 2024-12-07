@@ -165,3 +165,4 @@ notes.txt
 dump.rdb
 celerybeat-schedule-shm
 celerybeat-schedule-wal
+price.py
