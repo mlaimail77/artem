@@ -54,15 +54,26 @@ def post_tweet(payload, token, parent=None):
     )
 
     print(f"Tweet Response: {response.json()}")
+    if response.status_code == 429:
+        reset_time = response.headers.get('x-rate-limit-reset')
+        limit = response.headers.get('x-rate-limit-limit')
+        remaining = response.headers.get('x-rate-limit-remaining')
+        print(f"Rate limit ceiling: {limit}")
+        print(f"Remaining requests: {remaining}")
+        print(f"Rate limit reset time: {reset_time}")
+        return {
+            'error': 'Rate limit exceeded',
+            'reset_time': reset_time
+        }
 
-    post = {
-        'hash': response.json()['data']['id'],
-        'text': payload['text'],
-        'parent_id': parent
-    }
 
-    
-    set_post_created(post)
+    if response.status_code == 200:
+        post = {
+            'hash': response.json()['data']['id'],
+            'text': payload['text'],
+            'parent_id': parent
+        }
+        set_post_created(post)
     return response.json()
 
 

@@ -131,7 +131,7 @@ def get_total_score(artwork_analysis: ArtworkAnalysis):
         "total_weights": total_weights,
         "decision": decision,
         "multiplier": multiplier,
-        "reward_points": total_score * multiplier
+        "reward_points": round(total_score * multiplier)
     }
 
     return response
