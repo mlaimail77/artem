@@ -100,7 +100,7 @@ def refresh_token():
     r.set("token", j_refreshed_token)
     return refreshed_token
 
-def search_twitter(query, bearer_token, max_results=50):
+def search_twitter(query, bearer_token, max_results=10):
     search_url = "https://api.twitter.com/2/tweets/search/recent"
     query_params = {
         'query': query,
