@@ -45,6 +45,11 @@ def filter_nft_metadata(response):
         print("No response from SimpleHash API")
         return None
 
+    # Check if response is a dictionary before accessing keys
+    if not isinstance(response, dict):
+        print("Invalid response format from SimpleHash API")
+        return None
+    
     filtered_response = {
         'nft_id': response.get('nft_id'),
         'chain': response.get('chain'),
@@ -199,8 +204,7 @@ async def get_nft_metadata(network, contract_address, token_id, api_key=SIMPLEHA
             # Check if the response is valid
             if response.status == 200:
                 response_data = await response.json()
-                print(response_data)
-                return filter_nft_metadata(response_data)
+                return response_data
             else:
                 # Handle the case where the API response is invalid
                 print(f"Error fetching NFT metadata: {response.status}")
