@@ -126,11 +126,12 @@ async def process_webhook(webhook_data):
         else:
             print("UNHANDLED DECISION")
 
+        
         # Transfer ARTTO tokens to the sender
         try:
             response = transfer_artto_token(
                 wallet, 
-                reward_points, 
+                round(reward_points), 
                 from_address
             )
             print(response)

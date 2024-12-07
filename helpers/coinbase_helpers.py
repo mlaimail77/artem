@@ -108,7 +108,7 @@ def transfer_artto_token(wallet, token_amount, destination):
             contract_address=artto_token_address,
             method="transfer",
             abi=abi,
-            args={"to":destination, "value":str(value_to_transfer)}
+            args={"to":destination, "value":str(int(value_to_transfer))}
         )
         transfer.wait()
         return f"Successfully transferred {token_amount} tokens to {destination}"
