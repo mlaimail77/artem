@@ -167,7 +167,10 @@ async def reply_twitter_mentions():
                     "in_reply_to_tweet_id": str(mention['id'])
                 }
             }
-            post_tweet(payload, refreshed_token, parent=mention['id'])
+            response = post_tweet(payload, refreshed_token, parent=mention['id'])
+            if response.status_code == 429:
+                print("Rate limit exceeded, breaking loop")
+                break
             if scores:
                 score_calcs = get_total_score(scores["artwork_analysis"])
                 store_nft_scores(scores, score_calcs)

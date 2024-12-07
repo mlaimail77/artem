@@ -60,7 +60,9 @@ def post_tweet(payload, token, parent=None):
         remaining = response.headers.get('x-rate-limit-remaining')
         print(f"Rate limit ceiling: {limit}")
         print(f"Remaining requests: {remaining}")
-        print(f"Rate limit reset time: {reset_time}")
+        reset_timestamp = datetime.fromtimestamp(int(reset_time))
+        minutes_until_reset = (reset_timestamp - datetime.now()).total_seconds() / 60
+        print(f"Rate limit reset time: {reset_timestamp} ({minutes_until_reset:.1f} minutes from now)")
         return {
             'error': 'Rate limit exceeded',
             'reset_time': reset_time
