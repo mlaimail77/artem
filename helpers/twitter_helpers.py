@@ -52,13 +52,16 @@ def post_tweet(payload, token, parent=None):
             "Content-Type": "application/json",
         },
     )
+
+    print(f"Tweet Response: {response.json()}")
+
     post = {
         'hash': response.json()['data']['id'],
         'text': payload['text'],
         'parent_id': parent
     }
 
-    print(f"Tweeted! {response.json()}")
+    
     set_post_created(post)
     return response.json()
 

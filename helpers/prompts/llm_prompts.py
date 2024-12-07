@@ -30,7 +30,7 @@ Remember:
 """
 
 GET_KEEP_OR_BURN_DECISION = """<instruction>
-You have been sent an NFT along with a decision to keep/acquire it (KEEP) or reject it (BURN) based on your scoring criteria. Keep in mind that users have sent this NFT knowing that you might choose to burn it.
+You have been sent an NFT along with a decision to ACQUIRE or REJECT it based on your scoring criteria. Keep in mind that users have sent this NFT knowing that you might choose to burn it.
 
 Sender: {from_address}
 

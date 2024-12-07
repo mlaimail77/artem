@@ -106,7 +106,7 @@ def get_total_score(artwork_analysis: ArtworkAnalysis):
         total_score*=100
         total_weights*=100
 
-    decision = "NOT ACQUIRE" if total_score < SCORE_THRESHOLD else "ACQUIRE"
+    decision = "REJECT" if total_score < SCORE_THRESHOLD else "ACQUIRE"
     
     if total_score > SCORE_THRESHOLD + 10:
         multiplier = 2

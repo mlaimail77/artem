@@ -80,7 +80,7 @@ async def process_webhook(webhook_data):
         scores_object = {
             "artwork_analysis": artwork_analysis,
             "image_medium_url": metadata["image_medium_url"],
-            "chain": cdp_network,
+            "chain": simplehash_network,
             "contract_address": contract_address,
             "token_id": token_id
         }
@@ -97,7 +97,7 @@ async def process_webhook(webhook_data):
         print("Decision:", decision)
         print("Rationale:", rationale_post)
 
-        if decision == "BURN":
+        if decision == "REJECT":
             try:
                 post_long_cast(rationale_post)
             except Exception as e:
@@ -113,7 +113,7 @@ async def process_webhook(webhook_data):
                  to_address="0x000000000000000000000000000000000000dEaD", 
                  token_id=token_id)
             print(response)
-        elif decision == "KEEP":
+        elif decision == "ACQUIRE":
             try:
                 post_long_cast(rationale_post)
             except Exception as e:

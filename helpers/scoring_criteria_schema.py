@@ -165,9 +165,9 @@ class ArtworkAnalysis(BaseModel):
         description="In-depth analysis of the artwork based on the scoring criteria scores"
     )
 
-class KeepOrBurn(BaseModel):
+class AcquireOrReject(BaseModel):
     decision: str = Field(
-        description="Final decision based on <nft_opinion> on whether you KEEP or BURN the NFT received."
+        description="Final decision based on <nft_opinion> on whether you ACQUIRE or REJECT the NFT received."
         )
     rationale_post: str = Field(
         description="A rationale on why the decision was made."
