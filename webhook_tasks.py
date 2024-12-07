@@ -56,11 +56,6 @@ async def process_webhook(webhook_data):
         print("Getting NFT metadata")
         try:
             metadata = await get_nft_metadata(network, contract_address, token_id)
-            print("raw metadata:", metadata)
-            if metadata:
-                metadata = filter_nft_metadata(metadata)
-            else:
-                print("No metadata found")
         except Exception as e:
             print(f"Error getting NFT metadata and filtering it: {str(e)}")
             return {

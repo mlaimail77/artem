@@ -307,8 +307,6 @@ async def get_reply(cast_details, post_params):
         print(tool_input)
         try:
             metadata = await get_nft_metadata(**tool_input)
-            if metadata:
-                metadata = filter_nft_metadata(metadata)
             if not metadata or 'image_medium_url' not in metadata:
                 raise ValueError("NFT metadata missing required image URL")
         except Exception as e:

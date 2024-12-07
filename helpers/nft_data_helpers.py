@@ -43,7 +43,7 @@ async def get_wallet_nfts(wallet_address: str, networks: list = ['ethereum', 'ba
 def filter_nft_metadata(response):
 
     print("response:", response)
-    
+
     if not response:
         print("No response from SimpleHash API")
         return None
@@ -207,7 +207,8 @@ async def get_nft_metadata(network, contract_address, token_id, api_key=SIMPLEHA
             # Check if the response is valid
             if response.status == 200:
                 response_data = await response.json()
-                return response_data
+                formatted = await filter_nft_metadata(response_data)
+                return formatted
             else:
                 # Handle the case where the API response is invalid
                 print(f"Error fetching NFT metadata: {response.status}")
