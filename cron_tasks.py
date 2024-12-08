@@ -37,7 +37,7 @@ async def process_adjust_weights():
         print(f"Error posting to Farcaster: {str(e)}")
     try:
         refreshed_token = refresh_token()
-        post_tweet({"text": text}, refreshed_token, parent=None)
+        await post_tweet({"text": text}, refreshed_token, parent=None)
     except Exception as e:
         print(f"Error posting to Twitter: {str(e)}")
 
@@ -78,7 +78,7 @@ async def post_trending_nfts():
         print(f"Error posting to Farcaster: {str(e)}")
     try:
         refreshed_token = refresh_token()
-        post_tweet({"text": thought}, refreshed_token, parent=None)
+        await post_tweet({"text": thought}, refreshed_token, parent=None)
     except Exception as e:
         print(f"Error posting to Twitter: {str(e)}")
 
@@ -136,7 +136,7 @@ async def post_thought():
         print(f"Error posting to Farcaster: {str(e)}")
     try:
         refreshed_token = refresh_token()
-        post_tweet({"text": thought}, refreshed_token, parent=None)
+        await post_tweet({"text": thought}, refreshed_token, parent=None)
     except Exception as e:
         print(f"Error posting to Twitter: {str(e)}")
 
@@ -179,7 +179,7 @@ async def reply_twitter_mentions():
                     "in_reply_to_tweet_id": str(mention['id'])
                 }
             }
-            response = post_tweet(payload, refreshed_token, parent=mention['id'])
+            response = await post_tweet(payload, refreshed_token, parent=mention['id'])
             if response:
                 set_post_created(response)
                 set_post_to_ignore(mention['id'])
@@ -245,7 +245,7 @@ async def post_thought_about_feed():
         print(f"Error posting to Farcaster: {str(e)}")
     try:
         refreshed_token = refresh_token()
-        post_tweet({"text": thought}, refreshed_token, parent=None)
+        await post_tweet({"text": thought}, refreshed_token, parent=None)
     except Exception as e:
         print(f"Error posting to Twitter: {str(e)}")
 

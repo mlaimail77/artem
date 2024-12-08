@@ -103,7 +103,7 @@ async def process_webhook(webhook_data):
             except Exception as e:
                 print(f"Error posting to Farcaster: {str(e)}")
             try:
-                post_tweet({"text": rationale_post}, refreshed_token, parent=None)
+                await post_tweet({"text": rationale_post}, refreshed_token, parent=None)
             except Exception as e:
                 print(f"Error posting to Twitter: {str(e)}")
             response = transfer_nft(wallet,
@@ -119,7 +119,7 @@ async def process_webhook(webhook_data):
             except Exception as e:
                 print(f"Error posting to Farcaster: {str(e)}")
             try:
-                post_tweet({"text": rationale_post}, refreshed_token, parent=None)
+                await post_tweet({"text": rationale_post}, refreshed_token, parent=None)
             except Exception as e:
                 print(f"Error posting to Twitter: {str(e)}")
             print("ACQUIRE!")
