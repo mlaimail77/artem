@@ -5,6 +5,8 @@ import re
 import json
 import requests
 import redis
+from twikit import Client
+import aiohttp
 from datetime import datetime, timedelta
 from requests.auth import AuthBase, HTTPBasicAuth
 from requests_oauthlib import OAuth2Session, TokenUpdated
@@ -14,6 +16,9 @@ from helpers.utils import *
 from dotenv import load_dotenv
 
 load_dotenv('.env.local')
+
+# Twikit client
+twikit_client = Client('en-US')
 
 r = redis.from_url(os.getenv('CELERY_BROKER_URL', 'redis://localhost'))
 
@@ -33,7 +38,18 @@ code_challenge = hashlib.sha256(code_verifier.encode("utf-8")).digest()
 code_challenge = base64.urlsafe_b64encode(code_challenge).decode("utf-8")
 code_challenge = code_challenge.replace("=", "")
 
-def post_tweet(payload, token, parent=None):
+async def get_twikit_client():
+    if os.path.exists('cookies.json'):
+        twikit_client.load_cookies('cookies.json')
+    else:
+        await twikit_client.login(
+            auth_info_1=os.environ.get("TWITTER_USERNAME"),
+            auth_info_2=os.environ.get("TWITTER_EMAIL"),
+            password=os.environ.get("TWITTER_PASSWORD")
+        )
+        twikit_client.save_cookies('cookies.json')
+
+async def post_tweet(payload, token, parent=None):
 
     posts_replied_to = get_all_posts_replied_to()
 
@@ -43,40 +59,50 @@ def post_tweet(payload, token, parent=None):
     
     print("Attempting to tweet!")
 
-    response =requests.request(
-        "POST",
-        "https://api.twitter.com/2/tweets",
-        json=payload,
-        headers={
-            "Authorization": "Bearer {}".format(token["access_token"]),
-            "Content-Type": "application/json",
-        },
-    )
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            "https://api.twitter.com/2/tweets",
+            json=payload,
+            headers={
+                "Authorization": "Bearer {}".format(token["access_token"]),
+                "Content-Type": "application/json",
+            }
+        ) as response:
+            response_json = await response.json()
+            print(f"Tweet Response: {response_json}")
+            # if response.status == 429:
+            #     reset_time = response.headers.get('x-rate-limit-reset')
+            #     limit = response.headers.get('x-rate-limit-limit')
+            #     remaining = response.headers.get('x-rate-limit-remaining')
+            #     print(f"Rate limit ceiling: {limit}")
+            #     print(f"Remaining requests: {remaining}")
+            #     reset_timestamp = datetime.fromtimestamp(int(reset_time))
+            #     minutes_until_reset = (reset_timestamp - datetime.now()).total_seconds() / 60
+            #     print(f"Rate limit reset time: {reset_timestamp} ({minutes_until_reset:.1f} minutes from now)")
+            #     return {
+            #         'error': 'Rate limit exceeded',
+            #         'reset_time': reset_time
+            #     }
 
-    print(f"Tweet Response: {response.json()}")
-    if response.status_code == 429:
-        reset_time = response.headers.get('x-rate-limit-reset')
-        limit = response.headers.get('x-rate-limit-limit')
-        remaining = response.headers.get('x-rate-limit-remaining')
-        print(f"Rate limit ceiling: {limit}")
-        print(f"Remaining requests: {remaining}")
-        reset_timestamp = datetime.fromtimestamp(int(reset_time))
-        minutes_until_reset = (reset_timestamp - datetime.now()).total_seconds() / 60
-        print(f"Rate limit reset time: {reset_timestamp} ({minutes_until_reset:.1f} minutes from now)")
-        return {
-            'error': 'Rate limit exceeded',
-            'reset_time': reset_time
-        }
-
-
-    if response.status_code == 200:
-        post = {
-            'hash': response.json()['data']['id'],
-            'text': payload['text'],
-            'parent_id': parent
-        }
-        set_post_created(post)
-    return response.json()
+            if response.status == 200:
+                post = {
+                    'hash': response_json['data']['id'],
+                    'text': payload['text'],
+                    'parent_id': parent
+                }
+                set_post_created(post)
+            elif response.status != 200:
+                try:
+                    await get_twikit_client()
+                    response =await twikit_client.create_tweet(
+                        text=payload['text'],
+                        reply_to=parent
+                    )
+                    response_json = response.json()
+                except Exception as e:
+                    print(f"Error posting tweet: {e}")
+                
+            return response_json
 
 
 def make_token():
