@@ -84,7 +84,7 @@ async def wallet_webhook():
                 'message': 'Server configuration error'
             }), 500
 
-        # Calculate expected signature
+        # Calculate expected signatures
         expected_signature_base = hmac.new(
             webhook_secret_base.encode(),
             request.get_data(),
@@ -98,7 +98,7 @@ async def wallet_webhook():
         ).hexdigest()
 
         # Verify signature matches
-        if not signature or not hmac.compare_digest(signature, expected_signature_base) or not hmac.compare_digest(signature, expected_signature_ethereum):
+        if not signature or (not hmac.compare_digest(signature, expected_signature_base) and not hmac.compare_digest(signature, expected_signature_ethereum)):
             logger.warning("Invalid webhook signature")
             return jsonify({
                 'status': 'error',
