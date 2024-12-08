@@ -38,6 +38,11 @@ code_challenge = hashlib.sha256(code_verifier.encode("utf-8")).digest()
 code_challenge = base64.urlsafe_b64encode(code_challenge).decode("utf-8")
 code_challenge = code_challenge.replace("=", "")
 
+USE_COOKIES = os.environ.get("USE_COOKIES_ON_TWITTER", "false").lower() == "true"
+
+if USE_COOKIES:
+    twikit_client = TwikitClient('en-US')
+
 async def get_twikit_client():
     try:
         if os.path.exists('cookies.json'):
@@ -91,21 +96,22 @@ async def post_tweet(payload, token, parent=None):
                 return post
             elif response.status != 200:
                 print(f"Error posting tweet: {response_json}")
-                print(f"Trying twikit client...")
-                try:
-                    await get_twikit_client()
-                    response =await twikit_client.create_tweet(
-                        text=payload['text'],
-                        reply_to=parent
-                    )
-                    post = {
-                        'hash': response.id,
-                        'text': payload['text'],
-                        'parent_id': parent
-                    }
-                    return post
-                except Exception as e:
-                    print(f"Error posting tweet: {e}")
+                if USE_COOKIES:
+                    print(f"Trying twikit client...")
+                    try:
+                        await get_twikit_client()
+                        response =await twikit_client.create_tweet(
+                            text=payload['text'],
+                            reply_to=parent
+                        )
+                        post = {
+                            'hash': response.id,
+                            'text': payload['text'],
+                            'parent_id': parent
+                        }
+                        return post
+                    except Exception as e:
+                        print(f"Error posting tweet: {e}")
                 
             return None
 

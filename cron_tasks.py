@@ -129,16 +129,18 @@ async def post_thought():
 
     thought = await get_scheduled_post(post_type, post_params, previous_posts, additional_context)
     print(thought)
-    try:
-        response = post_long_cast(thought)
-        print(response)
-    except Exception as e:
-        print(f"Error posting to Farcaster: {str(e)}")
-    try:
-        refreshed_token = refresh_token()
-        await post_tweet({"text": thought}, refreshed_token, parent=None)
-    except Exception as e:
-        print(f"Error posting to Twitter: {str(e)}")
+    if os.environ.get("POST_ON_FARCASTER", "false").lower() == "true":
+        try:
+            response = post_long_cast(thought)
+            print(response)
+        except Exception as e:
+            print(f"Error posting to Farcaster: {str(e)}")
+    if os.environ.get("POST_ON_TWITTER", "false").lower() == "true":
+        try:
+            refreshed_token = refresh_token()
+            await post_tweet({"text": thought}, refreshed_token, parent=None)
+        except Exception as e:
+            print(f"Error posting to Twitter: {str(e)}")
 
 # TWITTER
 async def reply_twitter_mentions():
