@@ -157,6 +157,7 @@ def get_24_HOA_tweets(bearer_token, max_results=25):
     query = f'"24 Hours of Art" -filter:replies from:RogerDickerman since:{seven_days_ago}'
     return search_twitter(query, bearer_token, max_results)
 
+# https://developer.x.com/en/docs/x-api/tweets/counts/integrate/build-a-query
 def search_twitter_images(query, bearer_token, max_results=50):
     search_url = "https://api.twitter.com/2/tweets/search/recent"
     query_params = {

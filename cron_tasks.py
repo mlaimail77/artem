@@ -144,7 +144,7 @@ async def post_thought():
 async def reply_twitter_mentions():
     print("Replying to Twitter mentions")
     refreshed_token = refresh_token()
-    tweets = search_twitter_images("(@artto__agent) -filter:replies -is:retweet", refreshed_token["access_token"], 10)
+    tweets = search_twitter_images("(@artto__agent) -is:reply -is:retweet", refreshed_token["access_token"], 10)
     ignore_posts = get_posts_to_ignore()
     ignore_posts_ids = [post['id'] for post in ignore_posts]
 
