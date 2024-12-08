@@ -167,5 +167,3 @@ celerybeat-schedule-shm
 celerybeat-schedule-wal
 price.py
 cookies.json
-backup_reqs.txt
-twitter_no_api.py
