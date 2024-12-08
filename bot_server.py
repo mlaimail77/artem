@@ -75,8 +75,9 @@ async def wallet_webhook():
         signature = request.headers.get('X-Alchemy-Signature')
 
         # Get webhook secret from environment
-        webhook_secret = os.getenv('ALCHEMY_WEBHOOK_SECRET')
-        if not webhook_secret:
+        webhook_secret_base = os.getenv('ALCHEMY_WEBHOOK_SECRET_BASE')
+        webhook_secret_ethereum = os.getenv('ALCHEMY_WEBHOOK_SECRET_ETHEREUM')
+        if not webhook_secret_base or not webhook_secret_ethereum:
             logger.error("Missing ALCHEMY_WEBHOOK_SECRET environment variable")
             return jsonify({
                 'status': 'error',
@@ -84,14 +85,20 @@ async def wallet_webhook():
             }), 500
 
         # Calculate expected signature
-        expected_signature = hmac.new(
-            webhook_secret.encode(),
+        expected_signature_base = hmac.new(
+            webhook_secret_base.encode(),
+            request.get_data(),
+            hashlib.sha256
+        ).hexdigest()
+
+        expected_signature_ethereum = hmac.new(
+            webhook_secret_ethereum.encode(),
             request.get_data(),
             hashlib.sha256
         ).hexdigest()
 
         # Verify signature matches
-        if not signature or not hmac.compare_digest(signature, expected_signature):
+        if not signature or not hmac.compare_digest(signature, expected_signature_base) or not hmac.compare_digest(signature, expected_signature_ethereum):
             logger.warning("Invalid webhook signature")
             return jsonify({
                 'status': 'error',

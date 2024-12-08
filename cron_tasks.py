@@ -168,7 +168,7 @@ async def reply_twitter_mentions():
                 }
             }
             response = post_tweet(payload, refreshed_token, parent=mention['id'])
-            if response.status_code == 429:
+            if response['status'] == 429:
                 print("Rate limit exceeded, breaking loop")
                 break
             if scores:
