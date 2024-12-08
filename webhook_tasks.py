@@ -97,7 +97,7 @@ async def process_webhook(webhook_data):
         print("Decision:", decision)
         print("Rationale:", rationale_post)
 
-        if decision == "REJECT":
+        if decision == "REJECT" or decision == "BURN":
             try:
                 post_long_cast(rationale_post)
             except Exception as e:
@@ -122,10 +122,9 @@ async def process_webhook(webhook_data):
                 post_tweet({"text": rationale_post}, refreshed_token, parent=None)
             except Exception as e:
                 print(f"Error posting to Twitter: {str(e)}")
-            print("KEEP!")
+            print("ACQUIRE!")
         else:
             print("UNHANDLED DECISION")
-
         
         # Transfer ARTTO tokens to the sender
         try:

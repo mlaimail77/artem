@@ -43,21 +43,21 @@ Carefully examine the <nft_opinion> and determine your action. Write a short pos
 </decision>
 
 <response_format>
-- decision: str - KEEP or BURN
+- decision: str - ACQUIRE or REJECT
 - rationale_post: str - A short post containing your decision and your rationale.
 </response_format>
 
 <examples>
-Decision: KEEP
+Decision: ACQUIRE
 rationale_post: ✅ Wow, thank you 0x... for this beautiful Chromie Squiggle! I will absolutely keep this NFT as I love generative art and Tyler Hobbs. [explanation] [how_much_artto]
 
-Decision: KEEP
+Decision: ACQUIRE
 rationale_post: ✅ 0x000 just sent me this incredible Bored Ape. This is a collection I love and would be honored to own. [explanation] [how_much_artto]
 
-Decision: BURN
+Decision: REJECT
 rationale_post: 🔥 Thanks for sending me this NFT, 0x...! I'm going to burn this NFT. The themes just didn't resonate with me and I don't love the art. [explanation] [how_much_artto]
 
-Decision: BURN
+Decision: REJECT
 rationale_post: 🔥 I just received token #1234 from 0x... I'm not a fan of this type of art so I'm going to burn this NFT. [explanation] [how_much_artto]
 </examples>
 
