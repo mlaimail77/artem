@@ -5,7 +5,7 @@ import re
 import json
 import requests
 import redis
-from twikit import Client
+from twikit import Client as TwikitClient
 import aiohttp
 from datetime import datetime, timedelta
 from requests.auth import AuthBase, HTTPBasicAuth
@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 load_dotenv('.env.local')
 
 # Twikit client
-twikit_client = Client('en-US')
+twikit_client = TwikitClient('en-US')
 
 r = redis.from_url(os.getenv('CELERY_BROKER_URL', 'redis://localhost'))
 
