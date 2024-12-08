@@ -39,15 +39,22 @@ code_challenge = base64.urlsafe_b64encode(code_challenge).decode("utf-8")
 code_challenge = code_challenge.replace("=", "")
 
 async def get_twikit_client():
-    if os.path.exists('cookies.json'):
-        twikit_client.load_cookies('cookies.json')
-    else:
-        await twikit_client.login(
-            auth_info_1=os.environ.get("TWITTER_USERNAME"),
-            auth_info_2=os.environ.get("TWITTER_EMAIL"),
-            password=os.environ.get("TWITTER_PASSWORD")
-        )
-        twikit_client.save_cookies('cookies.json')
+    try:
+        if os.path.exists('cookies.json'):
+            twikit_client.load_cookies('cookies.json')
+        else:
+            raise FileNotFoundError
+    except:
+        try:
+            await twikit_client.login(
+                auth_info_1=os.environ.get("TWITTER_USERNAME"),
+                auth_info_2=os.environ.get("TWITTER_EMAIL"),
+                password=os.environ.get("TWITTER_PASSWORD")
+            )
+            twikit_client.save_cookies('cookies.json')
+        except Exception as e:
+            print(f"Authentication failed: {e}")
+            raise
 
 async def post_tweet(payload, token, parent=None):    
     print("Attempting to tweet!")
@@ -210,7 +217,7 @@ def search_twitter_images(query, bearer_token, max_results=50):
 
 def main():
     refreshed_token = refresh_token()
-    post_tweet({"text": "🎨🖌️🎨🖌️🎨🖌️"}, refreshed_token)
+    # post_tweet({"text": "🎨🖌️🎨🖌️🎨🖌️"}, refreshed_token)
 
 if __name__ == "__main__":
     main()
