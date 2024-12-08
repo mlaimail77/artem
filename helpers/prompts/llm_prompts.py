@@ -1,6 +1,7 @@
 from helpers.prompts.core_identity import CORE_IDENTITY
 from helpers.prompts.scoring_criteria import SCORING_CRITERIA, SCORING_CRITERIA_TEMPLATE
 from helpers.prompts.voice_and_tone import VOICE_AND_TONE
+from helpers.prompts.spam_prompts import SPAM_IDENTIFICATION_PROMPT
 from helpers.prompts.casual_thought_topics import *
 
 import json
@@ -335,6 +336,8 @@ Tool call: NONE. IGNORE.
 
 For other types of links that aren't opensea, basescan, or etherscan, you can say "I don't support other networks yet.". 
 
+If you see a URL like https://t.co. Reply with "I only support OpenSea, BaseScan, and Etherscan links."
+
 <post_to_reply_to>
 {post_to_reply_to}
 </post_to_reply_to>
@@ -417,4 +420,8 @@ def get_nft_post_prompt(nft_analysis, decision):
 
 def get_thoughts_on_trending_casts_prompt():
     system_prompt = CORE_IDENTITY + VOICE_AND_TONE + GET_THOUGHTS_ON_TRENDING_CASTS
+    return system_prompt
+
+def get_spam_identification_prompt(tweet):
+    system_prompt = SPAM_IDENTIFICATION_PROMPT.format(tweet=tweet)
     return system_prompt

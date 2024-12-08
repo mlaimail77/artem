@@ -144,16 +144,28 @@ async def post_thought():
 async def reply_twitter_mentions():
     print("Replying to Twitter mentions")
     refreshed_token = refresh_token()
-    tweets = search_twitter_images("@artto__agent -is:retweet", refreshed_token["access_token"], 10)
+    tweets = search_twitter_images("(@artto__agent) -filter:replies -is:retweet", refreshed_token["access_token"], 10)
+    ignore_posts = get_posts_to_ignore()
+    ignore_posts_ids = [post['id'] for post in ignore_posts]
+
     print(tweets)
     for mention in tweets:
+        if mention['id'] in ignore_posts_ids:
+            print("Skipping ignored post")
+            continue
+
+        spam_result = identify_spam(mention['text'])
+    
+        if spam_result.is_spam:
+            print(f"SPAM DETECTED: {mention['text']}")
+            print("Skipping spam tweet")
+            set_post_to_ignore(mention['id'])
+            continue
+
         print(mention)
         print(f"Replying to mention: {mention['text']}")
         post_params = generate_post_params()
-        posts_replied_to = get_all_posts_replied_to()
-        if any(p['parent_id'] == mention['id'] for p in posts_replied_to):
-            print("Already replied to this parent")
-            continue
+
         if mention.get('author_id', None) == os.getenv('X_USER_ID'):
             print("Skipping self-mention")
             continue
@@ -168,9 +180,9 @@ async def reply_twitter_mentions():
                 }
             }
             response = post_tweet(payload, refreshed_token, parent=mention['id'])
-            if response['status'] == 429:
-                print("Rate limit exceeded, breaking loop")
-                break
+            if response:
+                set_post_created(response)
+                set_post_to_ignore(mention['id'])
             if scores:
                 score_calcs = get_total_score(scores["artwork_analysis"])
                 store_nft_scores(scores, score_calcs)

@@ -6,6 +6,7 @@ import json
 from helpers.nft_data_helpers import *
 from helpers.prompts.llm_prompts import *
 from helpers.scoring_criteria_schema import *
+from helpers.spam_tweet_schema import *
 
 client = OpenAI(
     api_key=os.getenv('OPENAI_API_KEY')
@@ -30,6 +31,15 @@ tools = [
         },
     }
 ]
+
+def identify_spam(tweet):
+    system_prompt = get_spam_identification_prompt(tweet)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": system_prompt}],
+        response_format=SpamTweet
+    )
+    return response.choices[0].message.parsed
 
 
 def adjust_weights(weights, nft_scores):

@@ -49,14 +49,7 @@ async def get_twikit_client():
         )
         twikit_client.save_cookies('cookies.json')
 
-async def post_tweet(payload, token, parent=None):
-
-    posts_replied_to = get_all_posts_replied_to()
-
-    if parent and any(p['parent_id'] == parent for p in posts_replied_to):
-        print("Already replied to this parent")
-        return json.dumps({"success": False, "reason": "already_replied"})
-    
+async def post_tweet(payload, token, parent=None):    
     print("Attempting to tweet!")
 
     async with aiohttp.ClientSession() as session:
@@ -70,39 +63,44 @@ async def post_tweet(payload, token, parent=None):
         ) as response:
             response_json = await response.json()
             print(f"Tweet Response: {response_json}")
-            # if response.status == 429:
-            #     reset_time = response.headers.get('x-rate-limit-reset')
-            #     limit = response.headers.get('x-rate-limit-limit')
-            #     remaining = response.headers.get('x-rate-limit-remaining')
-            #     print(f"Rate limit ceiling: {limit}")
-            #     print(f"Remaining requests: {remaining}")
-            #     reset_timestamp = datetime.fromtimestamp(int(reset_time))
-            #     minutes_until_reset = (reset_timestamp - datetime.now()).total_seconds() / 60
-            #     print(f"Rate limit reset time: {reset_timestamp} ({minutes_until_reset:.1f} minutes from now)")
-            #     return {
-            #         'error': 'Rate limit exceeded',
-            #         'reset_time': reset_time
-            #     }
+            if response.status == 429:
+                reset_time = response.headers.get('x-rate-limit-reset')
+                limit = response.headers.get('x-rate-limit-limit')
+                remaining = response.headers.get('x-rate-limit-remaining')
+                print(f"Rate limit ceiling: {limit}")
+                print(f"Remaining requests: {remaining}")
+                reset_timestamp = datetime.fromtimestamp(int(reset_time))
+                minutes_until_reset = (reset_timestamp - datetime.now()).total_seconds() / 60
+                print(f"Rate limit reset time: {reset_timestamp} ({minutes_until_reset:.1f} minutes from now)")
+
 
             if response.status == 200:
+                print(f"Tweet posted successfully: {response_json}")
                 post = {
                     'hash': response_json['data']['id'],
                     'text': payload['text'],
                     'parent_id': parent
                 }
-                set_post_created(post)
+                return post
             elif response.status != 200:
+                print(f"Error posting tweet: {response_json}")
+                print(f"Trying twikit client...")
                 try:
                     await get_twikit_client()
                     response =await twikit_client.create_tweet(
                         text=payload['text'],
                         reply_to=parent
                     )
-                    response_json = response.json()
+                    post = {
+                        'hash': response.id,
+                        'text': payload['text'],
+                        'parent_id': parent
+                    }
+                    return post
                 except Exception as e:
                     print(f"Error posting tweet: {e}")
                 
-            return response_json
+            return None
 
 
 def make_token():

@@ -115,6 +115,16 @@ def get_last_n_posts(n=10):
     posts_text = "\n".join([post["content"] for post in response.data])
     return posts_text
 
+def set_post_to_ignore(post_id):
+    response = refresh_or_get_supabase_client()
+    response = supabase.table("ignore_posts").insert({"id": post_id}).execute()
+    return response.data
+
+def get_posts_to_ignore():
+    response = refresh_or_get_supabase_client()
+    response = supabase.table("ignore_posts").select("id").execute()
+    return response.data
+
 def get_all_posts_replied_to():
     print("Fetching posts replied to")
     response = refresh_or_get_supabase_client()
