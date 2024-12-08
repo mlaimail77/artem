@@ -34,7 +34,7 @@ tools = [
 
 def identify_spam(tweet):
     system_prompt = get_spam_identification_prompt(tweet)
-    response = client.chat.completions.create(
+    response = client.beta.chat.completions.parse(
         model="gpt-4o-mini",
         messages=[{"role": "system", "content": system_prompt}],
         response_format=SpamTweet
