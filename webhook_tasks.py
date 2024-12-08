@@ -18,8 +18,17 @@ async def process_webhook(webhook_data):
                 'status': 'skipped',
                 'reason': 'Not ADDRESS_ACTIVITY event'
             }
-
+        
         activity = webhook_data['event']['activity'][0]
+
+        # Skip if not an ERC721 token transfer
+        if 'erc721TokenId' not in activity:
+            logger.info(f"Skipping - not an ERC721 token transfer")
+            return {
+                'status': 'skipped',
+                'reason': 'Not ERC721 transfer'
+            }
+
         to_address = activity['toAddress']
 
         # Only process if this is an incoming transfer to our wallet
@@ -48,7 +57,7 @@ async def process_webhook(webhook_data):
             cdp_network = webhook_network
             current_wallet_address = os.getenv('ARTTO_ADDRESS_MAINNET')
 
-        token_id = int(activity['erc721TokenId'], 16)  # Convert hex to decimal
+        token_id = str(int(activity['erc721TokenId'], 16))  # Convert hex to decimal
         from_address = activity['fromAddress']
         contract_address = activity['rawContract']['address']
         post_content = f"I just received token #{token_id} from {from_address}!"

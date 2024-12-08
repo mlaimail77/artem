@@ -26,6 +26,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# @flask_app.route('/test-twitter')
+# def test_twitter():
+#     try:
+#         await post_tweet({"text": "Hello, world!"}, refresh_token(), parent=None)
+#         return jsonify({'status': 'success', 'message': 'Twitter test successful'}), 200
+#     except Exception as e:
+#         return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @flask_app.route('/')
 def home():
     recent_nft_scores = get_recent_nft_scores()

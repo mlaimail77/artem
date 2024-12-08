@@ -86,7 +86,7 @@ async def post_tweet(payload, token, parent=None):
                 print(f"Rate limit reset time: {reset_timestamp} ({minutes_until_reset:.1f} minutes from now)")
 
 
-            if response.status == 200:
+            if response['data']['text']:
                 print(f"Tweet posted successfully: {response_json}")
                 post = {
                     'hash': response_json['data']['id'],
