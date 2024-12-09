@@ -51,7 +51,7 @@ def sync_post_channel_casts():
 
 @shared_task(ignore_result=False, name="post_thought_about_feed")
 def sync_post_thought_about_feed(post_on_twitter=False, post_on_farcaster=True):
-    async_to_sync(post_thought_about_feed)(post_on_twitter, post_on_farcaster, post_type="Community Response")
+    async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type="Community Response")
 
 @shared_task(ignore_result=False, name="post_thought")
 def sync_post_thought(post_on_twitter=False, post_on_farcaster=True, post_type=None):

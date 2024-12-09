@@ -168,3 +168,4 @@ celerybeat-schedule-wal
 price.py
 cookies.json
 twitter_testing.py
+opensea_test.py

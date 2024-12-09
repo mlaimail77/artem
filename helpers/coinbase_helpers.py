@@ -115,7 +115,51 @@ def transfer_artto_token(wallet, token_amount, destination):
     except Exception as e:
         return f"Error transferring tokens: {str(e)}"
 
-def transfer_nft(wallet, network_id, contract_address, from_address, to_address, token_id):
+def transfer_erc1155(wallet, network_id, contract_address, from_address, to_address, token_id):
+    try:
+        print("Trying to transfer NFT")
+        abi = get_abi(network_id, contract_address)
+        invoke_contract = wallet.invoke_contract(
+            contract_address=contract_address,
+            method="safeTransferFrom", 
+            abi=abi,
+            args={"from":from_address, "to":to_address, "tokenId":token_id, "amount":1}
+        )
+        invoke_contract.wait()
+        return f"Successfully transferred NFT {token_id} from {from_address} to {to_address}"
+    except Exception as first_error:
+        print(f"Error transferring NFT: {str(first_error)}")
+        print("Trying again with implementation contract")
+        try:
+            # If first attempt fails, try getting implementation contract
+            implementation_contract = SmartContract.read(
+                network_id=network_id,
+                contract_address=contract_address,
+                method="implementation",
+                abi=abi
+            )
+            
+            # Get ABI of implementation contract
+            implementation_abi = get_abi(network_id, implementation_contract)
+            
+            # Try transfer with implementation contract ABI but proxy address
+            invoke_contract = wallet.invoke_contract(
+                contract_address=contract_address,
+                method="safeTransferFrom",
+                abi=implementation_abi, 
+                args={"from":from_address, "to":to_address, "tokenId":token_id, "amount":1}
+            )
+            invoke_contract.wait()
+            return f"Successfully transferred NFT {token_id} from {from_address} to {to_address}"
+        except Exception as e:
+            error_msg = f"Error transferring NFT: {str(e)}"
+            if hasattr(e, 'api_message'):
+                error_msg += f" - {e.api_message}" 
+            return error_msg
+
+
+
+def transfer_erc721(wallet, network_id, contract_address, from_address, to_address, token_id):
     try:
         print("Trying to transfer NFT")
         abi = get_abi(network_id, contract_address)
@@ -174,9 +218,26 @@ if __name__ == "__main__":
 
     print(wallet.default_address.balance(asset_id="0x9239e9F9E325E706EF8b89936eCe9d48896AbBe3"))
 
+    abi = get_abi("base-mainnet", "0xe970aC680342aFf70BB8D90A4C602D70f4405637")
+    implementation_contract = SmartContract.read(
+        network_id="base-mainnet",
+        contract_address="0xe970aC680342aFf70BB8D90A4C602D70f4405637",
+        method="implementation",
+        abi=abi
+    )
 
-    transfer = transfer_artto_token(wallet, 1, "0x9424116b9D61d04B678C5E5EddF8499f88ED9ADE")
-    print(transfer)
+    # transfer = transfer_erc721(
+    #     wallet=wallet,
+    #     network_id="base-mainnet",
+    #     contract_address="0xe970aC680342aFf70BB8D90A4C602D70f4405637",
+    #     from_address="0x4e64c721eBBE3285CFA60b61a3E12a8f4E1709E8",
+    #     to_address="0x9424116b9D61d04B678C5E5EddF8499f88ED9ADE",
+    #     token_id="4")
+    # print(transfer)
+
+
+    # transfer = transfer_artto_token(wallet, 1, "0x9424116b9D61d04B678C5E5EddF8499f88ED9ADE")
+    # print(transfer)
 
     # transfer.wait()
 
@@ -195,7 +256,7 @@ if __name__ == "__main__":
     #     gasless=True
     # )
 
-    print(wallet.default_address.balance(asset_id="0x9239e9F9E325E706EF8b89936eCe9d48896AbBe3"))
+    # print(wallet.default_address.balance(asset_id="0x9239e9F9E325E706EF8b89936eCe9d48896AbBe3"))
     # response = buy_token.wow_buy_token(
     #     wallet=wallet,
     #     contract_address="0x9239e9f9e325e706ef8b89936ece9d48896abbe3",

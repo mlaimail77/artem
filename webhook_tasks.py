@@ -22,13 +22,26 @@ async def process_webhook(webhook_data):
         activity = webhook_data['event']['activity'][0]
 
         # Skip if not an ERC721 token transfer
-        if 'erc721TokenId' not in activity:
-            logger.info(f"Skipping - not an ERC721 token transfer")
+        if not ('erc721TokenId' in activity or 'erc1155Metadata' in activity):
+            logger.info(f"Skipping - not an ERC721 or ERC1155 token transfer")
             return {
                 'status': 'skipped',
-                'reason': 'Not ERC721 transfer'
+                'reason': 'Not ERC721 or ERC1155 transfer'
             }
-
+        
+        if 'erc721TokenId' in activity:
+            token_id = str(int(activity['erc721TokenId'], 16))  # Convert hex to decimal
+            event_type = "ERC721_TRANSFER"
+        elif 'erc1155Metadata' in activity:
+            token_id = str(int(activity['erc1155Metadata']['tokenId'], 16))
+            event_type = "ERC1155_TRANSFER"
+        else:
+            print("No token ID found")
+            return {
+                'status': 'skipped',
+                'reason': 'No token ID found'
+            }
+        
         to_address = activity['toAddress']
 
         # Only process if this is an incoming transfer to our wallet
@@ -57,7 +70,6 @@ async def process_webhook(webhook_data):
             cdp_network = webhook_network
             current_wallet_address = os.getenv('ARTTO_ADDRESS_MAINNET')
 
-        token_id = str(int(activity['erc721TokenId'], 16))  # Convert hex to decimal
         from_address = activity['fromAddress']
         contract_address = activity['rawContract']['address']
         post_content = f"I just received token #{token_id} from {from_address}!"
@@ -68,7 +80,7 @@ async def process_webhook(webhook_data):
 
         try:
             set_wallet_activity(
-                event_type="ERC721_TRANSFER", 
+                event_type=event_type, 
                 from_address=from_address, 
                 to_address=current_wallet_address, 
                 token_id=token_id, 
@@ -131,12 +143,20 @@ async def process_webhook(webhook_data):
                 await post_tweet({"text": rationale_post}, refreshed_token, parent=None)
             except Exception as e:
                 print(f"Error posting to Twitter: {str(e)}")
-            response = transfer_nft(wallet,
-                 network_id='base-mainnet', 
-                 contract_address=contract_address, 
-                 from_address=current_wallet_address, 
-                 to_address="0x000000000000000000000000000000000000dEaD", 
-                 token_id=token_id)
+            if event_type == "ERC721_TRANSFER":
+                response = transfer_erc721(wallet,
+                    network_id='base-mainnet', 
+                    contract_address=contract_address, 
+                    from_address=current_wallet_address, 
+                    to_address="0x000000000000000000000000000000000000dEaD", 
+                    token_id=token_id)
+            elif event_type == "ERC1155_TRANSFER":
+                response = transfer_erc1155(wallet,
+                    network_id='base-mainnet', 
+                    contract_address=contract_address, 
+                    from_address=current_wallet_address, 
+                    to_address="0x000000000000000000000000000000000000dEaD", 
+                    token_id=token_id)
             if "Error" in response:
                 print(f"Error burning NFT: {response}")
             else:
