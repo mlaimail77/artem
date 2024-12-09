@@ -33,7 +33,7 @@ async def process_webhook(webhook_data):
             token_id = str(int(activity['erc721TokenId'], 16))  # Convert hex to decimal
             event_type = "ERC721_TRANSFER"
         elif 'erc1155Metadata' in activity:
-            token_id = str(int(activity['erc1155Metadata']['tokenId'], 16))
+            token_id = str(int(activity['erc1155Metadata'][0]['tokenId'], 16))
             event_type = "ERC1155_TRANSFER"
         else:
             print("No token ID found")
