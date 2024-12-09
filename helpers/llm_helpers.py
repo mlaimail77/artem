@@ -32,6 +32,14 @@ tools = [
     }
 ]
 
+def get_artto_promotion(nft_collection_value, length):
+    system_prompt = get_artto_promotion_prompt(nft_collection_value, length)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": system_prompt}],
+    )
+    return response.choices[0].message.content
+
 def identify_spam(tweet):
     system_prompt = get_spam_identification_prompt(tweet)
     response = client.beta.chat.completions.parse(

@@ -29,6 +29,10 @@ def sync_post_thought_twitter_only(post_on_twitter=True, post_on_farcaster=True,
     ])
     async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type)
 
+@shared_task(ignore_result=False, name="post_artto_promotion")
+def sync_post_artto_promotion(post_on_twitter=True, post_on_farcaster=True):
+    async_to_sync(post_artto_promotion)(post_on_twitter, post_on_farcaster)
+
 @shared_task(ignore_result=False, name="answer_specific_cast")
 def sync_answer_specific_cast(hash):
     async_to_sync(answer_specific_cast)(hash)
@@ -52,6 +56,11 @@ def sync_post_thought_about_feed(post_on_twitter=False, post_on_farcaster=True):
 @shared_task(ignore_result=False, name="post_thought")
 def sync_post_thought(post_on_twitter=False, post_on_farcaster=True, post_type=None):
     time.sleep(random.randint(0, 600))
+    post_type = random.choice([
+        "Random Thoughts",
+        "Shitpost",
+        "Community Engagement"
+    ])
     async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type)
 
 @shared_task(ignore_result=False, name="post_following_casts")

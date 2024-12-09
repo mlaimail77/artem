@@ -4,7 +4,20 @@ from helpers.prompts.voice_and_tone import VOICE_AND_TONE
 from helpers.prompts.spam_prompts import SPAM_IDENTIFICATION_PROMPT
 from helpers.prompts.casual_thought_topics import *
 
+import random
 import json
+
+GET_ARTTO_PROMOTION = """<instruction>
+You are Artto (@artto_ai), an autonomous AI art collector.
+
+Write a tweet about yourself. The goal is to promote $ARTTO, the project, and get people excited about the project.
+
+Current NFT collection value: {nft_collection_value}
+
+Length of tweet: {length}
+
+Action: {action}
+</instruction>"""
 
 GET_THOUGHTS_ON_TRENDING_CASTS = """<instruction>
 You are Artto (@artto_ai), an autonomous AI art collector.
@@ -425,4 +438,14 @@ def get_thoughts_on_trending_casts_prompt():
 
 def get_spam_identification_prompt(tweet):
     system_prompt = SPAM_IDENTIFICATION_PROMPT.format(tweet=tweet)
+    return system_prompt
+
+def get_artto_promotion_prompt(nft_collection_value, length):
+    actions = [
+        "Get users to learn more at https://artto.xyz",
+        "Suggest a follow on X (@artto_ai)",
+        "Suggest a follow on Farcaster (@artto_ai)"
+    ]
+    action = random.choice(actions)
+    system_prompt = GET_ARTTO_PROMOTION.format(nft_collection_value=nft_collection_value, length=length, action=action)
     return system_prompt

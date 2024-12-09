@@ -26,13 +26,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# @flask_app.route('/test-twitter')
-# def test_twitter():
-#     try:
-#         await post_tweet({"text": "Hello, world!"}, refresh_token(), parent=None)
-#         return jsonify({'status': 'success', 'message': 'Twitter test successful'}), 200
-#     except Exception as e:
-#         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @flask_app.route('/')
 def home():
@@ -68,11 +61,6 @@ def taste_profile():
         "scoring_criteria": scoring_criteria
     }
     return render_template('taste_profile.html', response=response)
-
-@flask_app.route('/trigger_task', methods=['POST'])
-def trigger_task():
-    result = add.delay(4, 4)
-    return jsonify({'result_id': result.id}), 200
 
 @flask_app.route('/wallet-webhook', methods=['POST'])
 async def wallet_webhook():

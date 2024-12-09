@@ -26,6 +26,10 @@ def create_app() -> Flask:
                     "task": "post_thought", 
                     "schedule": 1800
                 },
+                "post_artto_promotion_every_12_hours": {
+                    "task": "post_artto_promotion",
+                    "schedule": 43200
+                },
                 "post_channel_casts_every_2_hours": {
                     "task": "post_channel_casts",
                     "schedule": 7200
@@ -45,6 +49,10 @@ def create_app() -> Flask:
                 "refresh_twitter_token_every_2_hours": {
                     "task": "refresh_twitter_token",
                     "schedule": 7200
+                },
+                "post_trending_nfts_every_11_hours": {
+                    "task": "post_trending_nfts",
+                    "schedule": 39600
                 },
             },
         ),

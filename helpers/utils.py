@@ -115,9 +115,14 @@ def get_last_n_posts(n=10):
     posts_text = "\n".join([post["content"] for post in response.data])
     return posts_text
 
-def set_post_to_ignore(post_id):
+def set_post_to_ignore(post_id, reason="None"):
     response = refresh_or_get_supabase_client()
-    response = supabase.table("ignore_posts").insert({"id": post_id}).execute()
+    insert_data = {
+        "id": post_id,
+        "created_at": str(datetime.now()),
+        "reason": reason
+    }
+    response = supabase.table("ignore_posts").insert(insert_data).execute()
     return response.data
 
 def get_posts_to_ignore():
@@ -141,7 +146,8 @@ def set_wallet_activity(event_type, from_address, to_address, token_id, network,
         "token_id": token_id,
         "network": network,
         "contract_address": contract_address,
-        "amount": str(amount)
+        "amount": str(amount),
+        "created_at": str(datetime.now())
     }
     response = supabase.table("wallet_activity").insert(insert_data).execute()
     return response.data

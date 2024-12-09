@@ -13,6 +13,24 @@ load_dotenv('.env.local')
 def refresh_twitter_token():
     refresh_token()
 
+async def post_artto_promotion(post_on_twitter=True, post_on_farcaster=True):
+    wallet_value = get_wallet_valuation(os.getenv('ARTTO_ADDRESS_MAINNET'))
+    post_params = generate_post_params()
+    reply = get_artto_promotion(wallet_value, post_params['length'])
+    if post_on_farcaster:
+        try:
+            response = post_long_cast(reply)
+            print(response)
+        except Exception as e:
+            print(f"Error posting to Farcaster: {str(e)}")
+    if post_on_twitter:
+        try:
+            refreshed_token = refresh_token()
+            await post_tweet({"text": reply}, refreshed_token, parent=None)
+        except Exception as e:
+            print(f"Error posting to Twitter: {str(e)}")
+
+
 async def process_adjust_weights():
     weights = get_taste_weights()
     nft_scores = get_nft_scores(n=10)
@@ -142,7 +160,7 @@ async def reply_twitter_mentions():
         if spam_result.is_spam:
             print(f"SPAM DETECTED: {mention['text']}")
             print("Skipping spam tweet")
-            set_post_to_ignore(mention['id'])
+            set_post_to_ignore(mention['id'], "spam")
             continue
 
         print(mention)
@@ -165,7 +183,7 @@ async def reply_twitter_mentions():
             response = await post_tweet(payload, refreshed_token, parent=mention['id'])
             if response:
                 set_post_created(response)
-                set_post_to_ignore(mention['id'])
+                set_post_to_ignore(mention['id'], "parent")
             if scores:
                 score_calcs = get_total_score(scores["artwork_analysis"])
                 store_nft_scores(scores, score_calcs)

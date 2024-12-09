@@ -200,7 +200,8 @@ def post_long_cast(text, parent=None, channel_id=None):
                 'parent_id': parent
             }
             set_post_created(post)
-            set_post_to_ignore(parent)
+            if parent:
+                set_post_to_ignore(parent, "parent")
             return [response]
         return []
         
