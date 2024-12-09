@@ -16,14 +16,18 @@ from webhook_tasks import *
 import time
 
 
-flask_app = create_app()  #-Line 2
-celery_app = flask_app.extensions["celery"] #-Line 3
+flask_app = create_app()
+celery_app = flask_app.extensions["celery"]
 
 logger = get_task_logger(__name__)
 
 @shared_task(ignore_result=False, name="post_thought_twitter_only")
-def sync_post_thought_twitter_only():
-    async_to_sync(post_thought_twitter_only)()
+def sync_post_thought_twitter_only(post_on_twitter=True, post_on_farcaster=True, post_type=None):
+    post_type = random.choice([
+        "Random Thoughts",
+        "Shitpost"
+    ])
+    async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type)
 
 @shared_task(ignore_result=False, name="answer_specific_cast")
 def sync_answer_specific_cast(hash):
@@ -42,21 +46,21 @@ def sync_post_channel_casts():
     async_to_sync(post_channel_casts)()
 
 @shared_task(ignore_result=False, name="post_thought_about_feed")
-def sync_post_thought_about_feed():
-    async_to_sync(post_thought_about_feed)()
+def sync_post_thought_about_feed(post_on_twitter=False, post_on_farcaster=True):
+    async_to_sync(post_thought_about_feed)(post_on_twitter, post_on_farcaster, post_type="Community Response")
 
 @shared_task(ignore_result=False, name="post_thought")
-def sync_post_thought():
+def sync_post_thought(post_on_twitter=False, post_on_farcaster=True, post_type=None):
     time.sleep(random.randint(0, 600))
-    async_to_sync(post_thought)()
+    async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type)
 
 @shared_task(ignore_result=False, name="post_following_casts")
 def sync_post_following_casts():
     async_to_sync(post_following_casts)()
 
 @shared_task(ignore_result=False, name="post_trending_nfts")
-def sync_post_trending_nfts():
-    async_to_sync(post_trending_nfts)()
+def sync_post_trending_nfts(post_on_twitter=False, post_on_farcaster=True):
+    async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type="Trending Collections")
 
 @shared_task(ignore_result=False, name="process_webhook")
 def sync_process_webhook(webhook_data):
@@ -69,8 +73,3 @@ def sync_process_neynar_webhook(webhook_data):
 @shared_task(ignore_result=False, name="adjust_weights")
 def sync_adjust_weights():
     async_to_sync(process_adjust_weights)()
-
-@shared_task(ignore_result=False, name="add")
-def add(x, y):
-    logger.info(f'Adding {x} + {y}')
-    return x + y

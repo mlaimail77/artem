@@ -131,6 +131,20 @@ def get_all_posts_replied_to():
     response = supabase.table("posts_created").select("parent_id").execute()
     return response.data
 
+def set_wallet_activity(event_type, from_address, to_address, token_id, network, contract_address, amount):
+    response = refresh_or_get_supabase_client()
+    insert_data = {
+        "id": hashlib.sha256(f"{network}:{contract_address}:{token_id}:{str(datetime.now())}".encode()).hexdigest(),
+        "event_type": event_type,
+        "from_address": from_address,
+        "to_address": to_address,
+        "token_id": token_id,
+        "network": network,
+        "contract_address": contract_address,
+        "amount": str(amount)
+    }
+    response = supabase.table("wallet_activity").insert(insert_data).execute()
+    return response.data
 
 def get_all_posts():
     print("Fetching all posts")

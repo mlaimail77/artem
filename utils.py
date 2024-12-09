@@ -30,7 +30,7 @@ def create_app() -> Flask:
                     "task": "post_channel_casts",
                     "schedule": 7200
                 },
-                "reply_twitter_mentions_every_2_hours": {
+                "post_thought_twitter_only_every_2_hours": {
                     "task": "post_thought_twitter_only",
                     "schedule": 7200
                 },

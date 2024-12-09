@@ -66,6 +66,22 @@ async def process_webhook(webhook_data):
         print("contract_address:", contract_address)
         print("token_id:", token_id)
 
+        try:
+            set_wallet_activity(
+                event_type="ERC721_TRANSFER", 
+                from_address=from_address, 
+                to_address=current_wallet_address, 
+                token_id=token_id, 
+                network=webhook_network, 
+                contract_address=contract_address, 
+                amount=1
+            )
+        except Exception as e:
+            print(f"Error setting wallet activity: {str(e)}")
+            return {
+                'status': 'error',
+                'error': str(e)
+            }
 
         print("Getting NFT metadata")
         try:
@@ -121,7 +137,19 @@ async def process_webhook(webhook_data):
                  from_address=current_wallet_address, 
                  to_address="0x000000000000000000000000000000000000dEaD", 
                  token_id=token_id)
-            print(response)
+            if "Error" in response:
+                print(f"Error burning NFT: {response}")
+            else:
+                set_wallet_activity(
+                    event_type="ERC721_TRANSFER", 
+                    from_address=current_wallet_address, 
+                    to_address="0x000000000000000000000000000000000000dEaD", 
+                    token_id=token_id, 
+                    network=webhook_network, 
+                    contract_address=contract_address, 
+                    amount=1
+                )
+                print(f"Successfully burned NFT: {response}")
         elif decision == "ACQUIRE":
             try:
                 post_long_cast(rationale_post)
@@ -143,6 +171,16 @@ async def process_webhook(webhook_data):
                 from_address
             )
             print(response)
+            set_wallet_activity(
+                event_type="ERC20_TRANSFER", 
+                from_address=current_wallet_address, 
+                to_address=from_address, 
+                token_id=token_id, 
+                network=webhook_network, 
+                contract_address=contract_address, 
+                amount=round(reward_points)
+            )
+
         except Exception as e:
             print(f"Error transferring ARTTO tokens: {str(e)}")
 
