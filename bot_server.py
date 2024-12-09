@@ -1,7 +1,7 @@
 
 
 from flask import request, jsonify, render_template, session, redirect
-from tasks import flask_app, add, sync_process_webhook, sync_process_neynar_webhook
+from tasks import flask_app, sync_process_webhook, sync_process_neynar_webhook
 
 import logging
 import os
