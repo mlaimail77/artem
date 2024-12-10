@@ -59,7 +59,9 @@ def sync_post_thought_about_feed(post_on_twitter=False, post_on_farcaster=True):
 
 @shared_task(ignore_result=False, name="post_thought")
 def sync_post_thought(post_on_twitter=False, post_on_farcaster=True, post_type=None):
-    time.sleep(random.randint(0, 600))
+    sleep_time = random.randint(0, 600)
+    print(f"Post thought task started; sleeping for {sleep_time} seconds")
+    time.sleep(sleep_time)
     post_type = random.choice([
         "Random Thoughts",
         "Shitpost",

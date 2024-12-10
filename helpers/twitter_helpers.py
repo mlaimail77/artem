@@ -61,6 +61,9 @@ async def get_twikit_client():
             raise
 
 def get_followers(id, bearer_token):
+
+    print(f"Getting followers for {id}")
+    
     url = f"https://api.twitter.com/2/users/{id}/followers"
 
     def bearer_oauth(r):
