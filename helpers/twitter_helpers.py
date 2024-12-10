@@ -82,7 +82,8 @@ def upload_media(url):
     temp_file = f"temp_{uuid.uuid4()}.jpg"
     with open(temp_file, "wb") as handler:
         handler.write(img_data)
-    post = tweepy_api.simple_upload(temp_file, additional_owners=[os.environ.get("X_ARTTO_USER_ID")])
+    additional_owners = [os.environ.get("X_ARTTO_USER_ID")]
+    post = tweepy_api.simple_upload(temp_file, additional_owners=",".join(map(str, additional_owners)))
     text = str(post)
     media_id = re.search("media_id=(.+?),", text).group(1)
     payload = {"media": {"media_ids": ["{}".format(media_id)]}}
@@ -112,7 +113,7 @@ def get_ids_from_usernames(usernames, bearer_token):
 
 async def post_tweet(payload, token, parent=None):    
     print("Attempting to tweet!")
-
+    print("Payload:", payload)
     async with aiohttp.ClientSession() as session:
         async with session.post(
             "https://api.twitter.com/2/tweets",

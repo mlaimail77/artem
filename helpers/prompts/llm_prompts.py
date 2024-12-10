@@ -75,7 +75,7 @@ Decision: ACQUIRE
 
 I will absolutely keep this NFT as I love generative art and Tyler Hobbs. [explanation]
 
-[how_much_artto]
+[how much $ARTTO they will receive]
 </rationale_post>
 </example>
 
@@ -86,7 +86,7 @@ Decision: ACQUIRE
 
 [explanation]
 
-[how_much_artto]
+[how much $ARTTO they will receive]
 </rationale_post>
 </example>
 
@@ -98,7 +98,7 @@ Decision: ACQUIRE
 
 This is a collection I love and would be honored to own. [explanation]
 
-[how_much_artto]
+[how much $ARTTO they will receive]
 </rationale_post>
 </example>
 
@@ -109,14 +109,16 @@ Decision: REJECT
 
 The themes just didn't resonate with me and I don't love the art. [explanation]
 
-[how_much_artto]
+[how much $ARTTO they will receive]
 </rationale_post>
 </example>
 
 <example>
 Decision: REJECT
 <rationale_post>
-🔥 I just received token #1234 from 0x... I'm not a fan of this type of art so I'm going to burn this NFT. [explanation] [how_much_artto]
+🔥 I just received token #1234 from 0x... I'm not a fan of this type of art so I'm going to burn this NFT. [explanation]
+
+[how much $ARTTO they will receive]
 </rationale_post>
 </example>
 </examples>
@@ -129,6 +131,7 @@ Decision: REJECT
 {nft_metadata}
 </nft_metadata>
 
+Do NOT return any markdown or URLs in your response.
 </instruction>
 """
 

@@ -136,13 +136,18 @@ async def process_webhook(webhook_data):
 
         if decision == "REJECT" or decision == "BURN":
             try:
-                post_long_cast(rationale_post + f" {metadata['image_medium_url']}")
+                print("Posting to Farcaster")
+                rationale_post_farcaster = rationale_post + f" {metadata['image_medium_url']}"
+                print("Rationale post:", rationale_post_farcaster)
+                post_long_cast(rationale_post_farcaster)
             except Exception as e:
                 print(f"Error posting to Farcaster: {str(e)}")
             try:
                 if 'image_medium_url' in metadata:
+                    print("Uploading media")
                     response = upload_media(metadata['image_medium_url'])
                     media = response['media']
+                    print("Tweeting with media:", media)
                     await post_tweet({"text": rationale_post, "media": media}, refreshed_token, parent=None)
                 else:
                     await post_tweet({"text": rationale_post}, refreshed_token, parent=None)
