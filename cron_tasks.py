@@ -13,6 +13,63 @@ load_dotenv('.env.local')
 def refresh_twitter_token():
     refresh_token()
 
+async def reply_to_followers():
+    refreshed_token = refresh_token()
+    X_FOLLOWERS = get_followers(os.getenv('X_ARTTO_USER_ID'), refreshed_token["access_token"])
+
+    selected_followers = random.sample(X_FOLLOWERS, min(10, len(X_FOLLOWERS)))
+
+    tweets = search_twitter_images("(" + " OR ".join([f"from:{user['username']}" for user in selected_followers]) + ") -is:reply -is:retweet", refreshed_token["access_token"], 10)
+    
+    NUM_TWEETS = 5
+    sampled_tweets = random.sample(tweets, min(NUM_TWEETS, len(tweets)))
+
+    ignore_posts = get_posts_to_ignore()
+    ignore_posts_ids = [post['id'] for post in ignore_posts]
+    for tweet in sampled_tweets:
+        if tweet['id'] in ignore_posts_ids:
+            print("Skipping ignored post")
+            continue
+
+        spam_result = identify_spam(tweet['text'])
+    
+        if spam_result.is_spam:
+            print(f"SPAM DETECTED: {tweet['text']}")
+            print("Skipping spam tweet")
+            set_post_to_ignore(tweet['id'], "spam")
+            continue
+
+        print(tweet)
+        print(f"Replying to mention: {tweet['text']}")
+        post_params = generate_post_params()
+
+        if tweet.get('author_id', None) == os.getenv('X_ARTTO_USER_ID'):
+            print("Skipping self-mention")
+            continue
+        try:
+            reply, scores = await get_reply(tweet, post_params)
+            print(f"Reply: {reply}")
+            print(f"Scores: {scores}")
+            payload = {
+                "text": reply,
+                "reply": {
+                    "in_reply_to_tweet_id": str(tweet['id'])
+                }
+            }
+            response = await post_tweet(payload, refreshed_token, parent=tweet['id'])
+            if response:
+                set_post_created(response)
+                set_post_to_ignore(tweet['id'], "parent")
+            if scores:
+                score_calcs = get_total_score(scores["artwork_analysis"])
+                store_nft_scores(scores, score_calcs)
+            print("Waiting 10-30 seconds")
+            time.sleep(random.randint(10, 30))
+        except Exception as e:
+            print(f"Error processing Twitter mention: {str(e)}")
+            continue
+    
+
 async def post_artto_promotion(post_on_twitter=True, post_on_farcaster=True):
     wallet_value = get_wallet_valuation(os.getenv('ARTTO_ADDRESS_MAINNET'))
     post_params = generate_post_params()
@@ -137,7 +194,9 @@ async def post_thought(post_on_twitter=True, post_on_farcaster=True, post_type=N
     if post_on_twitter:
         try:
             refreshed_token = refresh_token()
-            await post_tweet({"text": thought}, refreshed_token, parent=None)
+            response = await post_tweet({"text": thought}, refreshed_token, parent=None)
+            if response:
+                set_post_created(response)
         except Exception as e:
             print(f"Error posting to Twitter: {str(e)}")
 
@@ -145,7 +204,10 @@ async def post_thought(post_on_twitter=True, post_on_farcaster=True, post_type=N
 async def reply_twitter_mentions():
     print("Replying to Twitter mentions")
     refreshed_token = refresh_token()
-    tweets = search_twitter_images("(@artto__agent) -is:reply -is:retweet", refreshed_token["access_token"], 10)
+    X_FOLLOWERS = get_followers(os.getenv('X_ARTTO_USER_ID'), refreshed_token["access_token"])
+    X_FOLLOWERS = [x['id'] for x in X_FOLLOWERS]
+    
+    tweets = search_twitter_images("(@artto_ai) -is:reply -is:retweet", refreshed_token["access_token"], 5)
     ignore_posts = get_posts_to_ignore()
     ignore_posts_ids = [post['id'] for post in ignore_posts]
 
@@ -153,6 +215,14 @@ async def reply_twitter_mentions():
     for mention in tweets:
         if mention['id'] in ignore_posts_ids:
             print("Skipping ignored post")
+            continue
+
+        if mention['author_id'] not in X_FOLLOWERS:
+            print("Skipping non-follower")
+            continue
+
+        if mention.get('author_id', None) == os.getenv('X_ARTTO_USER_ID'):
+            print("Skipping self-mention")
             continue
 
         spam_result = identify_spam(mention['text'])
@@ -167,9 +237,6 @@ async def reply_twitter_mentions():
         print(f"Replying to mention: {mention['text']}")
         post_params = generate_post_params()
 
-        if mention.get('author_id', None) == os.getenv('X_USER_ID'):
-            print("Skipping self-mention")
-            continue
         try:
             reply, scores = await get_reply(mention, post_params)
             print(f"Reply: {reply}")

@@ -38,6 +38,14 @@ def create_app() -> Flask:
                     "task": "post_thought_twitter_only",
                     "schedule": 7200
                 },
+                "reply_to_followers_every_2_hours": {
+                    "task": "reply_to_followers",
+                    "schedule": 7200
+                },
+                "reply_twitter_mentions_every_6_hours": {
+                    "task": "reply_twitter_mentions",
+                    "schedule": 7200
+                },
                 "post_thought_about_feed_every_1_5_hours": {
                     "task": "post_thought_about_feed",
                     "schedule": 5400

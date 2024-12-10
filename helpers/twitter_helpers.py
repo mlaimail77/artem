@@ -22,7 +22,6 @@ twikit_client = TwikitClient('en-US')
 
 r = redis.from_url(os.getenv('CELERY_BROKER_URL', 'redis://localhost'))
 
-
 client_id = os.environ.get("X_CLIENT_ID")
 client_secret = os.environ.get("X_CLIENT_SECRET")
 auth_url = "https://twitter.com/i/oauth2/authorize"
@@ -61,6 +60,35 @@ async def get_twikit_client():
             print(f"Authentication failed: {e}")
             raise
 
+def get_followers(id, bearer_token):
+    url = f"https://api.twitter.com/2/users/{id}/followers"
+
+    def bearer_oauth(r):
+        r.headers["Authorization"] = f"Bearer {bearer_token}"
+        r.headers["User-Agent"] = "v2FollowersLookupPython"
+        return r
+
+    response = requests.get(url, auth=bearer_oauth)
+    print(response.status_code)
+    if response.status_code != 200:
+        raise Exception(response.status_code, response.text)
+    
+    response = response.json()
+
+    # [
+    #     {
+    #     "id": "6253282",
+    #     "name": "Twitter API",
+    #     "username": "TwitterAPI"
+    #     },
+    #     {
+    #     "id": "2244994945",
+    #     "name": "Twitter Dev",
+    #     "username": "TwitterDev"
+    #     }
+    # ]
+    return response['data']
+
 async def post_tweet(payload, token, parent=None):    
     print("Attempting to tweet!")
 
@@ -86,7 +114,7 @@ async def post_tweet(payload, token, parent=None):
                 print(f"Rate limit reset time: {reset_timestamp} ({minutes_until_reset:.1f} minutes from now)")
 
 
-            if response['data']['text']:
+            if response.ok:
                 print(f"Tweet posted successfully: {response_json}")
                 post = {
                     'hash': response_json['data']['id'],
@@ -94,7 +122,7 @@ async def post_tweet(payload, token, parent=None):
                     'parent_id': parent
                 }
                 return post
-            elif response.status != 200:
+            else:
                 print(f"Error posting tweet: {response_json}")
                 if USE_COOKIES:
                     print(f"Trying twikit client...")

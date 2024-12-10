@@ -21,6 +21,10 @@ celery_app = flask_app.extensions["celery"]
 
 logger = get_task_logger(__name__)
 
+@shared_task(ignore_result=False, name="reply_to_followers")
+def sync_reply_to_followers():
+    async_to_sync(reply_to_followers)()
+
 @shared_task(ignore_result=False, name="post_thought_twitter_only")
 def sync_post_thought_twitter_only(post_on_twitter=True, post_on_farcaster=True, post_type=None):
     post_type = random.choice([
