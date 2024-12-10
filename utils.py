@@ -1,4 +1,5 @@
 from celery import Celery, Task
+from celery.schedules import crontab
 from flask import Flask
 import os
 
@@ -21,30 +22,31 @@ def create_app() -> Flask:
             broker_url=os.getenv('CELERY_BROKER_URL', 'redis://localhost'),
             result_backend=os.getenv('CELERY_BROKER_URL', 'redis://localhost'),
             task_ignore_result=True,
+            timezone='America/New_York',
             beat_schedule={
                 "post_thought_every_30_mins": {
                     "task": "post_thought", 
-                    "schedule": 1800
+                    "schedule": crontab(minute='*/15')
                 },
                 "post_artto_promotion_every_12_hours": {
                     "task": "post_artto_promotion",
-                    "schedule": 43200
+                    "schedule": crontab(minute=0, hour='9,21')
                 },
                 "post_channel_casts_every_2_hours": {
                     "task": "post_channel_casts",
-                    "schedule": 7200
+                    "schedule": crontab(minute=0, hour='*/2')
                 },
                 "post_thought_twitter_only_every_2_hours": {
                     "task": "post_thought_twitter_only",
-                    "schedule": 7200
+                    "schedule": crontab(minute=0, hour='*/2')
                 },
                 "reply_to_followers_every_2_hours": {
                     "task": "reply_to_followers",
-                    "schedule": 7200
+                    "schedule": crontab(minute=30, hour='*/2')
                 },
                 "reply_twitter_mentions_every_6_hours": {
                     "task": "reply_twitter_mentions",
-                    "schedule": 7200
+                    "schedule": crontab(minute=45, hour='*/6')
                 },
                 "post_thought_about_feed_every_1_5_hours": {
                     "task": "post_thought_about_feed",
@@ -52,7 +54,7 @@ def create_app() -> Flask:
                 },
                 "adjust_weights_every_24_hours": {
                     "task": "adjust_weights",
-                    "schedule": 86400
+                    "schedule": crontab(minute=0, hour='10,22')
                 },
                 "refresh_twitter_token_every_2_hours": {
                     "task": "refresh_twitter_token",
