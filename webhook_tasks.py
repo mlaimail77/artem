@@ -111,8 +111,8 @@ async def process_webhook(webhook_data):
 
         decision = final_decision.decision
         rationale_post = final_decision.rationale_post
-        if 'image_medium_url' in metadata:
-            rationale_post += f" {metadata['image_medium_url']}"
+
+
 
         scores_object = {
             "artwork_analysis": artwork_analysis,
@@ -136,11 +136,16 @@ async def process_webhook(webhook_data):
 
         if decision == "REJECT" or decision == "BURN":
             try:
-                post_long_cast(rationale_post)
+                post_long_cast(rationale_post + f" {metadata['image_medium_url']}")
             except Exception as e:
                 print(f"Error posting to Farcaster: {str(e)}")
             try:
-                await post_tweet({"text": rationale_post}, refreshed_token, parent=None)
+                if 'image_medium_url' in metadata:
+                    response = upload_media(metadata['image_medium_url'])
+                    media = response['media']
+                    await post_tweet({"text": rationale_post, "media": media}, refreshed_token, parent=None)
+                else:
+                    await post_tweet({"text": rationale_post}, refreshed_token, parent=None)
             except Exception as e:
                 print(f"Error posting to Twitter: {str(e)}")
             if event_type == "ERC721_TRANSFER":

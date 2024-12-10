@@ -7,7 +7,10 @@ import requests
 import redis
 from twikit import Client as TwikitClient
 import aiohttp
+import tweepy
 from datetime import datetime, timedelta
+import uuid
+
 from requests.auth import AuthBase, HTTPBasicAuth
 from requests_oauthlib import OAuth2Session, TokenUpdated
 
@@ -65,6 +68,27 @@ async def get_twikit_client():
         except Exception as e:
             print(f"Authentication failed: {e}")
             raise
+
+
+def upload_media(url):
+    tweepy_auth = tweepy.OAuth1UserHandler(
+        "{}".format(os.environ.get("X_API_KEY")),
+        "{}".format(os.environ.get("X_API_SECRET")),
+        "{}".format(os.environ.get("X_ACCESS_TOKEN")),
+        "{}".format(os.environ.get("X_ACCESS_TOKEN_SECRET")),
+    )
+    tweepy_api = tweepy.API(tweepy_auth)
+    img_data = requests.get(url).content
+    temp_file = f"temp_{uuid.uuid4()}.jpg"
+    with open(temp_file, "wb") as handler:
+        handler.write(img_data)
+    post = tweepy_api.simple_upload(temp_file)
+    text = str(post)
+    media_id = re.search("media_id=(.+?),", text).group(1)
+    payload = {"media": {"media_ids": ["{}".format(media_id)]}}
+    os.remove(temp_file)
+    return payload
+
 
 def get_ids_from_usernames(usernames, bearer_token):
 
