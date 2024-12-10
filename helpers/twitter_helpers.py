@@ -28,7 +28,7 @@ auth_url = "https://twitter.com/i/oauth2/authorize"
 token_url = "https://api.twitter.com/2/oauth2/token"
 redirect_uri = os.environ.get("X_REDIRECT_URI", "http://127.0.0.1:8000/oauth/callback")
 
-scopes = ["tweet.read", "users.read", "tweet.write", "offline.access"]
+scopes = ["tweet.read", "users.read", "tweet.write", "follows.read", "offline.access", "like.write"]
 
 code_verifier = base64.urlsafe_b64encode(os.urandom(30)).decode("utf-8")
 code_verifier = re.sub("[^a-zA-Z0-9]+", "", code_verifier)
@@ -63,7 +63,7 @@ async def get_twikit_client():
 def get_followers(id, bearer_token):
 
     print(f"Getting followers for {id}")
-    
+
     url = f"https://api.twitter.com/2/users/{id}/followers"
 
     def bearer_oauth(r):
