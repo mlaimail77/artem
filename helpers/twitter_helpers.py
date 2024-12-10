@@ -82,7 +82,7 @@ def upload_media(url):
     temp_file = f"temp_{uuid.uuid4()}.jpg"
     with open(temp_file, "wb") as handler:
         handler.write(img_data)
-    post = tweepy_api.simple_upload(temp_file)
+    post = tweepy_api.simple_upload(temp_file, additional_owners=[os.environ.get("X_ARTTO_USER_ID")])
     text = str(post)
     media_id = re.search("media_id=(.+?),", text).group(1)
     payload = {"media": {"media_ids": ["{}".format(media_id)]}}
