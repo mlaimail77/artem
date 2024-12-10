@@ -12,7 +12,7 @@ from requests.auth import AuthBase, HTTPBasicAuth
 from requests_oauthlib import OAuth2Session, TokenUpdated
 
 from helpers.utils import *
-
+from helpers.twitter_following import FOLLOWING_ACCOUNTS
 from dotenv import load_dotenv
 
 load_dotenv('.env.local')
@@ -28,7 +28,13 @@ auth_url = "https://twitter.com/i/oauth2/authorize"
 token_url = "https://api.twitter.com/2/oauth2/token"
 redirect_uri = os.environ.get("X_REDIRECT_URI", "http://127.0.0.1:8000/oauth/callback")
 
-scopes = ["tweet.read", "users.read", "tweet.write", "follows.read", "offline.access", "like.write"]
+scopes = [
+    "tweet.read", 
+    "tweet.write", 
+    "users.read", 
+    "offline.access", 
+    "like.write"
+]
 
 code_verifier = base64.urlsafe_b64encode(os.urandom(30)).decode("utf-8")
 code_verifier = re.sub("[^a-zA-Z0-9]+", "", code_verifier)
@@ -60,11 +66,11 @@ async def get_twikit_client():
             print(f"Authentication failed: {e}")
             raise
 
-def get_followers(id, bearer_token):
+def get_ids_from_usernames(usernames, bearer_token):
 
-    print(f"Getting followers for {id}")
+    usernames = ",".join(usernames)
 
-    url = f"https://api.twitter.com/2/users/{id}/followers"
+    url = f"https://api.twitter.com/2/users/by?usernames={usernames}"
 
     def bearer_oauth(r):
         r.headers["Authorization"] = f"Bearer {bearer_token}"
@@ -78,19 +84,7 @@ def get_followers(id, bearer_token):
     
     response = response.json()
 
-    # [
-    #     {
-    #     "id": "6253282",
-    #     "name": "Twitter API",
-    #     "username": "TwitterAPI"
-    #     },
-    #     {
-    #     "id": "2244994945",
-    #     "name": "Twitter Dev",
-    #     "username": "TwitterDev"
-    #     }
-    # ]
-    return response['data']
+    return [x['id'] for x in response['data']]
 
 async def post_tweet(payload, token, parent=None):    
     print("Attempting to tweet!")

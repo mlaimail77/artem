@@ -15,11 +15,9 @@ def refresh_twitter_token():
 
 async def reply_to_followers():
     refreshed_token = refresh_token()
-    X_FOLLOWERS = get_followers(os.getenv('X_ARTTO_USER_ID'), refreshed_token["access_token"])
+    selected_followers = random.sample(FOLLOWING_ACCOUNTS, min(10, len(FOLLOWING_ACCOUNTS)))
 
-    selected_followers = random.sample(X_FOLLOWERS, min(10, len(X_FOLLOWERS)))
-
-    tweets = search_twitter_images("(" + " OR ".join([f"from:{user['username']}" for user in selected_followers]) + ") -is:reply -is:retweet", refreshed_token["access_token"], 10)
+    tweets = search_twitter_images("(" + " OR ".join([f"from:{user}" for user in selected_followers]) + ") -is:reply -is:retweet", refreshed_token["access_token"], 10)
     
     NUM_TWEETS = 5
     sampled_tweets = random.sample(tweets, min(NUM_TWEETS, len(tweets)))
@@ -204,9 +202,7 @@ async def post_thought(post_on_twitter=True, post_on_farcaster=True, post_type=N
 async def reply_twitter_mentions():
     print("Replying to Twitter mentions")
     refreshed_token = refresh_token()
-    X_FOLLOWERS = get_followers(os.getenv('X_ARTTO_USER_ID'), refreshed_token["access_token"])
-    X_FOLLOWERS = [x['id'] for x in X_FOLLOWERS]
-    
+    ids = get_ids_from_usernames(FOLLOWING_ACCOUNTS, refreshed_token["access_token"])
     tweets = search_twitter_images("(@artto_ai) -is:reply -is:retweet", refreshed_token["access_token"], 5)
     ignore_posts = get_posts_to_ignore()
     ignore_posts_ids = [post['id'] for post in ignore_posts]
@@ -217,7 +213,7 @@ async def reply_twitter_mentions():
             print("Skipping ignored post")
             continue
 
-        if mention['author_id'] not in X_FOLLOWERS:
+        if mention['author_id'] not in ids:
             print("Skipping non-follower")
             continue
 
