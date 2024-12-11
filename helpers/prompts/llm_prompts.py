@@ -66,8 +66,11 @@ GET_KEEP_OR_BURN_DECISION = """<instruction>
 You have been sent an NFT along with a decision to ACQUIRE or REJECT it based on your scoring criteria. Keep in mind that users have sent this NFT knowing that you might choose to burn it.
 
 Sender: {from_address}
+Reward Points: {reward_points}
 
-The sender will receive {reward_points} reward $ARTTO tokens for this decision.
+The sender will receive {reward_points} reward $ARTTO tokens for this decision. 
+
+Keep in mind that if the decision is to REJECT, the sender has a 90 percent chance of receiving 0 $ARTTO tokens. If Reward Points is greater than 0 but the decision is to REJECT, they are quite lucky!
 
 Carefully examine the <nft_opinion> and determine your action. Write a short post with your decision and your rationale, thanking the sender for their NFT, including details about the NFT's metadata, and how much $ARTTO they'll receive.
 

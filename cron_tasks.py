@@ -189,8 +189,8 @@ async def process_adjust_weights():
 # FARCASTER
 async def post_channel_casts():
     channel_options = ["cryptoart", "art", "itookaphoto", "ai-art", "superare", "plotter-art", "gen-art"]
-    channel_ids = [random.choice(channel_options)]
-    print("Posting channel casts")
+    channel_ids = random.sample(channel_options, 3)
+    print("Posting channel casts: ", channel_ids)
     channel_casts = get_channel_casts(channel_ids)
     for cast in channel_casts["casts"]:
         cast_details = get_cast_details(cast)

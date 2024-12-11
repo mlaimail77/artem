@@ -142,7 +142,11 @@ def get_total_score(artwork_analysis: ArtworkAnalysis):
     elif total_score > SCORE_THRESHOLD:
         multiplier = 150
     else:
-        multiplier = 100
+        # Multiplier logic for $ARTTO rewards:
+        # - Score > 45: Multiplier = 200 (max reward 20,000 $ARTTO for perfect score)
+        # - Score > 35 but < 45: Multiplier = 150 (rewards between 5,250-6,750 $ARTTO)
+        # - Score < 35: 90% chance of 0 multiplier, 10% chance of random 10-100 multiplier
+        multiplier = 0 if random.random() > 0.1 else random.randint(10, 100)
 
     print("score_threshold: ", SCORE_THRESHOLD)
     print("score: ", total_score/total_weights)

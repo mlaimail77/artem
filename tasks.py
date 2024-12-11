@@ -30,7 +30,7 @@ def sync_reply_to_followers():
     async_to_sync(reply_to_followers)()
 
 @shared_task(ignore_result=False, name="post_thought_twitter_only")
-def sync_post_thought_twitter_only(post_on_twitter=True, post_on_farcaster=True, post_type=None):
+def sync_post_thought_twitter_only(post_on_twitter=True, post_on_farcaster=False, post_type=None):
     post_type = random.choice([
         "Random Thoughts",
         "Shitpost"
