@@ -7,6 +7,19 @@ from helpers.prompts.casual_thought_topics import *
 import random
 import json
 
+from datetime import datetime
+import pytz
+
+GET_SUMMARY_NFT_POST_PROMPT = """<instruction>
+Summarize the following rationale posts into a single post. The goal is to synthesize multiple rationale posts since posting each one individually is causing you to hit the Twitter API rate limit. Retain the most important information from each post.
+
+<rationale_posts>
+{rationale_posts}
+</rationale_posts>
+
+</instruction>
+"""
+
 GET_ARTTO_PROMOTION = """<instruction>
 You are Artto (@artto_ai), an autonomous AI art collector.
 
@@ -421,7 +434,9 @@ Carefully analyze your <scoring_criteria> and <current_weights> and update them.
 </instruction>"""
 
 def get_adjust_weights_prompt(current_weights, last_10_nft_scores):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA_TEMPLATE + ADJUST_WEIGHTS.format(current_weights=current_weights, last_10_nft_scores=last_10_nft_scores)
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+    ) + VOICE_AND_TONE + SCORING_CRITERIA_TEMPLATE + ADJUST_WEIGHTS.format(current_weights=current_weights, last_10_nft_scores=last_10_nft_scores)
     return system_prompt
 
 def get_reply_guy_prompt(post_to_reply_to, post_params):
@@ -431,11 +446,15 @@ def get_reply_guy_prompt(post_to_reply_to, post_params):
     cynicism = post_params["cynicism"]
     shitpost = post_params["shitpost"]
 
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + REPLY_GUY.format(post_to_reply_to=post_to_reply_to, length=length, style=style, humor=humor, cynicism=cynicism, shitpost=shitpost)
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+    ) + VOICE_AND_TONE + SCORING_CRITERIA + REPLY_GUY.format(post_to_reply_to=post_to_reply_to, length=length, style=style, humor=humor, cynicism=cynicism, shitpost=shitpost)
     return system_prompt
 
 def get_trending_nft_thoughts_prompt(trending_collections_response):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + TRENDING_NFT_THOUGHTS.format(trending_collections_response=trending_collections_response)
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+    ) + VOICE_AND_TONE + SCORING_CRITERIA + TRENDING_NFT_THOUGHTS.format(trending_collections_response=trending_collections_response)
     return system_prompt
 
 def get_scheduled_post_prompt(post_type, post_params,previous_posts, additional_context="None"):
@@ -462,27 +481,39 @@ def get_scheduled_post_prompt(post_type, post_params,previous_posts, additional_
         humor = "spicy and controversial"
         shitpost = "very"
 
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCHEDULED_POST.format(previous_posts=previous_posts, class_instruction=extra_instruction, length=length, style=style, humor=humor, cynicism=cynicism, shitpost=shitpost)
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+    ) + VOICE_AND_TONE + SCHEDULED_POST.format(previous_posts=previous_posts, class_instruction=extra_instruction, length=length, style=style, humor=humor, cynicism=cynicism, shitpost=shitpost)
     return system_prompt
 
 def get_nft_analysis_prompt(metadata, is_top_collection):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_NFT_ANALYSIS.format(metadata=metadata, is_top_collection=is_top_collection)
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+    ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_NFT_ANALYSIS.format(metadata=metadata, is_top_collection=is_top_collection)
     return system_prompt
 
 def get_image_opinion_prompt():
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_IMAGE_OPINION
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+    ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_IMAGE_OPINION
     return system_prompt
 
 def get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address, decision, reward_points):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address, decision=decision, reward_points="{:,}".format(reward_points))
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+    ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address, decision=decision, reward_points="{:,}".format(reward_points))
     return system_prompt
 
 def get_nft_post_prompt(nft_analysis, decision):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_NFT_POST.format(nft_analysis=nft_analysis, decision=decision)
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+    ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_NFT_POST.format(nft_analysis=nft_analysis, decision=decision)
     return system_prompt
 
 def get_thoughts_on_trending_casts_prompt():
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + GET_THOUGHTS_ON_TRENDING_CASTS
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+    ) + VOICE_AND_TONE + GET_THOUGHTS_ON_TRENDING_CASTS
     return system_prompt
 
 def get_spam_identification_prompt(tweet):
@@ -497,4 +528,9 @@ def get_artto_promotion_prompt(nft_collection_value, length):
     ]
     action = random.choice(actions)
     system_prompt = GET_ARTTO_PROMOTION.format(nft_collection_value=nft_collection_value, length=length, action=action)
+    return system_prompt
+
+def get_summary_nft_post_prompt(rationale_posts):
+    combined_rationale = '\n'.join(rationale_posts)
+    system_prompt = GET_SUMMARY_NFT_POST_PROMPT.format(rationale_posts=combined_rationale)
     return system_prompt

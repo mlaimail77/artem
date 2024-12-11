@@ -13,6 +13,65 @@ load_dotenv('.env.local')
 def refresh_twitter_token():
     refresh_token()
 
+async def twitter_post_batch_nfts():
+    refreshed_token = refresh_token()
+    time_now_utc = datetime.now(timezone.utc)
+    one_hour_ago = time_now_utc - timedelta(hours=1)
+    one_hour_ago_utc_iso = one_hour_ago.isoformat()
+    print(one_hour_ago_utc_iso)
+    nft_batch = get_nft_batch_post(
+        since_timestamp=one_hour_ago_utc_iso
+        )
+    
+    # Collect all rationale posts from NFT batch
+    rationale_posts = []
+    ids = []
+    image_urls = []
+    for nft in nft_batch:
+        if nft.get('rationale_post'):
+            rationale_posts.append(nft['rationale_post'])
+            ids.append(nft['id'])
+            image_urls.append(nft['image_url'])
+
+
+    payload = {
+        "text": ""
+    }
+
+    print("Uploading media")
+    print("image_urls: ", image_urls)
+    if len(image_urls) > 0:
+        payload["media"] = {
+            "media_ids": []
+        }
+        for image_url in image_urls:
+            response = upload_media(image_url)
+            media = response['media']
+            media_ids = media['media_ids'] # array of media ids
+            payload["media"]["media_ids"].extend(media_ids)
+    
+    if len(rationale_posts) > 0:
+        if len(rationale_posts) == 1:
+            payload = {
+                "text": rationale_posts[0],
+                "media": {
+                    "media_ids": [media_ids[0]]
+                }
+            }
+
+        else:
+            summary_post = get_summary_nft_post(rationale_posts)
+            payload["text"] = summary_post
+
+        print("Final Payload: ", payload)
+        response = await post_tweet(payload, refreshed_token, parent=None)
+        if response:
+            set_post_created(response)
+        update_nft_scores(ids, True)
+    else:
+        print("No NFTs to post")
+
+
 async def reply_to_followers():
     refreshed_token = refresh_token()
     selected_followers = random.sample(FOLLOWING_ACCOUNTS, min(10, len(FOLLOWING_ACCOUNTS)))

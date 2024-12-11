@@ -32,6 +32,14 @@ tools = [
     }
 ]
 
+def get_summary_nft_post(rationale_posts):
+    system_prompt = get_summary_nft_post_prompt(rationale_posts)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": system_prompt}],
+    )
+    return response.choices[0].message.content
+
 def get_artto_promotion(nft_collection_value, length):
     system_prompt = get_artto_promotion_prompt(nft_collection_value, length)
     response = client.chat.completions.create(

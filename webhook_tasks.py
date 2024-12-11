@@ -128,7 +128,7 @@ async def process_webhook(webhook_data):
         except:
             reward_points = 0
         print("Reward points:", reward_points)
-        store_nft_scores(scores_object, score_calcs)
+        store_nft_scores(scores_object, score_calcs, final_decision)
         refreshed_token = refresh_token()
 
         print("Decision:", decision)
@@ -142,17 +142,18 @@ async def process_webhook(webhook_data):
                 post_long_cast(rationale_post_farcaster)
             except Exception as e:
                 print(f"Error posting to Farcaster: {str(e)}")
-            try:
-                if 'image_medium_url' in metadata:
-                    print("Uploading media")
-                    response = upload_media(metadata['image_medium_url'])
-                    media = response['media']
-                    print("Tweeting with media:", media)
-                    await post_tweet({"text": rationale_post, "media": media}, refreshed_token, parent=None)
-                else:
-                    await post_tweet({"text": rationale_post}, refreshed_token, parent=None)
-            except Exception as e:
-                print(f"Error posting to Twitter: {str(e)}")
+            # Skip posting to Twitter for now    
+            # try:
+            #     if 'image_medium_url' in metadata:
+            #         print("Uploading media")
+            #         response = upload_media(metadata['image_medium_url'])
+            #         media = response['media']
+            #         print("Tweeting with media:", media)
+            #         await post_tweet({"text": rationale_post, "media": media}, refreshed_token, parent=None)
+            #     else:
+            #         await post_tweet({"text": rationale_post}, refreshed_token, parent=None)
+            # except Exception as e:
+            #     print(f"Error posting to Twitter: {str(e)}")
             if event_type == "ERC721_TRANSFER":
                 response = transfer_erc721(wallet,
                     network_id='base-mainnet', 

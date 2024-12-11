@@ -8,7 +8,7 @@ import redis
 from twikit import Client as TwikitClient
 import aiohttp
 import tweepy
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 
 from requests.auth import AuthBase, HTTPBasicAuth

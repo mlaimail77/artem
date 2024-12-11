@@ -74,6 +74,18 @@ def set_taste_weights(weights):
         f.write(f"EMOTIONAL_IMPACT_WEIGHT: {weights.updated_weights.EMOTIONAL_IMPACT_WEIGHT}\n")
         f.write(f"AI_COLLECTOR_PERSPECTIVE_WEIGHT: {weights.updated_weights.AI_COLLECTOR_PERSPECTIVE_WEIGHT}\n")
 
+def get_nft_batch_post(since_timestamp=None):
+    response = refresh_or_get_supabase_client()
+    query = supabase.table("nft_scores").select(
+        "id,scores,analysis_text,image_url,acquire_recommendation,decision,rationale_post"
+    ).eq("group_posted", False).filter("decision", "in", '("ACQUIRE","REJECT","BURN")')
+    
+    if since_timestamp:
+        query = query.gte("timestamp", since_timestamp)
+        
+    response = query.order("timestamp", desc=True).execute()
+    return response.data
+
 def get_nft_scores(n=10):
     response = refresh_or_get_supabase_client()
     response = supabase.table("nft_scores").select("id,scores,analysis_text").order("timestamp", desc=True).limit(n).execute()
@@ -158,7 +170,7 @@ def get_all_posts():
     response = supabase.table("posts_created").select("*").execute()
     return response.data
 
-def store_nft_scores(scores_object, score_calcs):
+def store_nft_scores(scores_object, score_calcs, final_decision = None):
     """
     Store artwork scoring and metadata in Supabase database
     
@@ -168,6 +180,13 @@ def store_nft_scores(scores_object, score_calcs):
     Returns:
         dict: Response data from Supabase insert
     """
+    if final_decision:
+        decision = final_decision.decision
+        rationale_post = final_decision.rationale_post
+    else:
+        decision = None
+        rationale_post = None
+
     response = refresh_or_get_supabase_client()
 
     artwork_analysis = scores_object["artwork_analysis"]
@@ -254,7 +273,10 @@ def store_nft_scores(scores_object, score_calcs):
         "weights": json.dumps(weights), 
         "analysis_text": json.dumps(analysis_text),
         "total_score": round(total_score, 4),
-        "acquire_recommendation": total_score > int(os.getenv('SCORE_THRESHOLD', 55))
+        "acquire_recommendation": total_score > int(os.getenv('SCORE_THRESHOLD', 55)),
+        "decision": decision,
+        "rationale_post": rationale_post,
+        "group_posted": None
     }
 
     if existing.data:
@@ -266,6 +288,16 @@ def store_nft_scores(scores_object, score_calcs):
         response = supabase.table("nft_scores").insert(artwork_data).execute()
     return response.data
 
+def update_nft_scores(ids, group_posted):
+    response = refresh_or_get_supabase_client()
+    quoted_ids = [f'"{id}"' for id in ids]
+    ids_string = f"({','.join(quoted_ids)})"
+
+    for id in ids:
+        print("id: ", id)
+        response = supabase.table("nft_scores").update({"group_posted": group_posted}).eq("id", id).execute()
+        print("response: ", response)
+    return response.data
 
 def set_post_created(post):
     print("Setting post created")
@@ -285,7 +317,15 @@ def set_post_created(post):
 
 def main():
     supabase = get_supabase_client()
+    from datetime import timezone
     print("Successfully connected to Supabase!")
+
+    time_now_utc = datetime.now(timezone.utc)
+    time_now_utc_iso = time_now_utc.isoformat()
+    nft_batch = get_nft_batch_post(since_timestamp=time_now_utc_iso)
+    print(nft_batch)
+
+
 
     # print(get_all_posts_replied_to())
 

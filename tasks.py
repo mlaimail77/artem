@@ -21,6 +21,10 @@ celery_app = flask_app.extensions["celery"]
 
 logger = get_task_logger(__name__)
 
+@shared_task(ignore_result=False, name="twitter_post_batch_nfts")
+def sync_twitter_post_batch_nfts():
+    async_to_sync(twitter_post_batch_nfts)()
+
 @shared_task(ignore_result=False, name="reply_to_followers")
 def sync_reply_to_followers():
     async_to_sync(reply_to_followers)()

@@ -36,13 +36,17 @@ def create_app() -> Flask:
                     "task": "post_channel_casts",
                     "schedule": crontab(minute=0, hour='*/2')
                 },
-                "post_thought_twitter_only_every_2_hours": {
-                    "task": "post_thought_twitter_only",
-                    "schedule": crontab(minute=0, hour='*/2')
+                "twitter_post_batch_nfts_every_1_hour": {
+                    "task": "twitter_post_batch_nfts",
+                    "schedule": crontab(minute=0, hour='*/1')
                 },
-                "reply_to_followers_every_2_hours": {
+                "post_thought_twitter_only_every_3_hours": {
+                    "task": "post_thought_twitter_only",
+                    "schedule": crontab(minute=0, hour='*/3')
+                },
+                "reply_to_followers_every_4_hours": {
                     "task": "reply_to_followers",
-                    "schedule": crontab(minute=30, hour='*/2')
+                    "schedule": crontab(minute=30, hour='*/4')
                 },
                 "reply_twitter_mentions_every_6_hours": {
                     "task": "reply_twitter_mentions",
