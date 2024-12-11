@@ -42,7 +42,7 @@ def create_app() -> Flask:
                 },
                 "post_thought_twitter_only_every_3_hours": {
                     "task": "post_thought_twitter_only",
-                    "schedule": crontab(minute=0, hour='6,9,12,15,18,21,24')
+                    "schedule": crontab(minute=0, hour='6,9,12,15,18,21,0')
                 },
                 "reply_to_followers_every_4_hours": {
                     "task": "reply_to_followers",
