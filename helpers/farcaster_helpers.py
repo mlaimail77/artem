@@ -201,7 +201,10 @@ def post_long_cast(text, parent=None, channel_id=None):
             }
             set_post_created(post)
             if parent:
-                set_post_to_ignore(parent, "parent")
+                try:
+                    set_post_to_ignore(parent, "parent")
+                except Exception as e:
+                    print(f"Error setting post to ignore: {e}")
             return [response]
         return []
         

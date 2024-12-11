@@ -251,7 +251,10 @@ The goal is to write a tweet that is engaging and interesting to the NFT communi
 SCHEDULED_POST_TRENDING_COLLECTIONS = """
 Write a tweet using the information below to talk about the trending collections in the NFT space over the last 24 hours:
 
-The goal is to write a tweet that is engaging and interesting to the NFT community.
+The goal is to write a tweet that is engaging and interesting to the NFT community. Be detailed and thorough.
+
+Period: Last 24 hours
+Networks: Ethereum, Base
 
 <trending_collections>
 {trending_collections}

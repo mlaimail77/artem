@@ -1,6 +1,22 @@
 # 🎨 Artto: AI Art Collector
 
+<p align="center">
+  <img src="https://artto.xyz/static/artto_small.png" alt="Artto Logo">
+</p>
+
 Meet Artto, an AI that collects digital art. Unlike trading bots that just flip NFTs for profit, Artto is building its own art collection based on what it finds interesting. Think of it as an AI developing its own taste in art.
+
+## Important Links & Addresses
+
+| Resource | Address |
+|----------|---------|
+| Website | https://artto.xyz |
+| Farcaster | [@artto_ai](https://warpcast.com/artto-ai) |
+| X | [@artto_ai](https://x.com/artto_ai) |
+| Buy $ARTTO | https://wow.xyz/0x9239e9f9e325e706ef8b89936ece9d48896abbe3 |
+| $ARTTO Token Contract | 0x4e64c721eBBE3285CFA60b61a3E12a8f4E1709E8 |
+| Artto Wallet | 0x9239e9f9e325e706ef8b89936ece9d48896abbe3 |
+
 
 ## What is Artto?
 
@@ -24,7 +40,9 @@ Most bots in the NFT space are focused on trading. Artto is different - it's try
 
 Currently, Artto can:
 
-- Chat with people on Farcaster
+- Receive and analyze NFTs on its wallet
+- Send back $ARTTO tokens back to the sender: the more it likes the NFT, the more $ARTTO it sends back
+- Chat with people on Farcaster and X
 - Look at artwork and share what it thinks
 - Check out NFTs when people share links
 - Give detailed thoughts on both the art and its market data
@@ -32,25 +50,23 @@ Currently, Artto can:
 
 ## What's Next for Artto?
 
-### Coming Soon
+### Roadmap
 
 - [x] Liking and sharing posts
 - [x] Following interesting accounts
 - [x] Learning and updating its taste as it sees more art
-- [ ] Give Artto its own wallet
+- [x] Give Artto its own wallet
+- [x] Send $ARTTO tokens back to the sender
+- [ ] Ability to analyze and entire wallet
 - [ ] Making offers on artwork it wants to collect
-
-### Down the Road
-
-- Having its own token
-- Automatically finding art it likes
-- Making deals directly through smart contracts
-- Taking in unwanted NFTs from the community
-- Running on decentralized infrastructure
+- [ ] Automatically finding art it likes
+- [ ] Making deals directly through smart contracts
+- [ ] Running on decentralized infrastructure
 
 ## How Does Artto Judge Art?
 
 Artto looks at art through several lenses. These weights are dynamic and will be updated daily autonomously based on its own learning.
+
 - How innovative is it technically? (8%)
 - Is it artistically strong? (20%)
 - Does it matter culturally? (12%)
@@ -62,6 +78,7 @@ Artto looks at art through several lenses. These weights are dynamic and will be
 ## Get Involved
 
 Want to help shape how an AI learns to appreciate art? We'd love your help with:
+
 - Making Artto smarter
 - Improving how it interacts with users
 - Building better interfaces
@@ -70,16 +87,10 @@ Want to help shape how an AI learns to appreciate art? We'd love your help with:
 
 ## Connect with Artto
 
-- Find Artto on Farcaster: @artto_ai
+- Find Artto on Farcaster and X: @artto_ai
 - Report issues on GitHub
+- Join our Telegram: https://t.me/artto_ai
 - [More ways to connect coming soon]
-
-## Progress Tracker
-
-### Future Plans
-- [ ] Automated art discovery
-- [ ] Decentralized infra (eg. using Akash for compute and using tokens to pay for its own inference costs)
-- [ ] Community reward mechanisms
 
 ## License
 

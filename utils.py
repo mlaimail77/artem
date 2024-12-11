@@ -42,7 +42,7 @@ def create_app() -> Flask:
                 },
                 "post_thought_twitter_only_every_3_hours": {
                     "task": "post_thought_twitter_only",
-                    "schedule": crontab(minute=0, hour='*/3')
+                    "schedule": crontab(minute=0, hour='6,9,12,15,18,21,24')
                 },
                 "reply_to_followers_every_4_hours": {
                     "task": "reply_to_followers",
@@ -64,9 +64,9 @@ def create_app() -> Flask:
                     "task": "refresh_twitter_token",
                     "schedule": 7200
                 },
-                "post_trending_nfts_every_11_hours": {
+                "post_trending_nfts_every_at_10AM": {
                     "task": "post_trending_nfts",
-                    "schedule": 39600
+                    "schedule": crontab(minute=30, hour='10')
                 },
             },
         ),

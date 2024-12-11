@@ -274,9 +274,13 @@ async def reply_twitter_mentions():
     print("Replying to Twitter mentions")
     refreshed_token = refresh_token()
     ids = get_ids_from_usernames(FOLLOWING_ACCOUNTS, refreshed_token["access_token"])
-    tweets = search_twitter_images("(@artto_ai) -is:reply -is:retweet", refreshed_token["access_token"], 5)
+    tweets = search_twitter_images("(@artto_ai) -is:reply -is:retweet", refreshed_token["access_token"], 15)
     ignore_posts = get_posts_to_ignore()
     ignore_posts_ids = [post['id'] for post in ignore_posts]
+
+    # Randomly sample 5 tweets if more than 5 exist
+    if len(tweets) > 5:
+        tweets = random.sample(tweets, 5)
 
     print(tweets)
     for mention in tweets:

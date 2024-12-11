@@ -78,7 +78,7 @@ def sync_post_following_casts():
     async_to_sync(post_following_casts)()
 
 @shared_task(ignore_result=False, name="post_trending_nfts")
-def sync_post_trending_nfts(post_on_twitter=False, post_on_farcaster=True):
+def sync_post_trending_nfts(post_on_twitter=True, post_on_farcaster=True):
     async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type="Trending Collections")
 
 @shared_task(ignore_result=False, name="process_webhook")
