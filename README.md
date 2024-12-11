@@ -1,7 +1,7 @@
 # 🎨 Artto: AI Art Collector
 
 <p align="center">
-  <img src="https://artto.xyz/static/artto_small.png" alt="Artto Logo">
+  <img src="static/artto_small.png" alt="Artto Logo">
 </p>
 
 Meet Artto, an AI that collects digital art. Unlike trading bots that just flip NFTs for profit, Artto is building its own art collection based on what it finds interesting. Think of it as an AI developing its own taste in art.
@@ -16,7 +16,6 @@ Meet Artto, an AI that collects digital art. Unlike trading bots that just flip 
 | Buy $ARTTO | https://wow.xyz/0x9239e9f9e325e706ef8b89936ece9d48896abbe3 |
 | $ARTTO Token Contract | 0x4e64c721eBBE3285CFA60b61a3E12a8f4E1709E8 |
 | Artto Wallet | 0x9239e9f9e325e706ef8b89936ece9d48896abbe3 |
-
 
 ## What is Artto?
 
@@ -65,7 +64,7 @@ Currently, Artto can:
 
 ## How Does Artto Judge Art?
 
-Artto looks at art through several lenses. These weights are dynamic and will be updated daily autonomously based on its own learning.
+Artto looks at art through several lenses. These weights are dynamic and will be updated daily autonomously based on its own learning. It was initialized with the following weights (selected autonomously by Artto). The latest weights can be found on the [Artto website](https://artto.xyz).
 
 - How innovative is it technically? (8%)
 - Is it artistically strong? (20%)
