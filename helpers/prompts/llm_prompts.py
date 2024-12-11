@@ -474,7 +474,7 @@ def get_image_opinion_prompt():
     return system_prompt
 
 def get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address, decision, reward_points):
-    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address, decision=decision, reward_points=reward_points)
+    system_prompt = CORE_IDENTITY + VOICE_AND_TONE + SCORING_CRITERIA + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address, decision=decision, reward_points="{:,}".format(reward_points))
     return system_prompt
 
 def get_nft_post_prompt(nft_analysis, decision):

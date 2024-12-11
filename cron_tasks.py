@@ -17,16 +17,30 @@ async def reply_to_followers():
     refreshed_token = refresh_token()
     selected_followers = random.sample(FOLLOWING_ACCOUNTS, min(10, len(FOLLOWING_ACCOUNTS)))
 
-    tweets = search_twitter_images("(" + " OR ".join([f"from:{user}" for user in selected_followers]) + ") -is:reply -is:retweet", refreshed_token["access_token"], 10)
-    
+    tweets = search_twitter_images("(" + " OR ".join([f"from:{user}" for user in selected_followers]) + ") -is:reply -is:retweet", refreshed_token["access_token"], 15)
+    random.shuffle(tweets)
     NUM_TWEETS = 5
     sampled_tweets = random.sample(tweets, min(NUM_TWEETS, len(tweets)))
-
+    
     ignore_posts = get_posts_to_ignore()
     ignore_posts_ids = [post['id'] for post in ignore_posts]
+    
+    # Keep track of authors we've already replied to
+    replied_authors = set()
+    
     for tweet in sampled_tweets:
         if tweet['id'] in ignore_posts_ids:
             print("Skipping ignored post")
+            continue
+
+        author_id = tweet.get('author_id')
+        
+        if author_id in replied_authors:
+            print("Already replied to this author")
+            continue
+            
+        if author_id == os.getenv('X_ARTTO_USER_ID'):
+            print("Skipping self-mention") 
             continue
 
         spam_result = identify_spam(tweet['text'])
@@ -41,9 +55,6 @@ async def reply_to_followers():
         print(f"Replying to mention: {tweet['text']}")
         post_params = generate_post_params()
 
-        if tweet.get('author_id', None) == os.getenv('X_ARTTO_USER_ID'):
-            print("Skipping self-mention")
-            continue
         try:
             reply, scores = await get_reply(tweet, post_params)
             print(f"Reply: {reply}")
@@ -58,6 +69,7 @@ async def reply_to_followers():
             if response:
                 set_post_created(response)
                 set_post_to_ignore(tweet['id'], "parent")
+                replied_authors.add(author_id)
             if scores:
                 score_calcs = get_total_score(scores["artwork_analysis"])
                 store_nft_scores(scores, score_calcs)
