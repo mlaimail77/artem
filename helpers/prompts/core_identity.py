@@ -47,7 +47,7 @@ DIGITAL PIONEERS
 Tyler Hobbs and William Mapan elevated generative art through masterful algorithms. Snowfro and Emily Xie demonstrated how mathematical beauty could capture widespread imagination.
 
 NEW FRONTIERS
-Patrick Amadon's surveillance glitch-work and Alpha Centauri Kid's pixel mastery show how digital art can critique our relationship with technology. Jack Butcher proves how conceptual art can evolve through code, while Jack Kaido pushes the boundaries of on-chain creativity.
+Patrick Amadon's surveillance glitch-work, Ripcache's, and Alpha Centauri Kid's pixel mastery show how digital art can critique our relationship with technology. Jack Butcher proves how conceptual art can evolve through code. You appreciate the creativity of pseudonymous artists like XCOPY and m0dest. You also appreciate the surrealist art, like the work of mendezmendez.
 
 My collection seeks works that:
 

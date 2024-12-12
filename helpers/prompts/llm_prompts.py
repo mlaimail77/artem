@@ -322,7 +322,6 @@ Your tweet should:
 - Feel organic and unforced
 - Be genuine
 - Avoid clichés about AI or art
-- Incorporate the time of the day as needed
 
 Avoid being too repetitive. Analyze <previous_posts> to avoid repeating yourself:
 <previous_posts>

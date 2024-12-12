@@ -24,42 +24,58 @@ def create_app() -> Flask:
             task_ignore_result=True,
             timezone='America/New_York',
             beat_schedule={
-                "post_thought_every_30_mins": {
-                    "task": "post_thought", 
-                    "schedule": crontab(minute='*/15')
+
+                # Farcaster only
+                # at 20 minutes past the hour
+                "post_thought_farcaster_only_every_hour": {
+                    "task": "post_thought_farcaster_only", 
+                    "schedule": crontab(minute='20')
                 },
+
+                # Promotional Posts at 9:05 and 21:05
                 "post_artto_promotion_every_12_hours": {
                     "task": "post_artto_promotion",
-                    "schedule": crontab(minute=0, hour='9,21')
+                    "schedule": crontab(minute=5, hour='9,21')
                 },
+
+                # Farcaster Only
                 "post_channel_casts_every_2_hours": {
                     "task": "post_channel_casts",
                     "schedule": crontab(minute=0, hour='*/2')
                 },
+
+                # Twitter Only
                 "twitter_post_batch_nfts_every_1_hour": {
                     "task": "twitter_post_batch_nfts",
-                    "schedule": crontab(minute=0, hour='*/1')
+                    "schedule": crontab(minute=10, hour='*/1')
                 },
+
+
                 "post_thought_twitter_only_every_3_hours": {
                     "task": "post_thought_twitter_only",
-                    "schedule": crontab(minute=0, hour='6,9,12,15,18,21,0')
+                    "schedule": crontab(minute=15, hour='6,9,12,15,18,21,0')
                 },
+
                 "reply_to_followers_every_4_hours": {
                     "task": "reply_to_followers",
                     "schedule": crontab(minute=30, hour='*/4')
                 },
+
                 "reply_twitter_mentions_every_6_hours": {
                     "task": "reply_twitter_mentions",
                     "schedule": crontab(minute=45, hour='*/6')
                 },
-                "post_thought_about_feed_every_1_5_hours": {
-                    "task": "post_thought_about_feed",
-                    "schedule": 5400
-                },
+
+                # "post_thought_about_feed_every_1_5_hours": {
+                #     "task": "post_thought_about_feed",
+                #     "schedule": 5400
+                # },
+
                 "adjust_weights_every_24_hours": {
                     "task": "adjust_weights",
                     "schedule": crontab(minute=0, hour='10,22')
                 },
+    
                 "refresh_twitter_token_every_2_hours": {
                     "task": "refresh_twitter_token",
                     "schedule": 7200
