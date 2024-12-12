@@ -276,7 +276,7 @@ def store_nft_scores(scores_object, score_calcs, final_decision = None):
         "acquire_recommendation": total_score > int(os.getenv('SCORE_THRESHOLD', 55)),
         "decision": decision,
         "rationale_post": rationale_post,
-        "group_posted": None
+        "group_posted": False
     }
 
     if existing.data:

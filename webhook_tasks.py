@@ -186,11 +186,11 @@ async def process_webhook(webhook_data):
                 post_long_cast(rationale_post)
             except Exception as e:
                 print(f"Error posting to Farcaster: {str(e)}")
-            try:
-                await post_tweet({"text": rationale_post}, refreshed_token, parent=None)
-            except Exception as e:
-                print(f"Error posting to Twitter: {str(e)}")
-            print("ACQUIRE!")
+            # try:
+            #     await post_tweet({"text": rationale_post}, refreshed_token, parent=None)
+            # except Exception as e:
+            #     print(f"Error posting to Twitter: {str(e)}")
+            # print("ACQUIRE!")
         else:
             print("UNHANDLED DECISION")
         
