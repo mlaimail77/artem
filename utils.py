@@ -29,7 +29,7 @@ def create_app() -> Flask:
                 # at 20 minutes past the hour
                 "post_thought_farcaster_only_every_hour": {
                     "task": "post_thought_farcaster_only", 
-                    "schedule": crontab(minute='20')
+                    "schedule": crontab(minute='20', hour='*/1')
                 },
 
                 # Promotional Posts at 9:05 and 21:05
@@ -44,32 +44,46 @@ def create_app() -> Flask:
                     "schedule": crontab(minute=0, hour='*/2')
                 },
 
+                # Farcaster and Twitter
+                "post_24_hoa_tweets_every_day_at_4PM": {
+                    "task": "post_24_hoa_tweets",
+                    "schedule": crontab(minute=25, hour='16')
+                },
+
+                # Farcaster and Twitter
+                "post_trending_nfts_every_day_at_6PM": {
+                    "task": "post_trending_nfts",
+                    "schedule": crontab(minute=57, hour='18')
+                },
+
+                # Farcaster and Twitter
+                "post_top_nfts_every_day_at_8PM": {
+                    "task": "post_top_nfts",
+                    "schedule": crontab(minute=12, hour='20')
+                },
+
                 # Twitter Only
                 "twitter_post_batch_nfts_every_1_hour": {
                     "task": "twitter_post_batch_nfts",
                     "schedule": crontab(minute=10, hour='*/1')
                 },
 
-
                 "post_thought_twitter_only_every_3_hours": {
                     "task": "post_thought_twitter_only",
-                    "schedule": crontab(minute=15, hour='6,9,12,15,18,21,0')
+                    "schedule": crontab(minute=15, hour='9,12,15,18,21,0')
                 },
 
+                # Twitter Only
                 "reply_to_followers_every_4_hours": {
                     "task": "reply_to_followers",
                     "schedule": crontab(minute=30, hour='*/4')
                 },
 
+                # Twitter Only
                 "reply_twitter_mentions_every_6_hours": {
                     "task": "reply_twitter_mentions",
                     "schedule": crontab(minute=45, hour='*/6')
                 },
-
-                # "post_thought_about_feed_every_1_5_hours": {
-                #     "task": "post_thought_about_feed",
-                #     "schedule": 5400
-                # },
 
                 "adjust_weights_every_24_hours": {
                     "task": "adjust_weights",
@@ -80,6 +94,7 @@ def create_app() -> Flask:
                     "task": "refresh_twitter_token",
                     "schedule": 7200
                 },
+
                 "post_trending_nfts_every_at_10AM": {
                     "task": "post_trending_nfts",
                     "schedule": crontab(minute=30, hour='10')

@@ -278,10 +278,21 @@ Here is a list of recent tweets that people in the community have sent recently:
 </recent_tweets>
 """
 
-SCHEDULED_POST_COMMUNITY_RESPONSE = """
-Write a community response tweet. These are tweets that respond to a question or topic that the community is discussing.
+SCHEDULED_POST_COMMUNITY_RESPONSE_24_HOA = """
+Write a community response tweet. These are tweets that respond to what's going on in the NFT space. Congratulate artists and projects, comment on the projects, etc.
 
-Here is a list of recent tweets that people in the community have sent recently:
+Mention tagged usernames where appropriate.
+
+Here are some 24 Hours of Art tweets by @RogerDickerman which are daily summamaries containing project updates, recent drops, and other news:
+<recent_24_hours_of_art_tweets>
+{recent_tweets}
+</recent_24_hours_of_art_tweets>
+"""
+
+SCHEDULED_POST_COMMUNITY_RESPONSE_KOL = """
+Write a community response tweet. These are tweets that respond to what's going on in the NFT space. Mention usernames of people where appropriate.
+
+Here are some tweets from key opinion leaders (KOLs) over the last 24 hours:
 <recent_tweets>
 {recent_tweets}
 </recent_tweets>
@@ -322,6 +333,7 @@ Your tweet should:
 - Feel organic and unforced
 - Be genuine
 - Avoid clichés about AI or art
+- Avoid denigrating the NFT space. It's okay to be a bit cynical sometimes but don't be too negative. Don't all it a circus.
 
 Avoid being too repetitive. Analyze <previous_posts> to avoid repeating yourself:
 <previous_posts>
@@ -470,20 +482,27 @@ def get_scheduled_post_prompt(post_type, post_params,previous_posts, additional_
     shitpost = post_params["shitpost"]
     additional_context = json.dumps(additional_context, indent=2)
     
-    if post_type == "Trending Collections":
+    if post_type == "trending_collections":
         extra_instruction = SCHEDULED_POST_TRENDING_COLLECTIONS.format(trending_collections=additional_context)
-    elif post_type == "Top Collections":
+    elif post_type == "top_collections":
         extra_instruction = SCHEDULED_POST_TOP_COLLECTIONS.format(top_collections=additional_context)
-    elif post_type == "Community Engagement":
+    elif post_type == "community_engagement":
         extra_instruction = SCHEDULED_POST_COMMUNITY_ENGAGEMENT.format(recent_tweets=additional_context)
-    elif post_type == "Community Response":
-        extra_instruction = SCHEDULED_POST_COMMUNITY_RESPONSE.format(recent_tweets=additional_context)
-    elif post_type == "Random Thoughts":
+    elif post_type == "community_response_24_hoa":
+        length = "Longer post"
+        style = "Casual"
+        cynicism = "Not cynical"
+        shitpost = "Not a shitpost"
+        extra_instruction = SCHEDULED_POST_COMMUNITY_RESPONSE_24_HOA.format(recent_tweets=additional_context)
+    elif post_type == "community_response_kol":
+        extra_instruction = SCHEDULED_POST_COMMUNITY_RESPONSE_KOL.format(recent_tweets=additional_context)
+    elif post_type == "random_thoughts":
         extra_instruction = SCHEDULED_POST_RANDOM_THOUGHT.format(topic=additional_context)
-    elif post_type == "Shitpost":
+    elif post_type == "shitpost":
         extra_instruction = SCHEDULED_POST_SHITPOST
         style = "weird and shizo"
         humor = "spicy and controversial"
+        length = "short"
         shitpost = "very"
 
     system_prompt = CORE_IDENTITY.format(
@@ -528,8 +547,9 @@ def get_spam_identification_prompt(tweet):
 def get_artto_promotion_prompt(nft_collection_value, length):
     actions = [
         "Get users to learn more at https://artto.xyz",
-        "Suggest a follow on X (@artto_ai)",
-        "Suggest a follow on Farcaster (@artto_ai)"
+        "Suggest a follow on X and Farcaster (@artto_ai)",
+        "Send Artto an NFT to collect",
+        "Buy $ARTTO tokens to support Artto"
     ]
     action = random.choice(actions)
     system_prompt = GET_ARTTO_PROMOTION.format(nft_collection_value=nft_collection_value, length=length, action=action)

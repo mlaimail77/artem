@@ -189,7 +189,7 @@ def refresh_token():
     r.set("token", j_refreshed_token)
     return refreshed_token
 
-def search_twitter(query, bearer_token, max_results=10):
+def search_twitter(query, bearer_token, max_results=10, start_time=None):
     search_url = "https://api.twitter.com/2/tweets/search/recent"
     query_params = {
         'query': query,
@@ -198,6 +198,9 @@ def search_twitter(query, bearer_token, max_results=10):
         'media.fields': 'preview_image_url,url,type',
         'max_results': max_results
     }
+
+    if start_time:
+        query_params['start_time'] = start_time
 
     def bearer_oauth(r):
         r.headers["Authorization"] = f"Bearer {bearer_token}"
@@ -214,11 +217,30 @@ def get_twitter_mentions(bearer_token, max_results=50):
     query = "@artto__agent"
     return search_twitter(query, bearer_token, max_results)
 
-def get_24_HOA_tweets(bearer_token, max_results=25):
+def format_tweets(response):
+    if response['data']:
+        tweets = response['data']
+    else: 
+        return ""
+    formatted_tweets = []
+    for tweet in tweets:
+        formatted_tweets.append(f"{tweet['text']}")
+    return "\n\n## Tweet:\n\n".join(formatted_tweets)
+
+def get_24_HOA_tweets_formatted(bearer_token, max_results=25):
     # Get tweets from the last 7 days
-    seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
-    query = f'"24 Hours of Art" -filter:replies from:RogerDickerman since:{seven_days_ago}'
-    return search_twitter(query, bearer_token, max_results)
+    start_time = (datetime.now() - timedelta(days=6))
+    query = f'"24 Hours of Art" -is:reply -is:retweet from:RogerDickerman'
+    response = search_twitter(query, bearer_token, max_results, start_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    formatted_response = format_tweets(response)
+    return formatted_response
+
+def get_kol_tweets_formatted(bearer_token, max_results=25):
+    start_time = (datetime.now() - timedelta(days=1))
+    selected_followers = random.sample(FOLLOWING_ACCOUNTS, min(10, len(FOLLOWING_ACCOUNTS)))
+    response = search_twitter("(" + " OR ".join([f"from:{user}" for user in selected_followers]) + ") -is:reply -is:retweet", bearer_token, max_results, start_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    formatted_response = format_tweets(response)
+    return formatted_response
 
 # https://developer.x.com/en/docs/x-api/tweets/counts/integrate/build-a-query
 def search_twitter_images(query, bearer_token, max_results=50):

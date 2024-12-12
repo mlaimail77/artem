@@ -31,10 +31,16 @@ def sync_reply_to_followers():
 
 @shared_task(ignore_result=False, name="post_thought_twitter_only")
 def sync_post_thought_twitter_only(post_on_twitter=True, post_on_farcaster=False, post_type=None):
-    post_type = random.choice([
-        "Random Thoughts",
-        "Shitpost"
-    ])
+    POST_CLASSES = {
+        "community_engagement": 0.15,
+        "community_response_kol": 0.3,
+        "random_thoughts": 0.2,
+        "shitpost": 0.1
+    }
+    post_type = random.choices(
+        list(POST_CLASSES.keys()),
+        weights=list(POST_CLASSES.values())
+    )[0]
     async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type)
 
 @shared_task(ignore_result=False, name="post_artto_promotion")
@@ -57,20 +63,21 @@ def sync_refresh_twitter_token():
 def sync_post_channel_casts():
     async_to_sync(post_channel_casts)()
 
-@shared_task(ignore_result=False, name="post_thought_about_feed")
-def sync_post_thought_about_feed(post_on_twitter=False, post_on_farcaster=True):
-    async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type="Community Response")
-
-@shared_task(ignore_result=False, name="post_thought")
-def sync_post_thought(post_on_twitter=False, post_on_farcaster=True, post_type=None):
+@shared_task(ignore_result=False, name="post_thought_farcaster_only")
+def sync_post_thought_farcaster_only(post_on_twitter=False, post_on_farcaster=True, post_type=None):
     sleep_time = random.randint(0, 600)
     print(f"Post thought task started; sleeping for {sleep_time} seconds")
     time.sleep(sleep_time)
-    post_type = random.choice([
-        "Random Thoughts",
-        "Shitpost",
-        "Community Engagement"
-    ])
+    POST_CLASSES = {
+        "community_engagement": 0.2,
+        "community_response_kol": 0.3,
+        "random_thoughts": 0.2,
+        "shitpost": 0.1
+    }
+    post_type = random.choices(
+        list(POST_CLASSES.keys()),
+        weights=list(POST_CLASSES.values())
+    )[0]
     async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type)
 
 @shared_task(ignore_result=False, name="post_following_casts")
@@ -79,7 +86,15 @@ def sync_post_following_casts():
 
 @shared_task(ignore_result=False, name="post_trending_nfts")
 def sync_post_trending_nfts(post_on_twitter=True, post_on_farcaster=True):
-    async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type="Trending Collections")
+    async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type="trending_collections")
+
+@shared_task(ignore_result=False, name="post_top_nfts")
+def sync_post_top_nfts(post_on_twitter=True, post_on_farcaster=True):
+    async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type="top_collections")
+
+@shared_task(ignore_result=False, name="post_24_hoa_tweets")
+def sync_post_24_hoa_tweets(post_on_twitter=True, post_on_farcaster=True):
+    async_to_sync(post_thought)(post_on_twitter, post_on_farcaster, post_type="community_response_24_hoa")
 
 @shared_task(ignore_result=False, name="process_webhook")
 def sync_process_webhook(webhook_data):

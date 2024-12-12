@@ -10,6 +10,16 @@ from dotenv import load_dotenv
 
 load_dotenv('.env.local')
 
+POST_CLASSES = {
+    "trending_collections": 0.15,
+    "top_collections": 0.15,
+    "community_engagement": 0.2,
+    "community_response_24_hoa": 0,
+    "community_response_kol": 0.3,
+    "random_thoughts": 0.2,
+    "shitpost": 0.1
+}
+
 def refresh_twitter_token():
     refresh_token()
 
@@ -211,6 +221,7 @@ async def post_thought(post_on_twitter=True, post_on_farcaster=True, post_type=N
     print("Posting thought")
     previous_posts = get_last_n_posts(10)
     post_params = generate_post_params()
+    refreshed_token = refresh_token()
 
     print("Post params:")
     print(f"Length: {post_params['length']}")
@@ -218,39 +229,45 @@ async def post_thought(post_on_twitter=True, post_on_farcaster=True, post_type=N
     print(f"Humor: {post_params['humor']}")
     print(f"Cynicism: {post_params['cynicism']}")
     print(f"Shitpost: {post_params['shitpost']}")
-
-    POST_CLASSES = [
-        "Trending Collections",
-        "Top Collections",
-        "Community Engagement",
-        "Community Response",
-        "Random Thoughts",
-        "Shitpost"
-    ]
-
+    
+    additional_context = "None"
     if post_type is None:
-        post_type = random.choice(POST_CLASSES)
+        post_type = random.choices(
+            list(POST_CLASSES.keys()),
+            weights=list(POST_CLASSES.values())
+        )[0]
 
-    if post_type == "Random Thoughts":
-        additional_context = random.choice(POST_TOPICS)
-    elif post_type == "Community Engagement":
-        trending_casts = get_trending_casts(limit=10)
-        print(trending_casts)
-        additional_context = filter_trending_casts(trending_casts)
-    elif post_type == "Community Response":
-        additional_context = filter_trending_casts(get_trending_casts(limit=10))
-    elif post_type == "Trending Collections":
-        time_period = '24h'
-        chains = ['ethereum', 'base']
-        trending_collections = await get_trending_collections(time_period=time_period, chains=chains)
-        additional_context = format_collections(trending_collections, time_period)
-    elif post_type == "Top Collections":
-        time_period = '7d'
-        chains = ['ethereum', 'base']
-        top_collections = await get_top_collections(time_period=time_period, chains=chains)
-        additional_context = format_collections(top_collections, time_period)
-    elif post_type == "Shitpost":
-        additional_context = "None"
+    match post_type:
+        case "random_thoughts":
+            additional_context = random.choice(POST_TOPICS)
+        case "community_engagement":
+            trending_casts = get_trending_casts(limit=10)
+            print(trending_casts)
+            additional_context = filter_trending_casts(trending_casts)
+        case "community_response_24_hoa":
+            try:
+                additional_context = get_24_HOA_tweets_formatted(refreshed_token["access_token"])
+            except Exception as e:
+                print(f"Error getting 24 HOA tweets: {str(e)}")
+                post_type = "random_thoughts"
+                additional_context = random.choice(POST_TOPICS)
+        case "community_response_kol":
+            try:
+                additional_context = get_kol_tweets_formatted(refreshed_token["access_token"])
+            except Exception as e:
+                print(f"Error getting KOL tweets: {str(e)}")
+        case "trending_collections":
+            time_period = '24h'
+            chains = ['ethereum', 'base']
+            trending_collections = await get_trending_collections(time_period=time_period, chains=chains)
+            additional_context = format_collections(trending_collections, time_period)
+        case "top_collections":
+            time_period = '24h'
+            chains = ['ethereum', 'base']
+            top_collections = await get_top_collections(time_period=time_period, chains=chains)
+            additional_context = format_collections(top_collections, time_period)
+        case "shitpost":
+            additional_context = "None"
 
     thought = await get_scheduled_post(post_type, post_params, previous_posts, additional_context)
     print(thought)
@@ -262,7 +279,6 @@ async def post_thought(post_on_twitter=True, post_on_farcaster=True, post_type=N
             print(f"Error posting to Farcaster: {str(e)}")
     if post_on_twitter:
         try:
-            refreshed_token = refresh_token()
             response = await post_tweet({"text": thought}, refreshed_token, parent=None)
             if response:
                 set_post_created(response)
@@ -282,7 +298,8 @@ async def reply_twitter_mentions():
     if len(tweets) > 5:
         tweets = random.sample(tweets, 5)
 
-    print(tweets)
+    print("Replying to tweets: ", tweets)
+
     for mention in tweets:
         if mention['id'] in ignore_posts_ids:
             print("Skipping ignored post")
