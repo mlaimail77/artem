@@ -238,6 +238,7 @@ async def process_neynar_webhook(webhook_data):
     cast = data.get('data', {})
 
     cast_details = get_cast_details(cast)
+    print("Responding to cast:", cast_details)
     post_params = generate_post_params()
     posts_replied_to = get_all_posts_replied_to()
     if any(p['parent_id'] == cast["hash"] for p in posts_replied_to):
@@ -245,7 +246,7 @@ async def process_neynar_webhook(webhook_data):
         return
     reply, scores = await get_reply(cast_details, post_params)
     react_cast('like', cast["hash"])
-    print(reply)
+    print("Reply:", reply)
     response = post_long_cast(reply, parent=cast["hash"])
     if scores:
         score_calcs = get_total_score(scores["artwork_analysis"])

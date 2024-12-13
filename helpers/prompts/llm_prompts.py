@@ -413,6 +413,11 @@ Tool call: get_nft_opinion(network="base", contract_address="0x7d210dae7a88cadac
 </example>
 
 <example>
+Link: https://foundation.app/mint/base/0x678FC585bAEa0ae8c413C63Bdd578bba500C57D9/3
+Tool call: get_nft_opinion(network="base", contract_address="0x678FC585bAEa0ae8c413C63Bdd578bba500C57D9", token_id="3")
+</example>
+
+<example>
 Link: https://etherscan.io/nft/0x059edd72cd353df5106d2b9cc5ab83a52287ac3a/3333
 Tool call: get_nft_opinion(network="ethereum", contract_address="0x059edd72cd353df5106d2b9cc5ab83a52287ac3a", token_id="3333")
 </example>
