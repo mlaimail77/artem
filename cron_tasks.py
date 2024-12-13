@@ -54,7 +54,7 @@ async def twitter_post_batch_nfts():
         payload["media"] = {
             "media_ids": []
         }
-        for image_url in image_urls:
+        for image_url in image_urls[:4]:  # Limit to first 4 images
             response = upload_media(image_url)
             media = response['media']
             media_ids = media['media_ids'] # array of media ids

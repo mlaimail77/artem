@@ -432,9 +432,7 @@ Link: https://t.co/XXXXX
 Tool call: NONE. IGNORE.
 </example>
 
-For other types of links that aren't opensea, basescan, or etherscan, you can say "I don't support other networks yet.". 
-
-If you see a URL like https://t.co. Reply with "I only support OpenSea, BaseScan, and Etherscan links."
+For other types of links that aren't opensea, basescan, or etherscan, you can ignore them and write a regular reply, do not invoke a tool.
 
 <post_to_reply_to>
 {post_to_reply_to}
