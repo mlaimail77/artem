@@ -10,6 +10,34 @@ load_dotenv('.env.local')
 
 SIMPLEHASH_API_KEY = os.getenv('SIMPLEHASH_API_KEY')
 
+def get_ens_name(wallet_address: str, api_key: str = SIMPLEHASH_API_KEY) -> str:
+    """
+    Fetches the ENS name for a wallet address using the SimpleHash API.
+
+    Args:
+        wallet_address (str): The wallet address to lookup
+        api_key (str): The SimpleHash API key to use. Default: SIMPLEHASH_API_KEY
+
+    Returns:
+        str: The ENS name if one exists, otherwise the wallet address
+    """
+    url = f"https://api.simplehash.com/api/v0/ens/reverse_lookup?wallet_addresses={wallet_address}"
+
+    headers = {
+        "accept": "application/json",
+        "X-API-KEY": api_key
+    }
+
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        if data and len(data) > 0:
+            ens = data[0].get("ens")
+            if ens:
+                return ens
+    return wallet_address
+
+
 def get_wallet_valuation(wallet_address: str, api_key: str = SIMPLEHASH_API_KEY):
     """
     Fetches the total NFT valuation for a specific wallet address from the SimpleHash API.

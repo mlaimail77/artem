@@ -188,7 +188,9 @@ async def get_final_decision(nft_opinion, nft_metadata, from_address):
     decision = response["decision"]
     reward_points = response["reward_points"]
 
-    system_prompt = get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address, decision, reward_points)
+    ens_name = get_ens_name(from_address)
+
+    system_prompt = get_keep_or_burn_decision(nft_opinion, nft_metadata, ens_name, decision, reward_points)
 
     response = client.beta.chat.completions.parse(
         model="gpt-4o-mini",
