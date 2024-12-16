@@ -84,9 +84,10 @@ def roast():
                 wallet = get_wallet_from_ens(wallet)
 
             # artto_balance = get_artto_balance(wallet)
+            # unique_nft_senders = get_unique_nft_senders()
 
-            # if artto_balance == 0:
-            #     response["message"] = "No Artto balance found"
+            # if artto_balance == 0 or wallet not in unique_nft_senders:
+            #     response["message"] = "No Artto balance found or wallet not in unique NFT senders"
             #     return jsonify(response), 400
 
             wallet_analysis = get_wallet_analysis(wallet)

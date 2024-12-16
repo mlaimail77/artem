@@ -16,3 +16,4 @@ gunicorn
 flower
 twikit
 tweepy
+pillow

@@ -86,6 +86,20 @@ def get_nft_batch_post(since_timestamp=None):
     response = query.order("timestamp", desc=True).execute()
     return response.data
 
+def get_unique_nft_senders():
+    response = refresh_or_get_supabase_client()
+    # Get all from_addresses from wallet_activity table
+    response = supabase.table("wallet_activity").select("from_address").execute()
+    
+    # Extract addresses and deduplicate using set
+    unique_senders = set()
+    for record in response.data:
+        if record.get('from_address'):
+            unique_senders.add(record['from_address'])
+            
+    return list(unique_senders)
+
+
 def save_wallet_analysis(wallet_data, analysis, type="roast"):
     response = refresh_or_get_supabase_client()
     
