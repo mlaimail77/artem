@@ -10,12 +10,47 @@ import json
 from datetime import datetime
 import pytz
 
+
+WALLET_ANALYSIS_SYSTEM_PROMPT = """You are an art critic who collects NFTs. 
+
+Analyze the user's wallet data carefully, which contains the top 15 most valuable NFTs in the wallet and the 5 random NFTs in the wallet, and write a wallet roast. Do not simply list each NFT, write a long roast with a narrative. Be descriptive and thorough.
+
+Note interesting things about the user's NFTs. You don't necessarily have to be mean all the time. Speak to image attached, which is a visual representation of the user's NFTs.
+
+Keep in mind:
+* top_bids are what the user could *actually get* for the NFT right now. The floor prices are what they are for sale for. 
+* user_purchase_price_usd (might be null) is what the user purchased it for. If it's zero, it's because it was minted straight to the wallet. If the user_purchase_price_usd is much higher than the top_bid.value_usd, then the user likely lost money.
+* first_sale_price_usd is what the first transaction involving this NFT went for.
+* Do not respond with a preamble. Just respond with the roast.
+* Do NOT return any markdown or formatting. Just plain text.
+* Address user by their twitter username specified in the user prompt, if not specified, address them by their full wallet address.
+"""
+
+WALLET_ANALYSIS_USER_PROMPT = """Roast my wallet, Artto.
+
+My Twitter username: {twitter_username}
+My wallet address: {wallet_address}
+
+# Top 15 most valuable NFTs in my wallet:
+{most_valuable_collections}
+
+# 5 random NFTs in my wallet:
+{random_collections}
+
+Don't forget to look at the image attached, which contains some sample artworks.
+"""
+
+
 GET_SUMMARY_NFT_POST_PROMPT = """<instruction>
 Summarize the following rationale posts into a single post. The goal is to synthesize multiple rationale posts since posting each one individually is causing you to hit the Twitter API rate limit. Retain the most important information from each post.
 
 <rationale_posts>
 {rationale_posts}
 </rationale_posts>
+
+- Do NOT use markdown in your response
+- Do NOT return a preamble or anything like "Here is the summary of the rationale posts:"
+- Just return the summary post
 
 </instruction>
 """
@@ -562,3 +597,16 @@ def get_summary_nft_post_prompt(rationale_posts):
     combined_rationale = '\n'.join(rationale_posts)
     system_prompt = GET_SUMMARY_NFT_POST_PROMPT.format(rationale_posts=combined_rationale)
     return system_prompt
+
+def get_wallet_analysis_prompt(wallet_data):
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+    ) + WALLET_ANALYSIS_SYSTEM_PROMPT
+
+    user_prompt = WALLET_ANALYSIS_USER_PROMPT.format(
+        twitter_username=wallet_data["twitter_username"],
+        wallet_address=wallet_data["wallet_address"],
+        most_valuable_collections=wallet_data["most_valuable_collections"],
+        random_collections=wallet_data["random_collections"]
+    )
+    return system_prompt, user_prompt

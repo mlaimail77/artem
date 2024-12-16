@@ -86,6 +86,33 @@ def get_nft_batch_post(since_timestamp=None):
     response = query.order("timestamp", desc=True).execute()
     return response.data
 
+def save_wallet_analysis(wallet_data, analysis, type="roast"):
+    response = refresh_or_get_supabase_client()
+    
+    # Check if wallet address already exists
+    existing = supabase.table("wallet_analysis").select("*").eq("wallet_address", wallet_data["wallet_address"]).execute()
+    if existing.data:
+        return existing.data
+        
+    insert_data = {
+        "id": hashlib.sha256(f"{wallet_data['wallet_address']}:{str(datetime.now())}".encode()).hexdigest(),
+        "created_at": str(datetime.now()),
+        "wallet_address": wallet_data["wallet_address"],
+        "analysis": analysis,
+        "most_valuable_collections": json.dumps(wallet_data["most_valuable_collections"]),
+        "random_collections": json.dumps(wallet_data["random_collections"]),
+        "twitter_username": wallet_data["twitter_username"],
+        "image_urls": json.dumps(wallet_data["image_urls"]),
+        "type": type
+    }
+    response = supabase.table("wallet_analysis").insert(insert_data).execute()
+    return response.data
+
+def get_wallet_analysis(wallet_address):
+    response = refresh_or_get_supabase_client()
+    response = supabase.table("wallet_analysis").select("*").eq("wallet_address", wallet_address).execute()
+    return response.data
+
 def get_nft_scores(n=10):
     response = refresh_or_get_supabase_client()
     response = supabase.table("nft_scores").select("id,scores,analysis_text").order("timestamp", desc=True).limit(n).execute()

@@ -32,6 +32,33 @@ tools = [
     }
 ]
 
+def get_wallet_analysis_text(wallet_data, base64_image):
+    system_prompt, user_prompt = get_wallet_analysis_prompt(wallet_data)
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", 
+             "content": system_prompt},
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": user_prompt
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}"
+                        }
+                    }
+                ]
+            }
+        ],
+    )
+
+    return response.choices[0].message.content
+
 def get_summary_nft_post(rationale_posts):
     system_prompt = get_summary_nft_post_prompt(rationale_posts)
     response = client.chat.completions.create(

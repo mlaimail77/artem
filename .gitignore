@@ -173,3 +173,4 @@ test_twitter.py
 test_utils.py
 helpers/.DS_Store
 
+*.jpg

@@ -13,6 +13,7 @@ from helpers.llm_helpers import *
 from helpers.nft_data_helpers import *
 from helpers.farcaster_helpers import *
 from helpers.twitter_helpers import *
+from helpers.wallet_analysis import *
 
 from dotenv import load_dotenv
 
@@ -26,6 +27,90 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@flask_app.route('/roast', methods=['POST', 'GET'])
+def roast():
+    wallet = None
+    wallet_analysis = None
+    message = None
+    image_urls = None
+
+    response = {
+        "analysis": "",
+        "wallet": wallet,
+        "message": message,
+        "image_urls": image_urls
+    }
+
+    if request.method == 'GET':
+
+        try:
+            if request.args.get("wallet"):
+                wallet = request.args.get("wallet")
+                if not wallet.startswith('0x'):
+                    wallet = get_wallet_from_ens(wallet)
+
+                response["wallet"] = wallet
+                response["message"] = "Wallet address provided"
+            
+            wallet_analysis = get_wallet_analysis(wallet)
+            if wallet_analysis:
+                wallet_analysis = wallet_analysis[0]
+                response["analysis"] = wallet_analysis["analysis"]
+                message = "Wallet analysis found"
+            else:
+                message = "Wallet analysis not found"
+            return render_template('roast.html', response=response)
+        except Exception as e:
+            logger.error(f"Error in roast GET: {str(e)}")
+            response["message"] = "Error processing request"
+            return render_template('roast.html', response=response)
+
+    elif request.method == 'POST':
+        try:
+            print(request.json)
+            wallet = request.json.get('wallet')
+            response["wallet"] = wallet
+
+            if not wallet:
+                response["message"] = "No wallet address provided"
+                return jsonify(response), 400
+
+            # Validate wallet format
+            if not (wallet.startswith('0x') or wallet.endswith('.eth')):
+                response["message"] = "Invalid wallet address format"
+                return jsonify(response), 400
+
+            if not wallet.startswith('0x'):
+                wallet = get_wallet_from_ens(wallet)
+
+            # artto_balance = get_artto_balance(wallet)
+
+            # if artto_balance == 0:
+            #     response["message"] = "No Artto balance found"
+            #     return jsonify(response), 400
+
+            wallet_analysis = get_wallet_analysis(wallet)
+
+            if wallet_analysis:
+                response["analysis"] = wallet_analysis[0]["analysis"]
+                message = "Wallet analysis found"
+            else:
+                wallet_data = get_wallet_info(wallet)
+                response = get_analysis(wallet_data)
+                analysis = response["analysis"]
+                image_urls = response["image_urls"]
+
+                save_wallet_analysis(wallet_data, analysis, type="roast")
+                response["analysis"] = analysis
+                response["image_urls"] = image_urls
+                message = "Wallet analysis not found, generated analysis"
+        except Exception as e:
+            logger.error(f"Error in roast POST: {str(e)}")
+            response["message"] = "Error processing request"
+            return jsonify(response), 500
+        
+        response["message"] = message
+        return jsonify(response)
 
 @flask_app.route('/')
 def home():
