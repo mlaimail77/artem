@@ -22,9 +22,6 @@ def get_wallet_info(wallet_address):
 
     collections = get_wallet_collections(wallet_address)
     formatted_collections = format_wallet_collections(collections)
-
-    print("*" * 100)
-    print("Formatted collections: ", json.dumps(formatted_collections, indent=2))
     
     # Sort collections by highest floor price (USD) across any marketplace
     sorted_collections = sorted(
@@ -38,11 +35,6 @@ def get_wallet_info(wallet_address):
 
     # Get 5 random collections
     random_collections = random.sample(formatted_collections, 5)
-
-    print("Most valuable collections: ", json.dumps(most_valuable_collections, indent=2))
-    print("*" * 100)
-    print("Most recent collections: ", json.dumps(random_collections, indent=2))
-    
     # Initialize arrays for NFTs to analyze
     valuable_nfts_to_analyze = []
     random_nfts_to_analyze = []
@@ -108,7 +100,7 @@ def encode_image(image_path):
         return base64.b64encode(image_file.read()).decode('utf-8')
 
 
-def get_analysis(wallet_data):
+def get_analysis(wallet_data, tone, current_valuation):
     image_urls = wallet_data["image_urls"]
 
     # Combine images
@@ -120,7 +112,7 @@ def get_analysis(wallet_data):
     # Get base64 encoded image
     base64_image = encode_image(temp_image_path)
 
-    roast = get_wallet_analysis_text(wallet_data, base64_image)
+    roast = get_wallet_analysis_text(wallet_data, base64_image, tone, current_valuation)
 
     # Clean up temp file
     os.remove(temp_image_path)

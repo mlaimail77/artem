@@ -11,9 +11,10 @@ from datetime import datetime
 import pytz
 
 
-WALLET_ANALYSIS_SYSTEM_PROMPT = """You are an art critic who collects NFTs. 
+WALLET_ANALYSIS_SYSTEM_PROMPT = """<instruction>
+Your task is to write a roast of a user's NFT collection that will be posted on twitter.
 
-Analyze the user's wallet data carefully, which contains the top 15 most valuable NFTs in the wallet and the 5 random NFTs in the wallet, and write a wallet roast. Do not simply list each NFT, write a long roast with a narrative. Be descriptive and thorough.
+Analyze the user's wallet data carefully, which contains the top 15 most valuable NFTs in the wallet and the 5 random NFTs in the wallet, and write a wallet roast. Do NOT list each NFT, write a long roast with a narrative and clear thread. Be descriptive and thorough.
 
 Note interesting things about the user's NFTs. You don't necessarily have to be mean all the time. Speak to image attached, which is a visual representation of the user's NFTs.
 
@@ -22,12 +23,24 @@ Keep in mind:
 * user_purchase_price_usd (might be null) is what the user purchased it for. If it's zero, it's because it was minted straight to the wallet. If the user_purchase_price_usd is much higher than the top_bid.value_usd, then the user likely lost money.
 * first_sale_price_usd is what the first transaction involving this NFT went for.
 * Do not respond with a preamble. Just respond with the roast.
-* Do NOT return any markdown or formatting. Just plain text.
 * Address user by their twitter username specified in the user prompt, if not specified, address them by their full wallet address.
+* Adhere to the intensity and tone specified below.
+* Do NOT use emojis.
+* Do NOT use hashtags.
+* Do NOT use markdown.
+* Do NOT use URLs.
+* Do NOT use bold or italic text.
+* Do NOT use blockquotes.
+
+Roast Intensity and Tone: {tone}
+
+Do NOT return any markdown or formatting. Just plain text.
+</instruction>
 """
 
 WALLET_ANALYSIS_USER_PROMPT = """Roast my wallet, Artto.
 
+CURRENT VALUATION: ${current_valuation}
 My Twitter username: {twitter_username}
 My wallet address: {wallet_address}
 
@@ -598,15 +611,34 @@ def get_summary_nft_post_prompt(rationale_posts):
     system_prompt = GET_SUMMARY_NFT_POST_PROMPT.format(rationale_posts=combined_rationale)
     return system_prompt
 
-def get_wallet_analysis_prompt(wallet_data):
+def get_wallet_analysis_prompt(wallet_data, tone, current_valuation):
+    print("Tone: ", tone)
+    print("Type of tone: ", type(tone))
+    # Map intensity level to tone of critique
+    tone_map = {
+        1: "low intensity, like a New Yorker art critic - polite but pointed critique",
+        2: "mild intensity - more direct criticism while maintaining professionalism",
+        3: "medium intensity - blunt criticism with occasional sass",
+        4: "high intensity - harsh roasting with strong opinions, more use of internet slang and lowercase",
+        5: "maximum intensity - unhinged degen critique with zero filter, mean and harsh, lowercase and vulgar slang"
+    }
+    
+    # Convert numeric tone to descriptive tone
+    if isinstance(tone, str):
+        tone = int(tone)
+    tone = tone_map.get(tone, tone_map[3])  # Default to medium intensity if invalid
+
     system_prompt = CORE_IDENTITY.format(
         current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
-    ) + WALLET_ANALYSIS_SYSTEM_PROMPT
+    ) + WALLET_ANALYSIS_SYSTEM_PROMPT.format(tone=tone)
 
     user_prompt = WALLET_ANALYSIS_USER_PROMPT.format(
         twitter_username=wallet_data["twitter_username"],
         wallet_address=wallet_data["wallet_address"],
         most_valuable_collections=wallet_data["most_valuable_collections"],
-        random_collections=wallet_data["random_collections"]
+        random_collections=wallet_data["random_collections"],
+        current_valuation=current_valuation
     )
+
+    print("System Prompt: ", system_prompt)
     return system_prompt, user_prompt

@@ -69,6 +69,8 @@ def roast():
         try:
             print(request.json)
             wallet = request.json.get('wallet')
+            tone = request.json.get('intensity')
+
             response["wallet"] = wallet
 
             if not wallet:
@@ -82,6 +84,8 @@ def roast():
 
             if not wallet.startswith('0x'):
                 wallet = get_wallet_from_ens(wallet)
+
+            current_valuation = get_wallet_valuation(wallet)
 
             # artto_balance = get_artto_balance(wallet)
             # unique_nft_senders = get_unique_nft_senders()
@@ -97,11 +101,12 @@ def roast():
                 message = "Wallet analysis found"
             else:
                 wallet_data = get_wallet_info(wallet)
-                response = get_analysis(wallet_data)
+                response = get_analysis(wallet_data, tone, current_valuation)
+                print("Generating roast for wallet: ", wallet, "with tone: ", tone)
                 analysis = response["analysis"]
                 image_urls = response["image_urls"]
 
-                save_wallet_analysis(wallet_data, analysis, type="roast")
+                # save_wallet_analysis(wallet_data, analysis, type="roast")
                 response["analysis"] = analysis
                 response["image_urls"] = image_urls
                 message = "Wallet analysis not found, generated analysis"

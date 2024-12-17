@@ -32,8 +32,8 @@ tools = [
     }
 ]
 
-def get_wallet_analysis_text(wallet_data, base64_image):
-    system_prompt, user_prompt = get_wallet_analysis_prompt(wallet_data)
+def get_wallet_analysis_text(wallet_data, base64_image, tone, current_valuation):
+    system_prompt, user_prompt = get_wallet_analysis_prompt(wallet_data, tone, current_valuation)
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
