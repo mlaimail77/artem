@@ -17,7 +17,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_nft_opinion",
-            "description": "Get the opinion of an NFT provided by as a link the user",
+            "description": "Get the opinion of an NFT provided by as a link by the user",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -26,6 +26,21 @@ tools = [
                     "token_id": {"type": "string"},
                 },
                 "required": ["network", "contract_address", "token_id"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function", 
+        "function": {
+            "name": "get_roast",
+            "description": "Get a roast of a wallet address",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "wallet_address": {"type": "string"}
+                },
+                "required": ["wallet_address"],
                 "additionalProperties": False,
             },
         },

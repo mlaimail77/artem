@@ -195,25 +195,38 @@ async def process_webhook(webhook_data):
             print("UNHANDLED DECISION")
         
         # Transfer ARTTO tokens to the sender
-        try:
-            response = transfer_artto_token(
-                wallet, 
-                round(reward_points), 
-                from_address
-            )
-            print(response)
-            set_wallet_activity(
-                event_type="ERC20_TRANSFER", 
-                from_address=current_wallet_address, 
-                to_address=from_address, 
-                token_id=token_id, 
-                network=webhook_network, 
-                contract_address=contract_address, 
-                amount=round(reward_points)
-            )
-
-        except Exception as e:
-            print(f"Error transferring ARTTO tokens: {str(e)}")
+        max_attempts = 3
+        attempt = 0
+        delay = 1  # Initial delay in seconds
+        
+        while attempt < max_attempts:
+            try:
+                response = transfer_artto_token(
+                    wallet, 
+                    round(reward_points), 
+                    from_address
+                )
+                print(response)
+                set_wallet_activity(
+                    event_type="ERC20_TRANSFER", 
+                    from_address=current_wallet_address, 
+                    to_address=from_address, 
+                    token_id=token_id, 
+                    network=webhook_network, 
+                    contract_address=contract_address, 
+                    amount=round(reward_points)
+                )
+                break  # Success - exit loop
+                
+            except Exception as e:
+                attempt += 1
+                if attempt == max_attempts:
+                    print(f"Error transferring ARTTO tokens after {max_attempts} attempts: {str(e)}")
+                    break
+                    
+                print(f"Attempt {attempt} failed, retrying in {delay} seconds: {str(e)}")
+                await asyncio.sleep(delay)
+                delay *= 2  # Exponential backoff
 
 
         return {
