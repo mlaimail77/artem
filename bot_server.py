@@ -54,7 +54,7 @@ def roast():
             
             wallet_analysis = get_wallet_analysis(wallet)
             if wallet_analysis:
-                wallet_analysis = wallet_analysis[0]
+                wallet_analysis = wallet_analysis[-1]
                 response["analysis"] = wallet_analysis["analysis"]
                 message = "Wallet analysis found"
             else:
@@ -106,7 +106,7 @@ def roast():
                 analysis = response["analysis"]
                 image_urls = response["image_urls"]
 
-                # save_wallet_analysis(wallet_data, analysis, type="roast")
+                save_wallet_analysis(wallet_data, analysis, type="roast", tone=tone)
                 response["analysis"] = analysis
                 response["image_urls"] = image_urls
                 message = "Wallet analysis not found, generated analysis"

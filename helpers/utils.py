@@ -100,7 +100,7 @@ def get_unique_nft_senders():
     return list(unique_senders)
 
 
-def save_wallet_analysis(wallet_data, analysis, type="roast"):
+def save_wallet_analysis(wallet_data, analysis, type="roast", tone="None"):
     response = refresh_or_get_supabase_client()
     
     # Check if wallet address already exists
@@ -117,7 +117,8 @@ def save_wallet_analysis(wallet_data, analysis, type="roast"):
         "random_collections": json.dumps(wallet_data["random_collections"]),
         "twitter_username": wallet_data["twitter_username"],
         "image_urls": json.dumps(wallet_data["image_urls"]),
-        "type": type
+        "type": type,
+        "tone": str(tone)
     }
     response = supabase.table("wallet_analysis").insert(insert_data).execute()
     return response.data
