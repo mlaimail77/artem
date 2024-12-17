@@ -378,29 +378,33 @@ async def get_reply(cast_details, post_params):
     )
 
     if response.choices[0].message.tool_calls:
-        print("Tool call")
-        tool_call = response.choices[0].message.tool_calls[0]
-        tool_input = json.loads(tool_call.function.arguments)
-        print(tool_input)
-        try:
-            metadata = await get_nft_metadata(**tool_input)
-            if not metadata or 'image_medium_url' not in metadata:
-                raise ValueError("NFT metadata missing required image URL")
-        except Exception as e:
-            raise ValueError(f"Failed to fetch NFT metadata: {str(e)}")
-        artwork_analysis = await get_nft_analysis(metadata)
+        print("Tool calls: ", response.choices[0].message.tool_calls)
+        # Iterate through all tool calls
+        for tool_call in response.choices[0].message.tool_calls:
+            if tool_call.function.name == "get_nft_opinion":
+                print("Tool call")
+                tool_input = json.loads(tool_call.function.arguments)
+                print(tool_input)
+                
+                try:
+                    metadata = await get_nft_metadata(**tool_input)
+                    if not metadata or 'image_medium_url' not in metadata:
+                        raise ValueError("NFT metadata missing required image URL")
+                except Exception as e:
+                    raise ValueError(f"Failed to fetch NFT metadata: {str(e)}")
+                artwork_analysis = await get_nft_analysis(metadata)
 
-        post = await get_nft_post(artwork_analysis)
-        print(f"metadata: {metadata}")
+                post = await get_nft_post(artwork_analysis)
+                print(f"metadata: {metadata}")
 
-        scores_object = {
-            "artwork_analysis": artwork_analysis,
-            "image_medium_url": metadata["image_medium_url"],
-            "chain": tool_input["network"],
-            "contract_address": tool_input["contract_address"],
-            "token_id": tool_input["token_id"]
-        }
-        return (post, scores_object)
+                scores_object = {
+                    "artwork_analysis": artwork_analysis,
+                    "image_medium_url": metadata["image_medium_url"],
+                    "chain": tool_input["network"],
+                    "contract_address": tool_input["contract_address"],
+                    "token_id": tool_input["token_id"]
+                }
+                return (post, scores_object)
 
     return (response.choices[0].message.content, None)
 
