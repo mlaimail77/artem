@@ -382,9 +382,9 @@ async def get_reply(cast_details, post_params):
         # Iterate through all tool calls
         for tool_call in response.choices[0].message.tool_calls:
             if tool_call.function.name == "get_nft_opinion":
-                print("Tool call")
+                print("Tool call: ", tool_call)
                 tool_input = json.loads(tool_call.function.arguments)
-                print(tool_input)
+                print("Tool input: ", tool_input)
                 
                 try:
                     metadata = await get_nft_metadata(**tool_input)
@@ -405,6 +405,11 @@ async def get_reply(cast_details, post_params):
                     "token_id": tool_input["token_id"]
                 }
                 return (post, scores_object)
+            if tool_call.function.name == "get_roast":
+                print("Tool call: ", tool_call)
+                tool_input = json.loads(tool_call.function.arguments)
+                print("Tool input: ", tool_input)
+                break
 
     return (response.choices[0].message.content, None)
 

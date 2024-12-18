@@ -137,7 +137,7 @@ def get_gallery_nft_scores(n=100):
     response = refresh_or_get_supabase_client()
     response = supabase.table("nft_scores").select(
         "network,contract_address,token_id,scores,analysis_text,image_url,acquire_recommendation"
-    ).eq("acquire_recommendation", True).order("timestamp", desc=True).limit(n).execute()
+    ).eq("acquire_recommendation", True).filter("decision", "in", '("ACQUIRE","REJECT","BURN")').order("timestamp", desc=True).limit(n).execute()
     return response.data
 
 def get_recent_nft_scores(n=6):

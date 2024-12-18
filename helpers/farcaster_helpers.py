@@ -315,8 +315,8 @@ def get_cast_details(cast_data):
     embeds = cast_data.get('embeds', [])
     if embeds and len(embeds) > 0:
         embed = embeds[0]
-        if 'metadata' in embed and 'content_type' in embed['metadata']:
-            if embed['metadata']['content_type'].startswith('image/') and 'url' in embed:
+        if 'url' in embed:
+            if 'metadata' not in embed or 'content_type' not in embed['metadata'] or embed['metadata']['content_type'].startswith('image/'):
                 image_url = embed['url']
             
     return {
