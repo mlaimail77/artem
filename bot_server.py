@@ -101,9 +101,13 @@ def roast():
                 message = "Wallet analysis found"
             else:
                 wallet_data = get_wallet_info(wallet)
-                response = get_analysis(wallet_data, tone, current_valuation)
+                response = get_analysis_params(wallet_data, tone, current_valuation)
+
+                # Clean up temp file
+                os.remove(response["temp_image_path"])
+
                 print("Generating roast for wallet: ", wallet, "with tone: ", tone)
-                analysis = response["analysis"]
+                analysis = get_wallet_analysis_response(wallet_data, response["base64_image"], tone, current_valuation)
                 image_urls = response["image_urls"]
 
                 save_wallet_analysis(wallet_data, analysis, type="roast", tone=tone)

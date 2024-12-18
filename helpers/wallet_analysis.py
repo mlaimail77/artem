@@ -1,5 +1,4 @@
 from helpers.utils import *
-from helpers.llm_helpers import *
 from helpers.nft_data_helpers import *
 from helpers.image_processing_helpers import *
 
@@ -100,7 +99,7 @@ def encode_image(image_path):
         return base64.b64encode(image_file.read()).decode('utf-8')
 
 
-def get_analysis(wallet_data, tone, current_valuation):
+def get_analysis_params(wallet_data, tone, current_valuation):
     image_urls = wallet_data["image_urls"]
 
     # Combine images
@@ -112,13 +111,12 @@ def get_analysis(wallet_data, tone, current_valuation):
     # Get base64 encoded image
     base64_image = encode_image(temp_image_path)
 
-    roast = get_wallet_analysis_text(wallet_data, base64_image, tone, current_valuation)
-
-    # Clean up temp file
-    os.remove(temp_image_path)
-
     response = {
-        "analysis": roast,
+        "wallet_data": wallet_data,
+        "base64_image": base64_image,
+        "tone": tone,
+        "current_valuation": current_valuation,
+        "temp_image_path": temp_image_path,
         "image_urls": image_urls
     }
 

@@ -48,7 +48,7 @@ tools = [
     }
 ]
 
-def get_wallet_analysis_text(wallet_data, base64_image, tone, current_valuation):
+def get_wallet_analysis_response(wallet_data, base64_image, tone, current_valuation):
     system_prompt, user_prompt = get_wallet_analysis_prompt(wallet_data, tone, current_valuation)
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -379,7 +379,6 @@ async def get_reply(cast_details, post_params):
     )
 
     if response.choices[0].message.tool_calls:
-        print("Tool calls: ", response.choices[0].message.tool_calls)
         # Iterate through all tool calls
         for tool_call in response.choices[0].message.tool_calls:
             if tool_call.function.name == "get_nft_opinion":
@@ -412,7 +411,12 @@ async def get_reply(cast_details, post_params):
                 print("Tool input: ", tool_input)
                 wallet_data = get_wallet_info(tool_input["wallet_address"])
                 current_valuation = get_wallet_valuation(tool_input["wallet_address"])
-                analysis = get_analysis(wallet_data, 3, current_valuation)
+
+                tone_default = 3
+                response = get_analysis_params(wallet_data, tone_default, current_valuation)
+                os.remove(response["temp_image_path"])
+                analysis = get_wallet_analysis_response(wallet_data, response["base64_image"], tone, current_valuation)
+
                 return (analysis, None)
 
     return (response.choices[0].message.content, None)
