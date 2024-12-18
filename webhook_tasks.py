@@ -250,6 +250,8 @@ async def process_neynar_webhook(webhook_data):
     # Extract relevant data from webhook payload
     cast = data.get('data', {})
 
+    print("Raw cast data:", cast)
+
     cast_details = get_cast_details(cast)
     print("Responding to cast:", cast_details)
     post_params = generate_post_params()

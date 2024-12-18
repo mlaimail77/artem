@@ -281,6 +281,7 @@ def search_twitter_images(query, bearer_token, max_results=50):
             tweet_text = tweet['text']
             if 'entities' in tweet and 'urls' in tweet['entities'] and len(tweet['entities']['urls']) > 0:
                 tweet_text += " URL: " + tweet['entities']['urls'][0]['expanded_url']
+                # media_url = tweet['entities']['urls'][0]['expanded_url']
 
             tweet_obj = {
                 'id': tweet['id'],
