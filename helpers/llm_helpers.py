@@ -415,7 +415,7 @@ async def get_reply(cast_details, post_params):
                 tone_default = 3
                 response = get_analysis_params(wallet_data, tone_default, current_valuation)
                 os.remove(response["temp_image_path"])
-                analysis = get_wallet_analysis_response(wallet_data, response["base64_image"], tone, current_valuation)
+                analysis = get_wallet_analysis_response(wallet_data, response["base64_image"], tone_default, current_valuation)
 
                 return (analysis, None)
 
