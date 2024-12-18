@@ -7,6 +7,7 @@ from helpers.nft_data_helpers import *
 from helpers.prompts.llm_prompts import *
 from helpers.scoring_criteria_schema import *
 from helpers.spam_tweet_schema import *
+from helpers.wallet_analysis import *
 
 client = OpenAI(
     api_key=os.getenv('OPENAI_API_KEY')
@@ -409,7 +410,10 @@ async def get_reply(cast_details, post_params):
                 print("Tool call: ", tool_call)
                 tool_input = json.loads(tool_call.function.arguments)
                 print("Tool input: ", tool_input)
-                break
+                wallet_data = get_wallet_info(tool_input["wallet_address"])
+                current_valuation = get_wallet_valuation(tool_input["wallet_address"])
+                analysis = get_analysis(wallet_data, 3, current_valuation)
+                return (analysis, None)
 
     return (response.choices[0].message.content, None)
 
