@@ -201,3 +201,35 @@ class UpdateWeights(BaseModel):
     reason: str = Field(
         description="Reason for weight updates"
     )
+
+class ScoringCriteriaImageOnly(BaseModel):
+    artistic_merit: ArtisticMerit
+    cultural_resonance: CulturalResonance
+    emotional_impact: EmotionalImpact
+    ai_collector_perspective: AICollectorPerspective
+    
+    artistic_merit_weight: Optional[float] = Field(
+        default=None,
+        description="Weight for artistic merit scoring category (0-100)"
+    )
+    cultural_resonance_weight: Optional[float] = Field(
+        default=None,
+        description="Weight for cultural resonance scoring category (0-100)"
+    )
+    emotional_impact_weight: Optional[float] = Field(
+        default=None,
+        description="Weight for emotional impact scoring category (0-100)"
+    )
+    ai_collector_perspective_weight: Optional[float] = Field(
+        default=None,
+        description="Weight for AI collector perspective scoring category (0-100)"
+    )
+
+class ArtworkAnalysisImageOnly(BaseModel):
+    artwork_scoring: ScoringCriteriaImageOnly
+    initial_impression: str = Field(
+        description="A brief, immediate reaction to the artwork"
+    )
+    detailed_analysis: str = Field(
+        description="In-depth analysis of the artwork based on the scoring criteria scores"
+    )

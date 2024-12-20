@@ -27,6 +27,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@flask_app.route('/image-opinion', methods=['POST'])
+async def image_opinion():
+    data = request.json
+    image_base64 = data.get('image')
+    cast_details = {
+        "text": "Analyze this image",
+        "image_url": f"data:image/jpeg;base64,{image_base64}"
+    }
+    opinion = await get_image_opinion(cast_details)
+    return jsonify({'analysis': opinion})
+
+@flask_app.route('/opinion')
+def opinion():
+    return render_template('opinion.html')
+
 @flask_app.route('/roast', methods=['POST', 'GET'])
 def roast():
     wallet = None

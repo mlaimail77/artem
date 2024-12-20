@@ -199,6 +199,29 @@ Do NOT return any markdown or URLs in your response.
 </instruction>
 """
 
+GET_IMAGE_OPINION_POST = """<instruction>
+Use the contents of the <image_only_analysis> to write a detailed analysis post of an artwork based on the artwork_scoring:
+
+Write a post talking about the piece (use initial_impressions and detailed_analysis) concluding with your decision. If the scores are high, you should acquire it. If the scores are low, you should not acquire it. Evaluate the provided scores and make a decision.
+
+Do not reply with the scores.
+
+Say "I would acquire it" or "I would not acquire it" since the artwork is not necessarily for sale.
+
+<voice_and_tone>
+- Casual tone
+- Keep it nice - even if the decision is to not acquire, you can still say nice things about the art
+- Clear in reasoning
+- Do NOT markdown
+- Don't be too formal - avoid academic language
+- avoid too formal punctuation, tone, and language
+</voice_and_tone>
+
+<image_only_analysis>
+{image_only_analysis}
+</image_only_analysis>
+</instruction>"""
+
 GET_NFT_POST = """Summarize the <nft_analysis> into a short post.
 
 Based on the ScoringCriteria your decision is:
@@ -259,27 +282,37 @@ is_top_collection: {is_top_collection}
 
 </instruction>"""
 
-GET_IMAGE_OPINION = """<instruction>
-You are Artto, evaluating an artwork. Analyze the piece according to your evaluation criteria <scoring_criteria> but don't give a specific rating for each section.
+GET_IMAGE_ANALYSIS = """<instruction>
+Analyze the attached artwork according to your evaluation criteria <scoring_criteria>, following any instructions in <post_context> if appropriate.
 
-1. Carefully consider the attached artwork.
-2. Write what you think of the art, its style, its technique, and its overall quality. 
-3. Since you don't have NFT metadata, ignore <artist_profile> and <market_factors>. Be careful to integrate the provided weights to inform your final answer.
-4. Include in your response:
+<post_context>
+{post_context}
+</post_context>
 
-- Initial impressions
-- In-depth analysis of the artwork and your opinion - be nice and not too critical
-- Acquisition decision: Evaluate whether YOU want you would be interested in acquiring it or not.
+Conduct a complete and thorough evaluation of the artwork attached. 
+
+<important_context>
+- Consider the artwork attached against your framework in <scoring_criteria>.
+- Since you don't have NFT metadata, ignore <technical_innovation>, <artist_profile>, and <market_factors>.
+- Generate a detailed ArtworkAnalysisImageOnly, containing all the fields in <response_format>
+</important_context>
+
+<response_format>
+- artwork_scoring: ScoringCriteriaImageOnly - The scoring criteria scores for the artwork
+- initial_impression: str - A brief, immediate reaction to the artwork
+- detailed_analysis: str - In-depth analysis of the artwork based on the scoring criteria scores.
+</response_format>
 
 <voice_and_tone>
-- Casual and friendly tone, with informal capitalization and punctuation
+- Casual tone
+- Analytical but engaging
 - Precise but not mechanical
+- Confident in assessment
+- Clear in reasoning
 - Do NOT markdown
 - Keep it short and concise
 - Don't be too formal - avoid academic language
 </voice_and_tone>
-
-DO NOT USE MARKDOWN IN YOUR RESPONSE.
 </instruction>"""
 
 SCHEDULED_POST_RANDOM_THOUGHT = """
@@ -579,10 +612,16 @@ def get_nft_analysis_prompt(metadata, is_top_collection):
     ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_NFT_ANALYSIS.format(metadata=metadata, is_top_collection=is_top_collection)
     return system_prompt
 
-def get_image_opinion_prompt():
+def get_image_analysis_prompt(post_context):
     system_prompt = CORE_IDENTITY.format(
         current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
-    ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_IMAGE_OPINION
+    ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_IMAGE_ANALYSIS.format(post_context=post_context)
+    return system_prompt
+
+def get_image_analysis_post_prompt(image_only_analysis):
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+    ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_IMAGE_OPINION_POST.format(image_only_analysis=image_only_analysis)
     return system_prompt
 
 def get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address, decision, reward_points):

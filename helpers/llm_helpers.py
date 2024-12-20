@@ -292,18 +292,14 @@ async def get_image_opinion(cast_details):
         cast_text = f"Text:{cast_details['text']}"
 
 
-    response = client.chat.completions.create(
+    response = client.beta.chat.completions.parse(
         model="gpt-4o-mini",
         messages=[
             {"role": "system", 
-             "content": get_image_opinion_prompt()},
+             "content": get_image_analysis_prompt(cast_text)},
             {
                 "role": "user",
                 "content": [
-                    {
-                        "type": "text", 
-                        "text": cast_text
-                    },
                     {
                         "type": "image_url",
                         "image_url": {
@@ -313,7 +309,20 @@ async def get_image_opinion(cast_details):
                 ]
             }
         ],
-        max_tokens=800
+        response_format=ArtworkAnalysisImageOnly,
+    )
+
+    image_analysis = response.choices[0].message.parsed
+
+    print("image_analysis: ", image_analysis)
+
+    system_prompt = get_image_analysis_post_prompt(image_analysis)
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": system_prompt}
+        ]
     )
 
     return response.choices[0].message.content
@@ -369,7 +378,7 @@ async def get_reply(cast_details, post_params):
 
     print("Generating reply to text-only cast")
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4o",
         messages=[
             {"role": "system", 
             "content": get_reply_guy_prompt(cast_text, post_params)},
