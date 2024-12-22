@@ -95,13 +95,12 @@ async def analyze_nft():
     reply = None
     try:
         reply, scores = await get_reply(cast_details, post_params)
+        if scores:
+            score_calcs = get_total_score(scores["artwork_analysis"])
+            store_nft_scores(scores, score_calcs)
+        return jsonify({'analysis': reply, 'score_calcs': score_calcs})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    if scores:
-        score_calcs = get_total_score(scores["artwork_analysis"])
-        store_nft_scores(scores, score_calcs)
-
-    return jsonify({'analysis': reply, 'scores': scores})
 
 @flask_app.route('/image-opinion', methods=['POST'])
 async def image_opinion():
