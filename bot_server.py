@@ -28,6 +28,29 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+from functools import lru_cache
+
+@lru_cache(maxsize=1)
+def get_cached_analyses(timestamp):
+    recent_nft_scores = get_recent_nft_scores(n=50, start_timestamp=timestamp)
+    # Parse the analysis_text JSON string for each score
+    for score in recent_nft_scores:
+        if score.get('analysis_text'):
+            score['analysis_text'] = json.loads(score['analysis_text'])
+        if score.get('scores'):
+            score['scores'] = json.loads(score['scores'])
+    return recent_nft_scores
+
+@flask_app.route('/analyses-24-hours')
+def analyses_24_hours():
+    # Round to nearest minute to enable caching
+    time_now_utc = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+    twenty_four_hours_ago = time_now_utc - timedelta(hours=24)
+    twenty_four_hours_ago_utc_iso = twenty_four_hours_ago.isoformat()
+
+    recent_nft_scores = get_cached_analyses(twenty_four_hours_ago_utc_iso)
+    return render_template('analyses-detail.html', recent_nft_scores=recent_nft_scores)
+
 @flask_app.route('/make-opensea-offer', methods=['POST'])
 def make_offer():
     try:
@@ -68,12 +91,17 @@ async def analyze_nft():
 
     post_params = generate_post_params()
     
-    reply, scores = await get_reply(cast_details, post_params)
+    scores = None
+    reply = None
+    try:
+        reply, scores = await get_reply(cast_details, post_params)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     if scores:
         score_calcs = get_total_score(scores["artwork_analysis"])
         store_nft_scores(scores, score_calcs)
 
-    return jsonify({'analysis': reply})
+    return jsonify({'analysis': reply, 'scores': scores})
 
 @flask_app.route('/image-opinion', methods=['POST'])
 async def image_opinion():

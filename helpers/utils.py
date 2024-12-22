@@ -140,9 +140,16 @@ def get_gallery_nft_scores(n=100):
     ).eq("acquire_recommendation", True).filter("decision", "in", '("ACQUIRE","REJECT","BURN")').order("timestamp", desc=True).limit(n).execute()
     return response.data
 
-def get_recent_nft_scores(n=6):
+def get_recent_nft_scores(n=6, start_timestamp=None):
     response = refresh_or_get_supabase_client()
-    response = supabase.table("nft_scores").select("network,contract_address,token_id,analysis_text,image_url,acquire_recommendation").order("timestamp", desc=True).limit(n).execute()
+    query = supabase.table("nft_scores").select(
+        "network,contract_address,token_id,analysis_text,image_url,acquire_recommendation,scores,total_score"
+    ).order("timestamp", desc=True)
+    
+    if start_timestamp:
+        query = query.gte("timestamp", start_timestamp)
+        
+    response = query.limit(n).execute()
     return response.data
 
 def get_last_n_posts(n=10):

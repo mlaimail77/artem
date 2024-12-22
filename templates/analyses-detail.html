@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artto - Recent Analyses</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    .score-cell {
+      cursor: pointer;
+      text-decoration: underline;
+      color: #007bff;
+    }
+    .modal-body {
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container my-5">
+    <h2 class="mb-4">Recent Analyses</h2>
+    <p>Here are the most recent NFTs that Artto has analyzed. A green checkmark indicates that Artto would recommend acquiring the NFT or did acquire it, while a red X indicates it wouldn't or didn't.</p>
+    
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Network</th>
+          <th>Contract Address</th>
+          <th>Token ID</th>
+          <th>Initial Impression</th>
+          <th>Score</th>
+          <th>Recommendation</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for nft_score in recent_nft_scores[:6] %}
+        <tr>
+          <td><img src="{{ nft_score.image_url }}" alt="NFT Image" style="max-width: 150px;"></td>
+          <td>{{ nft_score.network }}</td>
+          <td>{{ nft_score.contract_address }}</td>
+          <td>{{ nft_score.token_id }}</td>
+          <td>{{ nft_score.analysis_text.initial_impression }}</td>
+          <td class="score-cell" data-toggle="modal" data-target="#scoreModal{{ loop.index }}">{{ nft_score.total_score }}</td>
+          <td>
+            {% if nft_score.acquire_recommendation %}
+            <span style="color: green; font-size: 1.5rem;">✅</span>
+            {% else %}
+            <span style="color: red; font-size: 1.5rem;">❌</span>
+            {% endif %}
+          </td>
+        </tr>
+
+        <!-- Modal for this NFT's scores -->
+        <div class="modal fade" id="scoreModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="scoreModalLabel{{ loop.index }}" aria-hidden="true">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="scoreModalLabel{{ loop.index }}">Detailed Scores</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                {{ nft_score.scores | tojson(indent=2) }}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="text-center mt-4">
+      <a href="/analyses-24-hours" class="btn btn-primary">See all the analysis over the last 24 hours</a>
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
