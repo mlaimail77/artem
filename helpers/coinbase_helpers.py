@@ -216,15 +216,20 @@ if __name__ == "__main__":
     # artto_setup()
     wallet = fetch_wallet(os.getenv('WALLET_ID_MAINNET'), "artto_mainnet_seed.json")
 
-    print(wallet.default_address.balance(asset_id="0x9239e9F9E325E706EF8b89936eCe9d48896AbBe3"))
+    # print(wallet.default_address.balance(asset_id="0x9239e9F9E325E706EF8b89936eCe9d48896AbBe3"))
 
-    abi = get_abi("base-mainnet", "0xe970aC680342aFf70BB8D90A4C602D70f4405637")
-    implementation_contract = SmartContract.read(
-        network_id="base-mainnet",
-        contract_address="0xe970aC680342aFf70BB8D90A4C602D70f4405637",
-        method="implementation",
-        abi=abi
-    )
+    # abi = get_abi("base-mainnet", "0xe970aC680342aFf70BB8D90A4C602D70f4405637")
+    # implementation_contract = SmartContract.read(
+    #     network_id="base-mainnet",
+    #     contract_address="0xe970aC680342aFf70BB8D90A4C602D70f4405637",
+    #     method="implementation",
+    #     abi=abi
+    # )
+
+        # trade_result = wallet.trade(
+    #         amount=0.02, from_asset_id="eth", to_asset_id=WETH_CONTRACT_BASE
+    #     ).wait()
+    # print(trade_result)
 
     # transfer = transfer_erc721(
     #     wallet=wallet,

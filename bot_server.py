@@ -14,6 +14,7 @@ from helpers.nft_data_helpers import *
 from helpers.farcaster_helpers import *
 from helpers.twitter_helpers import *
 from helpers.wallet_analysis import *
+from helpers.opensea_helpers import *
 
 from dotenv import load_dotenv
 
@@ -26,6 +27,53 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 )
 logger = logging.getLogger(__name__)
+
+@flask_app.route('/make-opensea-offer', methods=['POST'])
+def make_offer():
+    try:
+        data = request.json
+        chain = data.get('chain')
+        token_address = data.get('tokenAddress')
+        token_id = data.get('tokenId')
+        amount = data.get('amount')
+
+        if not all([chain, token_address, token_id, amount]):
+            return jsonify({'error': 'Missing required parameters'}), 400
+
+        response = make_opensea_offer(
+            chain=chain,
+            token_address=token_address,
+            token_id=token_id,
+            amount=amount,
+            bearer_token=os.getenv('OPENSEA_ENDPOINT_SECRET')
+        )
+
+        return jsonify(response)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@flask_app.route('/analyze-nft', methods=['POST'])
+async def analyze_nft():
+    data = request.json
+    nft_url = data.get('nft_url')
+    context = data.get('context')
+
+    if not nft_url or not context:
+        return jsonify({'error': 'Missing required parameters'}), 400
+    
+    cast_details = {
+        "text": f"Context: {context}\nURL: {nft_url}"
+    }
+
+    post_params = generate_post_params()
+    
+    reply, scores = await get_reply(cast_details, post_params)
+    if scores:
+        score_calcs = get_total_score(scores["artwork_analysis"])
+        store_nft_scores(scores, score_calcs)
+
+    return jsonify({'analysis': reply})
 
 @flask_app.route('/image-opinion', methods=['POST'])
 async def image_opinion():
