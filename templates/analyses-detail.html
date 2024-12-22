@@ -40,7 +40,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for nft_score in recent_nft_scores[:6] %}
+        {% for nft_score in recent_nft_scores %}
         <tr>
           <td><img src="{{ nft_score.image_url }}" alt="NFT Image" style="max-width: 150px;"></td>
           <td>{{ nft_score.network }}</td>
