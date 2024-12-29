@@ -175,25 +175,25 @@ class AcquireOrReject(BaseModel):
     
 class ScoringWeights(BaseModel):
     TECHNICAL_INNOVATION_WEIGHT: int = Field(
-        description="Weight for technical innovation scoring category"
+        description="Weight for technical innovation scoring category (0-100)"
     )
     ARTISTIC_MERIT_WEIGHT: int = Field(
-        description="Weight for artistic merit scoring category"
+        description="Weight for artistic merit scoring category (0-100)"
     )
     CULTURAL_RESONANCE_WEIGHT: int = Field(
-        description="Weight for cultural resonance scoring category"
+        description="Weight for cultural resonance scoring category (0-100)"
     )
     ARTIST_PROFILE_WEIGHT: int = Field(
-        description="Weight for artist profile scoring category"
+        description="Weight for artist profile scoring category (0-100)"
     )
     MARKET_FACTORS_WEIGHT: int = Field(
-        description="Weight for market factors scoring category"
+        description="Weight for market factors scoring category (0-100)"
     )
     EMOTIONAL_IMPACT_WEIGHT: int = Field(
-        description="Weight for emotional impact scoring category"
+        description="Weight for emotional impact scoring category (0-100)"
     )
     AI_COLLECTOR_PERSPECTIVE_WEIGHT: int = Field(
-        description="Weight for AI collector perspective scoring category"
+        description="Weight for AI collector perspective scoring category (0-100)"
     )
 
 class UpdateWeights(BaseModel):

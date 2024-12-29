@@ -53,26 +53,51 @@ def refresh_or_get_supabase_client():
 
 
 def get_full_scoring_criteria():
-    from helpers.prompts.scoring_criteria import SCORING_CRITERIA
-    return SCORING_CRITERIA
+    from helpers.prompts.scoring_criteria import SCORING_CRITERIA_TEMPLATE
+    taste_weights = get_taste_weights()
+    print("Taste weights: ", taste_weights)
+    weights = taste_weights["weights"]
+    return SCORING_CRITERIA_TEMPLATE.format(
+        TECHNICAL_INNOVATION_WEIGHT=weights["technical_innovation_weight"],
+        ARTISTIC_MERIT_WEIGHT=weights["artistic_merit_weight"], 
+        CULTURAL_RESONANCE_WEIGHT=weights["cultural_resonance_weight"],
+        ARTIST_PROFILE_WEIGHT=weights["artist_profile_weight"],
+        MARKET_FACTORS_WEIGHT=weights["market_factors_weight"],
+        EMOTIONAL_IMPACT_WEIGHT=weights["emotional_impact_weight"],
+        AI_COLLECTOR_PERSPECTIVE_WEIGHT=weights["ai_collector_perspective_weight"]
+    )
 
 def get_taste_weights():
-    return yaml.safe_load(open("helpers/prompts/taste_weights.yaml"))
+    response = refresh_or_get_supabase_client()
+    response = supabase.table("analysis_weights").select("*").order("created_at", desc=True).limit(1).execute()
+    if response.data and len(response.data) > 0:
+        if isinstance(response.data[0].get('weights'), str):
+            response.data[0]['weights'] = json.loads(response.data[0]['weights'])
+    return response.data[0]
 
 def set_taste_weights(weights):
     print("setting weights")
     print(weights.updated_weights)
     print(weights.reason)
-    with open("helpers/prompts/taste_weights.yaml", "w") as f:
-        f.write("# NFT Evaluation Weights\n")
-        f.write(f"# ({datetime.now().strftime('%Y-%m-%d')}) Update Reason: {weights.reason}\n")
-        f.write(f"TECHNICAL_INNOVATION_WEIGHT: {weights.updated_weights.TECHNICAL_INNOVATION_WEIGHT}\n")
-        f.write(f"ARTISTIC_MERIT_WEIGHT: {weights.updated_weights.ARTISTIC_MERIT_WEIGHT}\n") 
-        f.write(f"CULTURAL_RESONANCE_WEIGHT: {weights.updated_weights.CULTURAL_RESONANCE_WEIGHT}\n")
-        f.write(f"ARTIST_PROFILE_WEIGHT: {weights.updated_weights.ARTIST_PROFILE_WEIGHT}\n")
-        f.write(f"MARKET_FACTORS_WEIGHT: {weights.updated_weights.MARKET_FACTORS_WEIGHT}\n")
-        f.write(f"EMOTIONAL_IMPACT_WEIGHT: {weights.updated_weights.EMOTIONAL_IMPACT_WEIGHT}\n")
-        f.write(f"AI_COLLECTOR_PERSPECTIVE_WEIGHT: {weights.updated_weights.AI_COLLECTOR_PERSPECTIVE_WEIGHT}\n")
+    weights_json = {
+        "technical_innovation_weight": weights.updated_weights.TECHNICAL_INNOVATION_WEIGHT,
+        "artistic_merit_weight": weights.updated_weights.ARTISTIC_MERIT_WEIGHT,
+        "cultural_resonance_weight": weights.updated_weights.CULTURAL_RESONANCE_WEIGHT,
+        "artist_profile_weight": weights.updated_weights.ARTIST_PROFILE_WEIGHT,
+        "market_factors_weight": weights.updated_weights.MARKET_FACTORS_WEIGHT,
+        "emotional_impact_weight": weights.updated_weights.EMOTIONAL_IMPACT_WEIGHT,
+        "ai_collector_perspective_weight": weights.updated_weights.AI_COLLECTOR_PERSPECTIVE_WEIGHT,
+    }
+    response = refresh_or_get_supabase_client()
+    insert_data = {
+        "id": hashlib.sha256(f"{str(datetime.now())}".encode()).hexdigest(),
+        "created_at": str(datetime.now()),
+        "weights": json.dumps(weights_json),
+        "reason": weights.reason
+    }
+    response = supabase.table("analysis_weights").insert(insert_data).execute()
+    return response.data
+
 
 def get_nft_batch_post(since_timestamp=None):
     response = refresh_or_get_supabase_client()

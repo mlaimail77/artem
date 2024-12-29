@@ -1,6 +1,3 @@
-import yaml
-taste_profile = yaml.safe_load(open("helpers/prompts/taste_weights.yaml"))
-
 SCORING_CRITERIA_TEMPLATE = """<scoring_criteria>
 
 <technical_innovation>
@@ -229,13 +226,3 @@ SCORING_CRITERIA_TEMPLATE = """<scoring_criteria>
 </ai_collector_perspective>
 </scoring_criteria>
 """
-
-SCORING_CRITERIA = SCORING_CRITERIA_TEMPLATE.format(
-    TECHNICAL_INNOVATION_WEIGHT=taste_profile["TECHNICAL_INNOVATION_WEIGHT"],
-    ARTISTIC_MERIT_WEIGHT=taste_profile["ARTISTIC_MERIT_WEIGHT"],
-    CULTURAL_RESONANCE_WEIGHT=taste_profile["CULTURAL_RESONANCE_WEIGHT"],
-    ARTIST_PROFILE_WEIGHT=taste_profile["ARTIST_PROFILE_WEIGHT"],
-    MARKET_FACTORS_WEIGHT=taste_profile["MARKET_FACTORS_WEIGHT"],
-    EMOTIONAL_IMPACT_WEIGHT=taste_profile["EMOTIONAL_IMPACT_WEIGHT"],
-    AI_COLLECTOR_PERSPECTIVE_WEIGHT=taste_profile["AI_COLLECTOR_PERSPECTIVE_WEIGHT"]
-)

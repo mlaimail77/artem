@@ -168,9 +168,9 @@ async def post_artto_promotion(post_on_twitter=True, post_on_farcaster=True):
 
 
 async def process_adjust_weights():
-    weights = get_taste_weights()
+    taste_profile = get_taste_weights() # A JSON object from Supabase
     nft_scores = get_nft_scores(n=10)
-    new_weights = adjust_weights(weights, nft_scores)
+    new_weights = adjust_weights(taste_profile["weights"], nft_scores)
     set_taste_weights(new_weights)
 
     text = f"""💫 I just updated my NFT evaluation weights:

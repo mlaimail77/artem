@@ -235,14 +235,21 @@ def gallery():
 @flask_app.route('/taste_profile')
 def taste_profile():
     import markdown
-    taste_profile_yaml = get_taste_weights()
-    # Pretty print the yaml data
-    formatted_yaml = yaml.dump(taste_profile_yaml, default_flow_style=False, sort_keys=False)
+
+    taste_weights = get_taste_weights()
+
+    taste_profile = {
+        "created_at": taste_weights["created_at"],
+        "weights": taste_weights["weights"],
+        "reason": taste_weights["reason"]
+    }
+
+    formatted_json = json.dumps(taste_profile, indent=2, sort_keys=False)
 
     scoring_criteria = markdown.markdown(get_full_scoring_criteria())
 
     response = {
-        "taste_profile_yaml": formatted_yaml,
+        "taste_profile_json": formatted_json,
         "scoring_criteria": scoring_criteria
     }
     return render_template('taste_profile.html', response=response)

@@ -1,8 +1,9 @@
 from helpers.prompts.core_identity import CORE_IDENTITY
-from helpers.prompts.scoring_criteria import SCORING_CRITERIA, SCORING_CRITERIA_TEMPLATE
+from helpers.prompts.scoring_criteria import SCORING_CRITERIA_TEMPLATE
 from helpers.prompts.voice_and_tone import VOICE_AND_TONE
 from helpers.prompts.spam_prompts import SPAM_IDENTIFICATION_PROMPT
 from helpers.prompts.casual_thought_topics import *
+from helpers.utils import get_taste_weights
 
 import random
 import json
@@ -537,6 +538,10 @@ You have a dynamic and evolving taste. Your task is to update your current_weigh
 
 Carefully analyze your <scoring_criteria> and <current_weights> and update them.
 
+Ensure that the weights are between 0 and 100. 
+
+They must sum to 100.
+
 <current_weights>
 {current_weights}
 </current_weights>
@@ -545,6 +550,19 @@ Carefully analyze your <scoring_criteria> and <current_weights> and update them.
 {last_10_nft_scores}
 </last_10_nft_scores>
 </instruction>"""
+
+def get_scoring_criteria():
+    taste_profile = get_taste_weights()
+    weights = taste_profile["weights"]
+    return SCORING_CRITERIA_TEMPLATE.format(
+        TECHNICAL_INNOVATION_WEIGHT=weights["technical_innovation_weight"],
+        ARTISTIC_MERIT_WEIGHT=weights["artistic_merit_weight"], 
+        CULTURAL_RESONANCE_WEIGHT=weights["cultural_resonance_weight"],
+        ARTIST_PROFILE_WEIGHT=weights["artist_profile_weight"],
+        MARKET_FACTORS_WEIGHT=weights["market_factors_weight"],
+        EMOTIONAL_IMPACT_WEIGHT=weights["emotional_impact_weight"],
+        AI_COLLECTOR_PERSPECTIVE_WEIGHT=weights["ai_collector_perspective_weight"]
+    )
 
 def get_adjust_weights_prompt(current_weights, last_10_nft_scores):
     system_prompt = CORE_IDENTITY.format(
@@ -561,13 +579,13 @@ def get_reply_guy_prompt(post_to_reply_to, post_params):
 
     system_prompt = CORE_IDENTITY.format(
         current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
-    ) + VOICE_AND_TONE + SCORING_CRITERIA + REPLY_GUY.format(post_to_reply_to=post_to_reply_to, length=length, style=style, humor=humor, cynicism=cynicism, shitpost=shitpost)
+    ) + VOICE_AND_TONE + get_scoring_criteria() + REPLY_GUY.format(post_to_reply_to=post_to_reply_to, length=length, style=style, humor=humor, cynicism=cynicism, shitpost=shitpost)
     return system_prompt
 
 def get_trending_nft_thoughts_prompt(trending_collections_response):
     system_prompt = CORE_IDENTITY.format(
         current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
-    ) + VOICE_AND_TONE + SCORING_CRITERIA + TRENDING_NFT_THOUGHTS.format(trending_collections_response=trending_collections_response)
+    ) + VOICE_AND_TONE + get_scoring_criteria() + TRENDING_NFT_THOUGHTS.format(trending_collections_response=trending_collections_response)
     return system_prompt
 
 def get_scheduled_post_prompt(post_type, post_params,previous_posts, additional_context="None"):
@@ -609,31 +627,31 @@ def get_scheduled_post_prompt(post_type, post_params,previous_posts, additional_
 def get_nft_analysis_prompt(metadata, is_top_collection):
     system_prompt = CORE_IDENTITY.format(
         current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
-    ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_NFT_ANALYSIS.format(metadata=metadata, is_top_collection=is_top_collection)
+    ) + VOICE_AND_TONE + get_scoring_criteria() + GET_NFT_ANALYSIS.format(metadata=metadata, is_top_collection=is_top_collection)
     return system_prompt
 
 def get_image_analysis_prompt(post_context):
     system_prompt = CORE_IDENTITY.format(
         current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
-    ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_IMAGE_ANALYSIS.format(post_context=post_context)
+    ) + VOICE_AND_TONE + get_scoring_criteria() + GET_IMAGE_ANALYSIS.format(post_context=post_context)
     return system_prompt
 
 def get_image_analysis_post_prompt(image_only_analysis):
     system_prompt = CORE_IDENTITY.format(
         current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
-    ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_IMAGE_OPINION_POST.format(image_only_analysis=image_only_analysis)
+    ) + VOICE_AND_TONE + get_scoring_criteria() + GET_IMAGE_OPINION_POST.format(image_only_analysis=image_only_analysis)
     return system_prompt
 
 def get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address, decision, reward_points):
     system_prompt = CORE_IDENTITY.format(
         current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
-    ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address, decision=decision, reward_points="{:,}".format(reward_points))
+    ) + VOICE_AND_TONE + get_scoring_criteria() + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address, decision=decision, reward_points="{:,}".format(reward_points))
     return system_prompt
 
 def get_nft_post_prompt(nft_analysis, decision):
     system_prompt = CORE_IDENTITY.format(
         current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
-    ) + VOICE_AND_TONE + SCORING_CRITERIA + GET_NFT_POST.format(nft_analysis=nft_analysis, decision=decision)
+    ) + VOICE_AND_TONE + get_scoring_criteria() + GET_NFT_POST.format(nft_analysis=nft_analysis, decision=decision)
     return system_prompt
 
 def get_thoughts_on_trending_casts_prompt():
