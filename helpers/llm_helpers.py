@@ -2,6 +2,7 @@ from openai import OpenAI
 import os
 import asyncio
 import json
+import math
 
 from helpers.nft_data_helpers import *
 from helpers.prompts.llm_prompts import *
@@ -117,7 +118,7 @@ def adjust_weights(weights, nft_scores):
 
     return new_weights
 
-def get_total_score(artwork_analysis: ArtworkAnalysis):
+def get_total_score(artwork_analysis: ArtworkAnalysis, collection_amount = None):
     SCORE_THRESHOLD = int(os.getenv('SCORE_THRESHOLD', 55))
 
     scoring = artwork_analysis.artwork_scoring
@@ -191,12 +192,30 @@ def get_total_score(artwork_analysis: ArtworkAnalysis):
         # - Score < 35: 90% chance of 0 multiplier, 10% chance of random 10-100 multiplier
         multiplier = 0 if random.random() > 0.1 else random.randint(10, 100)
 
+    collection_decay = 1
+
+    try:
+        decay_factor = get_decay_factor(date.today())
+    except:
+        decay_factor = 1
+
+    # Apply collection amount decay
+    if collection_amount is not None:
+        # Exponential decay function: multiplier * e^(-0.5 * collection_amount)
+        # At 5 NFTs, multiplier is reduced to ~8% of original
+        # At 10 NFTs, multiplier is reduced to ~0.7% of original
+        collection_decay = math.exp(-0.5 * collection_amount)
+
     print("score_threshold: ", SCORE_THRESHOLD)
     print("score: ", total_score/total_weights)
     print("total_score: ", total_score)
     print("total_weights: ", total_weights)
     print("decision: ", decision)
     print("multiplier: ", multiplier)
+    print("decay_factor: ", decay_factor)
+    if collection_amount is not None:
+        print("collection_amount: ", collection_amount)
+        print("collection_decay: ", collection_decay)
 
     response = {
         "total_score": total_score,
@@ -204,7 +223,8 @@ def get_total_score(artwork_analysis: ArtworkAnalysis):
         "total_weights": total_weights,
         "decision": decision,
         "multiplier": multiplier,
-        "reward_points": round(total_score * multiplier)
+        "decay_factor": decay_factor,
+        "reward_points": round(total_score * multiplier * collection_decay * decay_factor)
     }
 
     return response

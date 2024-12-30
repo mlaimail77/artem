@@ -2,7 +2,7 @@ import os
 import json
 import random
 import yaml
-from datetime import datetime
+from datetime import datetime, date
 from supabase import create_client, Client
 from helpers.prompts.casual_thought_topics import *
 
@@ -332,6 +332,11 @@ def store_nft_scores(scores_object, score_calcs, final_decision = None):
 
     total_score = score_calcs["total_score"]
 
+    multiplier = score_calcs["multiplier"]
+    decay_factor = score_calcs["decay_factor"]
+    reward_points = score_calcs["reward_points"]
+
+
     print(f"Total score: {total_score}")
 
     # Check if artwork exists
@@ -350,7 +355,10 @@ def store_nft_scores(scores_object, score_calcs, final_decision = None):
         "acquire_recommendation": total_score > int(os.getenv('SCORE_THRESHOLD', 55)),
         "decision": decision,
         "rationale_post": rationale_post,
-        "group_posted": False
+        "group_posted": False,
+        "multiplier": round(multiplier, 4),
+        "decay_factor": round(decay_factor, 4),
+        "reward_points": round(reward_points, 4)
     }
 
     if existing.data:
@@ -389,17 +397,63 @@ def set_post_created(post):
     return response.data
 
 
+def get_unique_nfts_count(contract_address):
+    response = refresh_or_get_supabase_client()
+    response = supabase.table("nft_scores").select("id").eq("contract_address", contract_address).execute()
+    
+    if response.data:
+        unique_ids = set(item['id'] for item in response.data)
+        return len(unique_ids)
+    return 0
+
+def get_decay_factor(check_date=None):
+    """
+    Calculate the multiplier for a given date based on the following rules:
+    - Until Jan 1, 2025: 100%
+    - Jan 1, 2025 to Jan 1, 2030: Daily decay of 0.1265%
+    - After Jan 1, 2030: Fixed 10%
+    
+    Args:
+        check_date: datetime.date or None (uses current date if None)
+    
+    Returns:
+        float: Multiplier as a decimal (e.g., 0.8 for 80%)
+    """
+    # Define key dates
+    start_decay = date(2025, 1, 1)    # Start of decay period
+    end_decay = date(2030, 1, 1)      # End of decay period
+    
+    # Use current date if none provided
+    if check_date is None:
+        check_date = date.today()
+    elif isinstance(check_date, datetime):
+        check_date = check_date.date()
+    
+    # Before start_decay: return 1.0 (100%)
+    if check_date < start_decay:
+        return 1.0
+    
+    # After end_decay: return 0.1 (10%)
+    if check_date >= end_decay:
+        return 0.1
+    
+    # During decay period: calculate decay
+    days_since_start = (check_date - start_decay).days
+    daily_rate = 0.001265  # 0.1265%
+    return max(0.1, (1 - daily_rate) ** days_since_start)
+
+
 def main():
     supabase = get_supabase_client()
     from datetime import timezone
     print("Successfully connected to Supabase!")
 
-    time_now_utc = datetime.now(timezone.utc)
-    time_now_utc_iso = time_now_utc.isoformat()
-    nft_batch = get_nft_batch_post(since_timestamp=time_now_utc_iso)
-    print(nft_batch)
+    # time_now_utc = datetime.now(timezone.utc)
+    # time_now_utc_iso = time_now_utc.isoformat()
+    # nft_batch = get_nft_batch_post(since_timestamp=time_now_utc_iso)
+    # print(nft_batch)
 
-
+    print(get_unique_nfts_count("0x80792de793799c57ee5febf97617393bfd7bae71"))
 
     # print(get_all_posts_replied_to())
 
