@@ -466,10 +466,11 @@ If the post contains a URL to an NFT, invoke the get_nft_opinion tool with the n
 If the post contains a wallet address, invoke the get_roast tool with the wallet address.
 
 Examples of URLs that should invoke the get_nft_opinion tool:
-- https://opensea.io/assets/base/0x7d210dae7a88cadac22cefa9cb5baa4301b5c256/47
-- https://basescan.org/nft/0x7d210dae7a88cadac22cefa9cb5baa4301b5c256/57
-- https://foundation.app/mint/base/0x678FC585bAEa0ae8c413C63Bdd578bba500C57D9/3
-- https://etherscan.io/nft/0x059edd72cd353df5106d2b9cc5ab83a52287ac3a/3333
+- https://opensea.io/assets/base/0x0123456789abcdef/47
+- https://basescan.org/nft/0x0123456789abcdef/57
+- https://foundation.app/mint/base/0x0123456789abcdef/3
+- https://etherscan.io/nft/0x0123456789abcdef/3333
+- https://superrare.com/artwork/eth/0x0123456789abcdef/9
 
 Examples of URLs that should NOT invoke the get_nft_opinion tool:
 - https://t.co/9nfi23bf9f29bnf
@@ -481,6 +482,10 @@ Here is how to extract the network, contract address, and token id from the URL:
 Post: "Hey @artto_ai, what do you think of this NFT? https://opensea.io/assets/base/0x0123456789abcdef/47"
 Tool call: get_nft_opinion(network="base", contract_address="0x0123456789abcdef", token_id="47")
 </example>
+
+<example>
+Post: "Analyze this NFT: https://superrare.com/artwork/eth/0x0123456789abcdef/9"
+Tool call: Tool call: get_nft_opinion(network="ethereum", contract_address="0x0123456789abcdef", token_id="9")
 
 <example>
 Post: "Hey @artto_ai can you analyze this NFT? https://basescan.org/nft/0x0123456789abcdef/57"
