@@ -1,4 +1,5 @@
 import os
+import time
 
 from cdp import *
 
@@ -103,17 +104,28 @@ def transfer_artto_token(wallet, token_amount, destination):
     value_to_transfer = token_amount * 10**18
 
     print(f"Transferring {token_amount} tokens with value {value_to_transfer}")
-    try:
-        transfer = wallet.invoke_contract(
-            contract_address=artto_token_address,
-            method="transfer",
-            abi=abi,
-            args={"to":destination, "value":str(int(value_to_transfer))}
-        )
-        transfer.wait()
-        return f"Successfully transferred {token_amount} tokens to {destination}"
-    except Exception as e:
-        return f"Error transferring tokens: {str(e)}"
+    max_attempts = 3
+    attempt = 0
+    delay = 10  # Initial delay in seconds
+    last_error = None
+    
+    while attempt < max_attempts:
+        try:
+            transfer = wallet.invoke_contract(
+                contract_address=artto_token_address,
+                method="transfer",
+                abi=abi,
+                args={"to":destination, "value":str(int(value_to_transfer))}
+            )
+            transfer.wait()
+            return f"Successfully transferred {token_amount} tokens to {destination}"
+        except Exception as e:
+            last_error = e
+            attempt += 1
+            if attempt == max_attempts:
+                return f"Error transferring tokens after {max_attempts} attempts: {str(last_error)}"
+            time.sleep(delay)
+            delay *= 2  # Double delay for next attempt (10->20->40)
 
 def transfer_erc1155(wallet, network_id, contract_address, from_address, to_address, token_id):
     try:

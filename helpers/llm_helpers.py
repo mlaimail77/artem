@@ -246,10 +246,15 @@ async def get_nft_post(artwork_analysis: ArtworkAnalysis):
 
     return response.choices[0].message.content
 
-async def get_final_decision(nft_opinion, nft_metadata, from_address):
-    response = get_total_score(nft_opinion)
-    decision = response["decision"]
-    reward_points = response["reward_points"]
+async def get_final_decision(nft_opinion, nft_metadata, from_address, total_score = None):
+
+    if total_score is None:
+        response = get_total_score(nft_opinion)
+        decision = response["decision"]
+        reward_points = response["reward_points"]
+    else:
+        decision = total_score["decision"]
+        reward_points = total_score["reward_points"]
 
     ens_name = get_ens_name(from_address)
 
