@@ -139,7 +139,7 @@ async def process_webhook(webhook_data):
         print("Decision:", decision)
         print("Rationale:", rationale_post)
 
-        if decision == "REJECT" or decision == "BURN":
+        if decision == "SELL" or decision == "REJECT":
             try:
                 print("Posting to Farcaster")
                 rationale_post_farcaster = rationale_post + f" {metadata['image_medium_url']}"
@@ -159,33 +159,33 @@ async def process_webhook(webhook_data):
             #         await post_tweet({"text": rationale_post}, refreshed_token, parent=None)
             # except Exception as e:
             #     print(f"Error posting to Twitter: {str(e)}")
-            if event_type == "ERC721_TRANSFER":
-                response = transfer_erc721(wallet,
-                    network_id='base-mainnet', 
-                    contract_address=contract_address, 
-                    from_address=current_wallet_address, 
-                    to_address="0x000000000000000000000000000000000000dEaD", 
-                    token_id=token_id)
-            elif event_type == "ERC1155_TRANSFER":
-                response = transfer_erc1155(wallet,
-                    network_id='base-mainnet', 
-                    contract_address=contract_address, 
-                    from_address=current_wallet_address, 
-                    to_address="0x000000000000000000000000000000000000dEaD", 
-                    token_id=token_id)
-            if "Error" in response:
-                print(f"Error burning NFT: {response}")
-            else:
-                set_wallet_activity(
-                    event_type="ERC721_TRANSFER", 
-                    from_address=current_wallet_address, 
-                    to_address="0x000000000000000000000000000000000000dEaD", 
-                    token_id=token_id, 
-                    network=webhook_network, 
-                    contract_address=contract_address, 
-                    amount=1
-                )
-                print(f"Successfully burned NFT: {response}")
+            # if event_type == "ERC721_TRANSFER":
+            #     response = transfer_erc721(wallet,
+            #         network_id='base-mainnet', 
+            #         contract_address=contract_address, 
+            #         from_address=current_wallet_address, 
+            #         to_address="0x000000000000000000000000000000000000dEaD", 
+            #         token_id=token_id)
+            # elif event_type == "ERC1155_TRANSFER":
+            #     response = transfer_erc1155(wallet,
+            #         network_id='base-mainnet', 
+            #         contract_address=contract_address, 
+            #         from_address=current_wallet_address, 
+            #         to_address="0x000000000000000000000000000000000000dEaD", 
+            #         token_id=token_id)
+            # if "Error" in response:
+            #     print(f"Error burning NFT: {response}")
+            # else:
+            #     set_wallet_activity(
+            #         event_type="ERC721_TRANSFER", 
+            #         from_address=current_wallet_address, 
+            #         to_address="0x000000000000000000000000000000000000dEaD", 
+            #         token_id=token_id, 
+            #         network=webhook_network, 
+            #         contract_address=contract_address, 
+            #         amount=1
+            #     )
+            #     print(f"Successfully burned NFT: {response}")
         elif decision == "ACQUIRE":
             try:
                 post_long_cast(rationale_post)

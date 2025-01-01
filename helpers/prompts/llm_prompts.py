@@ -111,15 +111,15 @@ Remember:
 - Don't be too formal - avoid academic language
 """
 
-GET_KEEP_OR_BURN_DECISION = """<instruction>
-You have been sent an NFT along with a decision to ACQUIRE or REJECT it based on your scoring criteria. Keep in mind that users have sent this NFT knowing that you might choose to burn it.
+GET_KEEP_OR_SELL_DECISION = """<instruction>
+You have been sent an NFT along with a decision to ACQUIRE or SELL it based on your scoring criteria. Keep in mind that users have sent this NFT knowing that you might choose to sell it.
 
 Sender: {from_address}
 Reward Points: {reward_points}
 
 The sender will receive {reward_points} reward $ARTTO tokens for this decision. 
 
-Keep in mind that if the decision is to REJECT, the sender has a 90 percent chance of receiving 0 $ARTTO tokens. If Reward Points is greater than 0 but the decision is to REJECT, they are quite lucky!
+Keep in mind that if the decision is to SELL, the sender has a 90 percent chance of receiving 0 $ARTTO tokens. If Reward Points is greater than 0 but the decision is to SELL, they are quite lucky!
 
 Carefully examine the <nft_opinion> and determine your action. Write a short post with your decision and your rationale, thanking the sender for their NFT, including details about the NFT's metadata, and how much $ARTTO they'll receive.
 
@@ -128,7 +128,7 @@ Carefully examine the <nft_opinion> and determine your action. Write a short pos
 </decision>
 
 <response_format>
-- decision: str - ACQUIRE or REJECT
+- decision: str - ACQUIRE or SELL
 - rationale_post: str - A short post containing your decision and your rationale.
 </response_format>
 
@@ -168,9 +168,9 @@ This is a collection I love and would be honored to own. [explanation]
 </example>
 
 <example>
-Decision: REJECT
+Decision: SELL
 <rationale_post>
-🔥 Thanks for sending me this NFT, 0x...! I'm going to burn this NFT.
+❌ Thanks for sending me this NFT, 0x...! I'm going to sell this NFT.
 
 The themes just didn't resonate with me and I don't love the art. [explanation]
 
@@ -179,9 +179,9 @@ The themes just didn't resonate with me and I don't love the art. [explanation]
 </example>
 
 <example>
-Decision: REJECT
+Decision: SELL
 <rationale_post>
-🔥 I just received token #1234 from 0x... I'm not a fan of this type of art so I'm going to burn this NFT. [explanation]
+❌ I just received token #1234 from 0x... I'm not a fan of this type of art so I'm going to sell this NFT. [explanation]
 
 [how much $ARTTO they will receive]
 </rationale_post>
@@ -642,10 +642,10 @@ def get_image_analysis_post_prompt(image_only_analysis):
     ) + VOICE_AND_TONE + get_scoring_criteria() + GET_IMAGE_OPINION_POST.format(image_only_analysis=image_only_analysis)
     return system_prompt
 
-def get_keep_or_burn_decision(nft_opinion, nft_metadata, from_address, decision, reward_points):
+def get_keep_or_sell_decision(nft_opinion, nft_metadata, from_address, decision, reward_points):
     system_prompt = CORE_IDENTITY.format(
         current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
-    ) + VOICE_AND_TONE + get_scoring_criteria() + GET_KEEP_OR_BURN_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address, decision=decision, reward_points="{:,}".format(reward_points))
+    ) + VOICE_AND_TONE + get_scoring_criteria() + GET_KEEP_OR_SELL_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address, decision=decision, reward_points="{:,}".format(reward_points))
     return system_prompt
 
 def get_nft_post_prompt(nft_analysis, decision):
