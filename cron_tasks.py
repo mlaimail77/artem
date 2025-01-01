@@ -289,24 +289,23 @@ async def post_thought(post_on_twitter=True, post_on_farcaster=True, post_type=N
 async def reply_twitter_mentions():
     print("Replying to Twitter mentions")
     refreshed_token = refresh_token()
-    ids = get_ids_from_usernames(FOLLOWING_ACCOUNTS, refreshed_token["access_token"])
-    tweets = search_twitter_images("(@artto_ai) -is:reply -is:retweet", refreshed_token["access_token"], 15)
+    # ids = get_ids_from_usernames(FOLLOWING_ACCOUNTS, refreshed_token["access_token"])
+    tweets = search_twitter_images("(@artto_ai) -is:reply -is:retweet", refreshed_token["access_token"], 25)
     ignore_posts = get_posts_to_ignore()
     ignore_posts_ids = [post['id'] for post in ignore_posts]
 
+    # Filter out ignored tweets
+    tweets = [tweet for tweet in tweets if tweet['id'] not in ignore_posts_ids]
+
     # Randomly sample 5 tweets if more than 5 exist
-    if len(tweets) > 5:
-        tweets = random.sample(tweets, 5)
+    if len(tweets) > 8:
+        tweets = random.sample(tweets, 8)
 
     print("Replying to tweets: ", tweets)
 
     for mention in tweets:
         if mention['id'] in ignore_posts_ids:
             print("Skipping ignored post")
-            continue
-
-        if mention['author_id'] not in ids:
-            print("Skipping non-follower")
             continue
 
         if mention.get('author_id', None) == os.getenv('X_ARTTO_USER_ID'):
