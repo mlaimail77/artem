@@ -147,45 +147,6 @@ async def process_webhook(webhook_data):
                 post_long_cast(rationale_post_farcaster)
             except Exception as e:
                 print(f"Error posting to Farcaster: {str(e)}")
-            # Skip posting to Twitter for now    
-            # try:
-            #     if 'image_medium_url' in metadata:
-            #         print("Uploading media")
-            #         response = upload_media(metadata['image_medium_url'])
-            #         media = response['media']
-            #         print("Tweeting with media:", media)
-            #         await post_tweet({"text": rationale_post, "media": media}, refreshed_token, parent=None)
-            #     else:
-            #         await post_tweet({"text": rationale_post}, refreshed_token, parent=None)
-            # except Exception as e:
-            #     print(f"Error posting to Twitter: {str(e)}")
-            # if event_type == "ERC721_TRANSFER":
-            #     response = transfer_erc721(wallet,
-            #         network_id='base-mainnet', 
-            #         contract_address=contract_address, 
-            #         from_address=current_wallet_address, 
-            #         to_address="0x000000000000000000000000000000000000dEaD", 
-            #         token_id=token_id)
-            # elif event_type == "ERC1155_TRANSFER":
-            #     response = transfer_erc1155(wallet,
-            #         network_id='base-mainnet', 
-            #         contract_address=contract_address, 
-            #         from_address=current_wallet_address, 
-            #         to_address="0x000000000000000000000000000000000000dEaD", 
-            #         token_id=token_id)
-            # if "Error" in response:
-            #     print(f"Error burning NFT: {response}")
-            # else:
-            #     set_wallet_activity(
-            #         event_type="ERC721_TRANSFER", 
-            #         from_address=current_wallet_address, 
-            #         to_address="0x000000000000000000000000000000000000dEaD", 
-            #         token_id=token_id, 
-            #         network=webhook_network, 
-            #         contract_address=contract_address, 
-            #         amount=1
-            #     )
-            #     print(f"Successfully burned NFT: {response}")
         elif decision == "ACQUIRE":
             try:
                 post_long_cast(rationale_post)
