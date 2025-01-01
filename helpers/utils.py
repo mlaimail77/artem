@@ -103,7 +103,7 @@ def get_nft_batch_post(since_timestamp=None):
     response = refresh_or_get_supabase_client()
     query = supabase.table("nft_scores").select(
         "id,scores,analysis_text,image_url,acquire_recommendation,decision,rationale_post"
-    ).eq("group_posted", False).filter("decision", "in", '("ACQUIRE","REJECT","BURN")')
+    ).eq("group_posted", False).filter("decision", "in", '("ACQUIRE","REJECT","BURN","SELL")')
     
     if since_timestamp:
         query = query.gte("timestamp", since_timestamp)
@@ -162,7 +162,7 @@ def get_gallery_nft_scores(n=100):
     response = refresh_or_get_supabase_client()
     response = supabase.table("nft_scores").select(
         "network,contract_address,token_id,scores,analysis_text,image_url,acquire_recommendation"
-    ).eq("acquire_recommendation", True).filter("decision", "in", '("ACQUIRE","REJECT","BURN")').order("timestamp", desc=True).limit(n).execute()
+    ).eq("acquire_recommendation", True).filter("decision", "in", '("ACQUIRE","REJECT","BURN","SELL")').order("timestamp", desc=True).limit(n).execute()
     return response.data
 
 def get_recent_nft_scores(n=6, start_timestamp=None):
