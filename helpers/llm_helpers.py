@@ -11,7 +11,8 @@ from helpers.spam_tweet_schema import *
 from helpers.wallet_analysis import *
 
 client = OpenAI(
-    api_key=os.getenv('OPENAI_API_KEY')
+    api_key=os.getenv('OPENROUTER_API_KEY'),
+    base_url=os.getenv('OPENROUTER_BASE_URL')
 )
 
 tools = [
