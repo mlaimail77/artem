@@ -107,18 +107,6 @@ async def process_webhook(webhook_data):
         print("Getting NFT analysis")
         artwork_analysis = await get_nft_analysis(metadata)
 
-        try:
-            collection_amount = get_unique_nfts_count(contract_address)
-        except:
-            collection_amount = 0
-        score_calcs = get_total_score(scores_object["artwork_analysis"], collection_amount)
-
-        print("Getting final decision")
-        final_decision = await get_final_decision(artwork_analysis, metadata, from_address, score_calcs)
-
-        decision = final_decision.decision
-        rationale_post = final_decision.rationale_post
-
         scores_object = {
             "artwork_analysis": artwork_analysis,
             "image_medium_url": metadata["image_medium_url"],
@@ -127,6 +115,18 @@ async def process_webhook(webhook_data):
             "token_id": token_id
         }
 
+        try:
+            collection_amount = get_unique_nfts_count(contract_address)
+        except:
+            collection_amount = 0
+        
+        score_calcs = get_total_score(scores_object["artwork_analysis"], collection_amount)
+
+        print("Getting final decision")
+        final_decision = await get_final_decision(artwork_analysis, metadata, from_address, score_calcs)
+
+        decision = final_decision.decision
+        rationale_post = final_decision.rationale_post
 
         try:
             reward_points = score_calcs["reward_points"]
