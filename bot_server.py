@@ -5,8 +5,6 @@ from tasks import flask_app, sync_process_webhook, sync_process_neynar_webhook
 
 import logging
 import os
-import hmac
-import hashlib
 
 from helpers.utils import *
 from helpers.llm_helpers import *
@@ -254,50 +252,22 @@ def taste_profile():
     }
     return render_template('taste_profile.html', response=response)
 
+
 @flask_app.route('/wallet-webhook', methods=['POST'])
 async def wallet_webhook():
     try:
-        # Get the webhook payload and signature
-        webhook_data = request.get_json()
-        # Get signature from request headers
-        signature = request.headers.get('X-Alchemy-Signature')
-
-        # Get webhook secret from environment
-        webhook_secret_base = os.getenv('ALCHEMY_WEBHOOK_SECRET_BASE')
-        webhook_secret_ethereum = os.getenv('ALCHEMY_WEBHOOK_SECRET_ETHEREUM')
-        if not webhook_secret_base or not webhook_secret_ethereum:
-            logger.error("Missing ALCHEMY_WEBHOOK_SECRET environment variable")
-            return jsonify({
-                'status': 'error',
-                'message': 'Server configuration error'
-            }), 500
-
-        # Calculate expected signatures
-        expected_signature_base = hmac.new(
-            webhook_secret_base.encode(),
-            request.get_data(),
-            hashlib.sha256
-        ).hexdigest()
-
-        expected_signature_ethereum = hmac.new(
-            webhook_secret_ethereum.encode(),
-            request.get_data(),
-            hashlib.sha256
-        ).hexdigest()
-
-        # Verify signature matches
-        if not signature or (not hmac.compare_digest(signature, expected_signature_base) and not hmac.compare_digest(signature, expected_signature_ethereum)):
-            logger.warning("Invalid webhook signature")
+        if not verify_webhook_signature(request.get_data(), request.headers.get('X-Alchemy-Signature')):
             return jsonify({
                 'status': 'error',
                 'message': 'Invalid signature'
             }), 401
-        
-        print("Valid webhook signature")
+
+        # Get the webhook payload and signature
+        webhook_data = request.get_json()
+
         logger.info(f"Received webhook callback: {webhook_data}")
         timestamp = datetime.now().isoformat()
         sync_process_webhook.delay(webhook_data)
-
 
         # Return success response
         return jsonify({

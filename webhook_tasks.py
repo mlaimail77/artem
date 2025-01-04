@@ -53,22 +53,28 @@ async def process_webhook(webhook_data):
             }
 
         webhook_network = webhook_data['event']['network']
-        if webhook_network == 'BASE_MAINNET':
-            print("BASE MAINNET")
-            simplehash_network = 'base'
-            cdp_network = 'base-mainnet'
-            current_wallet_address = os.getenv('ARTTO_ADDRESS_MAINNET')
-            wallet = wallet_mainnet
-        elif webhook_network == 'ETH_MAINNET':
-            print("ETH MAINNET")
-            simplehash_network = 'ethereum'
-            cdp_network = 'ethereum-mainnet'
-            current_wallet_address = os.getenv('ARTTO_ADDRESS_MAINNET')
-            wallet = wallet_mainnet
-        else:
-            simplehash_network = webhook_network
-            cdp_network = webhook_network
-            current_wallet_address = os.getenv('ARTTO_ADDRESS_MAINNET')
+
+        # Map webhook network names to simplehash network names
+        network_mapping = {
+            'BASE_MAINNET': 'base',
+            'ETH_MAINNET': 'ethereum', 
+            'SHAPE_MAINNET': 'shape',
+            'ZORA_MAINNET': 'zora'
+        }
+
+        # Get simplehash network name from mapping, default to webhook network name
+        simplehash_network = network_mapping.get(webhook_network, webhook_network)
+        
+        # All mainnet networks use the same wallet address
+        current_wallet_address = os.getenv('ARTTO_ADDRESS_MAINNET')
+        
+        if not webhook_network in network_mapping:
+            return {
+                'status': 'skipped',
+                'reason': f'Unsupported network: {webhook_network}'
+            }
+        logger.info(f"Processing {webhook_network}")
+        wallet = wallet_mainnet
 
         from_address = activity['fromAddress']
         contract_address = activity['rawContract']['address']

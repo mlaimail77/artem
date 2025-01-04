@@ -7,10 +7,53 @@ from supabase import create_client, Client
 from helpers.prompts.casual_thought_topics import *
 
 import hashlib
-
+import hmac
 from dotenv import load_dotenv
 
 load_dotenv('.env.local')
+
+def verify_webhook_signature(request_data, signature):
+    """
+    Verify the webhook signature against multiple webhook secrets.
+    
+    Args:
+        request_data: The raw request data to verify
+        signature: The signature from the request headers
+    
+    Returns:
+        bool: True if signature is valid, False otherwise
+    """
+    # Get webhook secrets from environment
+    webhook_secrets = {
+        'base': os.getenv('ALCHEMY_WEBHOOK_SECRET_BASE'),
+        'ethereum': os.getenv('ALCHEMY_WEBHOOK_SECRET_ETHEREUM'), 
+        'shape': os.getenv('ALCHEMY_WEBHOOK_SECRET_SHAPE'),
+        'zora': os.getenv('ALCHEMY_WEBHOOK_SECRET_ZORA')
+    }
+
+    # Check all secrets are configured
+    if not all(webhook_secrets.values()):
+        print("Missing ALCHEMY_WEBHOOK_SECRET environment variable")
+        raise ValueError('Server configuration error - missing webhook secret')
+
+    # Calculate expected signatures for each secret
+    expected_signatures = {
+        network: hmac.new(
+            secret.encode(),
+            request_data,
+            hashlib.sha256
+        ).hexdigest()
+        for network, secret in webhook_secrets.items()
+    }
+
+    # Verify signature matches any of the expected signatures
+    if not signature:
+        return False
+        
+    return any(
+        hmac.compare_digest(signature, expected_sig)
+        for expected_sig in expected_signatures.values()
+    )
 
 def generate_post_params():
     length = random.choice(POST_LENGTHS)
