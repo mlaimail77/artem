@@ -2,7 +2,7 @@ import os
 import json
 import random
 import yaml
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
 from supabase import create_client, Client
 from helpers.prompts.casual_thought_topics import *
 
@@ -280,6 +280,45 @@ def set_wallet_activity(event_type, from_address, to_address, token_id, network,
     }
     response = supabase.table("wallet_activity").insert(insert_data).execute()
     return response.data
+
+def get_wallet_activity_stats(wallet_address, since_timestamp=None):
+    """
+    Get total number of transfers and sum of tokens received for a wallet address,
+    excluding transfers to Artto's address.
+    
+    Args:
+        wallet_address: The wallet address to get stats for
+        since_timestamp: Optional timestamp to filter activity from
+        
+    Returns:
+        tuple: (total_transfers, total_tokens) where:
+            total_transfers (int): Number of transfers to this address
+            total_tokens (int): Sum of token amounts received
+    """
+    response = refresh_or_get_supabase_client()
+    
+    # Standardize wallet address to lowercase
+    wallet_address = wallet_address.lower()
+    
+    # Query wallet activity table for the given address
+    # Exclude Artto's address (case insensitive)
+    query = supabase.table("wallet_activity") \
+        .select("*") \
+        .eq("to_address", wallet_address)
+        
+    if since_timestamp:
+        query = query.gte("created_at", since_timestamp)
+        
+    result = query.execute()
+        
+    if not result.data:
+        return 0, 0
+        
+    total_transfers = len(result.data)
+    total_tokens = sum(int(row["amount"]) for row in result.data)
+    
+    return total_transfers, total_tokens
+
 
 def get_all_posts():
     print("Fetching all posts")

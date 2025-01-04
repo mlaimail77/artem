@@ -168,6 +168,37 @@ async def process_webhook(webhook_data):
         
         # Transfer ARTTO tokens to the sender
         try:
+
+            time_now_utc = datetime.now(timezone.utc)
+
+            # Check last 7 days
+            seven_days_ago = (time_now_utc - timedelta(days=7)).isoformat()
+            transfers_7d, tokens_7d = get_wallet_activity_stats(from_address, seven_days_ago)
+
+            # Check last hour 
+            one_hour_ago = (time_now_utc - timedelta(hours=1)).isoformat()
+            transfers_1h, tokens_1h = get_wallet_activity_stats(from_address, one_hour_ago)
+
+            # Check all time
+            total_transfers, total_tokens = get_wallet_activity_stats(from_address)
+
+            # Check hourly, weekly, and total limits
+            hourly_limit = int(os.getenv('HOURLY_TOKEN_LIMIT'))
+            weekly_limit = int(os.getenv('WEEKLY_TOKEN_LIMIT'))
+            total_limit = int(os.getenv('TOTAL_TOKEN_LIMIT'))
+
+            if tokens_1h > hourly_limit:
+                print(f"Hourly token limit exceeded ({tokens_1h} > {hourly_limit}). Setting reward points to 0.")
+                reward_points = 0
+            elif tokens_7d > weekly_limit:
+                print(f"Weekly token limit exceeded ({tokens_7d} > {weekly_limit}). Setting reward points to 0.")
+                reward_points = 0
+            elif total_tokens > total_limit:
+                print(f"Total tokens {total_tokens} exceeds cap of {total_limit}. Setting reward points to 0.")
+                reward_points = 0
+
+            print("Reward points:", reward_points)
+
             response = transfer_artto_token(
                 wallet,
                 round(reward_points),
