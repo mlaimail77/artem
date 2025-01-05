@@ -115,7 +115,7 @@ async def process_webhook(webhook_data):
 
         scores_object = {
             "artwork_analysis": artwork_analysis,
-            "image_medium_url": metadata["image_medium_url"],
+            "image_small_url": metadata["image_small_url"],
             "chain": simplehash_network,
             "contract_address": contract_address,
             "token_id": token_id
@@ -148,7 +148,7 @@ async def process_webhook(webhook_data):
         if decision == "SELL" or decision == "REJECT":
             try:
                 print("Posting to Farcaster")
-                rationale_post_farcaster = rationale_post + f" {metadata['image_medium_url']}"
+                rationale_post_farcaster = rationale_post + f" {metadata['image_small_url']}"
                 print("Rationale post:", rationale_post_farcaster)
                 post_long_cast(rationale_post_farcaster)
             except Exception as e:

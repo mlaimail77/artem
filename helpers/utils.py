@@ -346,7 +346,7 @@ def store_nft_scores(scores_object, score_calcs, final_decision = None):
     response = refresh_or_get_supabase_client()
 
     artwork_analysis = scores_object["artwork_analysis"]
-    image_url = scores_object["image_medium_url"]
+    image_url = scores_object["image_small_url"]
     network = scores_object["chain"]
     contract_address = scores_object["contract_address"]
     token_id = scores_object["token_id"]

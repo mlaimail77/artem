@@ -311,7 +311,7 @@ def filter_nft_metadata(response):
         'contract_address': None if not response.get('contract_address') else response.get('contract_address'),
         'name': None if not response.get('name') else response.get('name'),
         'description': None if not response.get('description') else response.get('description'),
-        'image_medium_url': None if not response.get('previews', {}).get('image_medium_url') else response.get('previews', {}).get('image_medium_url'),
+        'image_small_url': None if not response.get('previews', {}).get('image_small_url') else response.get('previews', {}).get('image_small_url'),
         'contract': None if not response.get('contract') else response.get('contract'),
         'collection_name': None if not response.get('collection', {}).get('name') else response.get('collection', {}).get('name'),
         'collection_id': None if not response.get('collection', {}).get('collection_id') else response.get('collection', {}).get('collection_id'),

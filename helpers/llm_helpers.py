@@ -297,7 +297,7 @@ async def get_nft_analysis(metadata):
                     {
                         "type": "image_url",
                         "image_url": {
-                            "url": metadata["image_medium_url"]
+                            "url": metadata["image_small_url"]
                         }
                     }
                 ]
@@ -425,7 +425,7 @@ async def get_reply(cast_details, post_params):
                 
                 try:
                     metadata = await get_nft_metadata(**tool_input)
-                    if not metadata or 'image_medium_url' not in metadata:
+                    if not metadata or 'image_small_url' not in metadata:
                         raise ValueError("NFT metadata missing required image URL")
                 except Exception as e:
                     raise ValueError(f"Failed to fetch NFT metadata: {str(e)}")
@@ -436,7 +436,7 @@ async def get_reply(cast_details, post_params):
 
                 scores_object = {
                     "artwork_analysis": artwork_analysis,
-                    "image_medium_url": metadata["image_medium_url"],
+                    "image_small_url": metadata["image_small_url"],
                     "chain": tool_input["network"],
                     "contract_address": tool_input["contract_address"],
                     "token_id": tool_input["token_id"]
