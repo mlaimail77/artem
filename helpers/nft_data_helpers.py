@@ -308,6 +308,7 @@ def filter_nft_metadata(response):
     filtered_response = {
         'nft_id': None if not response.get('nft_id') else response.get('nft_id'),
         'chain': None if not response.get('chain') else response.get('chain'),
+        'created_date': None if not response.get('created_date') else response.get('created_date'),
         'contract_address': None if not response.get('contract_address') else response.get('contract_address'),
         'name': None if not response.get('name') else response.get('name'),
         'description': None if not response.get('description') else response.get('description'),

@@ -140,7 +140,7 @@ async def reply_to_followers():
                 set_post_to_ignore(tweet['id'], "parent")
                 replied_authors.add(author_id)
             if scores:
-                score_calcs = get_total_score(scores["artwork_analysis"])
+                score_calcs = get_total_score(scores["artwork_analysis"], scores)
                 store_nft_scores(scores, score_calcs)
             print("Waiting 10-30 seconds")
             time.sleep(random.randint(10, 30))
@@ -207,7 +207,7 @@ async def post_channel_casts():
         post_params = generate_post_params()
         reply, scores = await get_reply(cast_details, post_params)
         if scores:
-            score_calcs = get_total_score(scores["artwork_analysis"])
+            score_calcs = get_total_score(scores["artwork_analysis"], scores)
             store_nft_scores(scores, score_calcs)
         react_cast('like', cast["hash"])
         print(reply)
@@ -339,7 +339,7 @@ async def reply_twitter_mentions():
                 set_post_created(response)
                 set_post_to_ignore(mention['id'], "parent")
             if scores:
-                score_calcs = get_total_score(scores["artwork_analysis"])
+                score_calcs = get_total_score(scores["artwork_analysis"], scores)
                 store_nft_scores(scores, score_calcs)
             print("Waiting 10-30 seconds")
             time.sleep(random.randint(10, 30))
@@ -356,7 +356,7 @@ async def post_following_casts():
         post_params = generate_post_params()
         reply, scores = await get_reply(cast_details, post_params)
         if scores:
-            score_calcs = get_total_score(scores["artwork_analysis"])
+            score_calcs = get_total_score(scores["artwork_analysis"], scores)
             store_nft_scores(scores, score_calcs)
         react_cast('like', cast["hash"])
         print(reply)
@@ -379,7 +379,7 @@ async def answer_specific_cast(hash):
     except Exception as e:
         print(f"Error posting to Farcaster: {str(e)}")
     if scores:
-        score_calcs = get_total_score(scores["artwork_analysis"])
+        score_calcs = get_total_score(scores["artwork_analysis"], scores)
         store_nft_scores(scores, score_calcs)
 
 

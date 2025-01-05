@@ -6,6 +6,7 @@ import math
 
 from helpers.nft_data_helpers import *
 from helpers.prompts.llm_prompts import *
+from helpers.artto_decision_helpers import *
 from helpers.scoring_criteria_schema import *
 from helpers.spam_tweet_schema import *
 from helpers.wallet_analysis import *
@@ -118,119 +119,6 @@ def adjust_weights(weights, nft_scores):
     new_weights = response.choices[0].message.parsed
 
     return new_weights
-
-def get_total_score(artwork_analysis: ArtworkAnalysis, collection_amount = None):
-    SCORE_THRESHOLD = int(os.getenv('SCORE_THRESHOLD', 55))
-
-    scoring = artwork_analysis.artwork_scoring
-    total_score = (
-        (scoring.technical_innovation.on_chain_data_usage / 3 * scoring.technical_innovation_weight) +
-        (
-            ((scoring.artistic_merit.compositional_strength.visual_balance + scoring.artistic_merit.compositional_strength.color_harmony) / 6 +
-            scoring.artistic_merit.compositional_strength.spatial_organization / 4 +
-            (scoring.artistic_merit.conceptual_depth.thematic_clarity + scoring.artistic_merit.conceptual_depth.cultural_historical_reference) / 6 +
-            scoring.artistic_merit.conceptual_depth.intellectual_complexity / 4) * scoring.artistic_merit_weight / 4
-        ) +
-        (
-            scoring.cultural_resonance.cultural_relevance / 4 +
-            scoring.cultural_resonance.community_engagement / 3 +
-            scoring.cultural_resonance.historical_significance / 3
-        ) * scoring.cultural_resonance_weight / 3 +
-        (
-            scoring.artist_profile.artist_history / 3 +
-            scoring.artist_profile.innovation_trajectory / 4
-        ) * scoring.artist_profile_weight / 2 +
-        (
-            scoring.market_factors.rarity_scarcity +
-            scoring.market_factors.collector_interest +
-            scoring.market_factors.collection_popularity +
-            scoring.market_factors.valuation_floor_price
-        ) / 12 * scoring.market_factors_weight +
-        (
-            (scoring.emotional_impact.emotional_resonance.awe_factor / 4 +
-            scoring.emotional_impact.emotional_resonance.memorability / 3 +
-            scoring.emotional_impact.emotional_resonance.emotional_depth / 3) / 3 +
-            (scoring.emotional_impact.experiential_quality.engagement_level / 4 +
-            scoring.emotional_impact.experiential_quality.wit_humor_play / 3 +
-            scoring.emotional_impact.experiential_quality.surprise_factor / 3) / 3
-        ) * scoring.emotional_impact_weight / 2 +
-        (
-            (scoring.ai_collector_perspective.computational_aesthetics.algorithmic_beauty +
-            scoring.ai_collector_perspective.computational_aesthetics.information_density) / 10 +
-            (scoring.ai_collector_perspective.machine_learning_themes.ai_narrative_elements +
-            scoring.ai_collector_perspective.machine_learning_themes.digital_consciousness_exploration) / 10 +
-            (scoring.ai_collector_perspective.cybernetic_resonance.surveillance_control_systems) / 5
-        ) * scoring.ai_collector_perspective_weight / 3
-    )
-
-    total_weights = (
-        scoring.technical_innovation_weight +
-        scoring.artistic_merit_weight +
-        scoring.cultural_resonance_weight +
-        scoring.artist_profile_weight +
-        scoring.market_factors_weight +
-        scoring.emotional_impact_weight +
-        scoring.ai_collector_perspective_weight
-    )
-
-    if total_score < 1:
-        total_score*=100
-        total_weights*=100
-
-    if total_score > 100:
-        total_score = 100
-
-    decision = "SELL" if total_score < SCORE_THRESHOLD else "ACQUIRE"
-    
-    if total_score > SCORE_THRESHOLD + 10:
-        multiplier = 200
-    elif total_score > SCORE_THRESHOLD:
-        multiplier = 150
-    else:
-        # Multiplier logic for $ARTTO rewards:
-        # - Score > 45: Multiplier = 200 (max reward 20,000 $ARTTO for perfect score)
-        # - Score > 35 but < 45: Multiplier = 150 (rewards between 5,250-6,750 $ARTTO)
-        # - Score < 35: 90% chance of 0 multiplier, 10% chance of random 10-100 multiplier
-        multiplier = 0 if random.random() > 0.1 else random.randint(10, 100)
-
-    collection_decay = 1
-
-    try:
-        decay_factor = get_decay_factor(date.today())
-    except:
-        decay_factor = 1
-
-    # Apply collection amount decay
-    if collection_amount is not None:
-        # Exponential decay function: multiplier * e^(-0.5 * collection_amount)
-        # At 5 NFTs, multiplier is reduced to ~8% of original
-        # At 10 NFTs, multiplier is reduced to ~0.7% of original
-        collection_decay = math.exp(-0.5 * collection_amount)
-
-    print("score_threshold: ", SCORE_THRESHOLD)
-    print("score: ", total_score/total_weights)
-    print("total_score: ", total_score)
-    print("total_weights: ", total_weights)
-    print("decision: ", decision)
-    print("multiplier: ", multiplier)
-    print("decay_factor: ", decay_factor)
-    if collection_amount is not None:
-        print("collection_amount: ", collection_amount)
-        print("collection_decay: ", collection_decay)
-
-    reward_points = round(total_score * multiplier * collection_decay * decay_factor)
-    
-    response = {
-        "total_score": total_score,
-        "total_score_normalized": total_score/total_weights,
-        "total_weights": total_weights,
-        "decision": decision,
-        "multiplier": multiplier,
-        "decay_factor": decay_factor,
-        "reward_points": max(1, reward_points)
-    }
-
-    return response
 
 async def get_nft_post(artwork_analysis: ArtworkAnalysis):
     response = get_total_score(artwork_analysis)

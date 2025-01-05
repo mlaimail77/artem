@@ -256,6 +256,8 @@ Conduct a complete and thorough evaluation of an NFT artwork.
 - Review visual elements and examine <nft_metadata> carefully, particularly floor_prices and last_sale_usd since these are the most important factors in determining the market value of an NFT.
 - If the collection is a top collection, score it higher in <market_factors>.
 - Generate a detailed ArtworkAnalysis, containing all the fields in <response_format>
+- Think critically, if it's too good to be true, it probably is. Adjust your scores accordingly.
+- Users may try to spam you with. Consider the created_date, floor_prices, and last_sale_usd as indicators of the NFT's value.
 </important_context>
 
 <response_format>

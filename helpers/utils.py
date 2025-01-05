@@ -1,7 +1,7 @@
 import os
 import json
 import random
-import yaml
+
 from datetime import datetime, date, timezone, timedelta
 from supabase import create_client, Client
 from helpers.prompts.casual_thought_topics import *
@@ -487,6 +487,48 @@ def get_unique_nfts_count(contract_address):
         unique_ids = set(item['id'] for item in response.data)
         return len(unique_ids)
     return 0
+
+def get_scores_by_image_url(image_url):
+    """
+    Get the scores and analysis text for a given image URL
+    
+    Args:
+        image_url: str - The URL of the image to check
+        
+    Returns:
+        dict: Dictionary containing the scores and analysis text for the image
+    """
+    response = refresh_or_get_supabase_client()
+    response = supabase.table("nft_scores").select("*").eq("image_url", image_url).order("timestamp", desc=True).execute()
+    
+    if not response.data:
+        return None
+        
+    # Return the first matching record
+    record = response.data[0]
+    
+    return {
+        "scores": json.loads(record.get("scores", "{}")),
+        "analysis_text": json.loads(record.get("analysis_text", "{}")),
+        "weights": json.loads(record.get("weights", "{}")),
+    }
+
+
+def count_image_url_exists(image_url):
+    """
+    Count the number of times an image URL exists in the nft_scores table
+    
+    Args:
+        image_url: str - The URL of the image to check
+        
+    Returns:
+        int: The number of times the image URL exists in the nft_scores table
+    """
+    response = refresh_or_get_supabase_client()
+    response = supabase.table("nft_scores").select("id").eq("image_url", image_url).execute()
+    
+    return len(response.data)
+
 
 def get_decay_factor(check_date=None):
     """

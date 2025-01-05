@@ -110,8 +110,8 @@ SCORING_CRITERIA_TEMPLATE = """<scoring_criteria>
 - 2: Rare
 - 3: Unique
 
-### Collector Interest (0-3 points)
-- 0: Limited interest
+### Collector Interest and Historicity (0-3 points)
+- 0: Limited interest and/or very recent
 - 1: Growing interest
 - 2: Strong interest
 - 3: High demand
