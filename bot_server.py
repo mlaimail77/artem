@@ -267,7 +267,8 @@ async def wallet_webhook():
 
         logger.info(f"Received webhook callback: {webhook_data}")
         timestamp = datetime.now().isoformat()
-        sync_process_webhook.delay(webhook_data)
+
+        # sync_process_webhook.delay(webhook_data)
 
         # Return success response
         return jsonify({
