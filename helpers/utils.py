@@ -1,7 +1,7 @@
 import os
 import json
 import random
-import yaml
+
 from datetime import datetime, date, timezone, timedelta
 from supabase import create_client, Client
 from helpers.prompts.casual_thought_topics import *
@@ -141,6 +141,33 @@ def set_taste_weights(weights):
     response = supabase.table("analysis_weights").insert(insert_data).execute()
     return response.data
 
+def get_artto_reward_batch_post(since_timestamp=None):
+    response = refresh_or_get_supabase_client()
+
+    fields_to_fetch = [
+        "id",
+        "analysis_text",
+        "image_url",
+        "contract_address",
+        "acquire_recommendation",
+        "decision",
+        "rationale_post",
+        "total_score",
+        "reward_points",
+        "sender_address",
+        "timestamp"
+    ]
+
+    query = supabase.table("nft_scores") \
+        .select(",".join(fields_to_fetch)) \
+        .eq("reward_posted", False) \
+        .eq("decision", "ACQUIRE")
+
+    if since_timestamp:
+        query = query.gte("timestamp", since_timestamp)
+        
+    response = query.order("timestamp", desc=True).execute()
+    return response.data
 
 def get_nft_batch_post(since_timestamp=None):
     response = refresh_or_get_supabase_client()
@@ -303,7 +330,7 @@ def get_wallet_activity_stats(wallet_address, since_timestamp=None):
     # Query wallet activity table for the given address
     # Exclude Artto's address (case insensitive)
     query = supabase.table("wallet_activity") \
-        .select("*") \
+        .select("amount") \
         .eq("to_address", wallet_address)
         
     if since_timestamp:
@@ -326,7 +353,7 @@ def get_all_posts():
     response = supabase.table("posts_created").select("*").execute()
     return response.data
 
-def store_nft_scores(scores_object, score_calcs, final_decision = None):
+def store_nft_scores(nft_details, score_details, final_decision = None):
     """
     Store artwork scoring and metadata in Supabase database
     
@@ -343,17 +370,24 @@ def store_nft_scores(scores_object, score_calcs, final_decision = None):
         decision = None
         rationale_post = None
 
+    metadata = nft_details["metadata"]
+
     response = refresh_or_get_supabase_client()
 
-    artwork_analysis = scores_object["artwork_analysis"]
-    image_url = scores_object["image_small_url"]
-    network = scores_object["chain"]
-    contract_address = scores_object["contract_address"]
-    token_id = scores_object["token_id"]
+    artwork_analysis = nft_details["artwork_analysis"]
+    image_url = nft_details["image_small_url"]
+    network = nft_details["chain"]
+    contract_address = nft_details["contract_address"]
+    token_id = nft_details["token_id"]
 
     artwork_scoring = artwork_analysis.artwork_scoring
     initial_impression = artwork_analysis.initial_impression
     detailed_analysis = artwork_analysis.detailed_analysis
+
+    flag_as_suspicious = score_details["flag_as_suspicious"]
+    source = score_details["source"]
+    sender_address = score_details["sender_address"]
+    decision_reason = score_details["decision_reason"]
 
     scores = {
         # Technical Innovation
@@ -412,14 +446,11 @@ def store_nft_scores(scores_object, score_calcs, final_decision = None):
     }
 
 
-    total_score = score_calcs["total_score"]
+    total_score = score_details["total_score"]
 
-    multiplier = score_calcs["multiplier"]
-    decay_factor = score_calcs["decay_factor"]
-    reward_points = score_calcs["reward_points"]
-
-
-    print(f"Total score: {total_score}")
+    multiplier = score_details["multiplier"]
+    decay_factor = score_details["decay_factor"]
+    reward_points = score_details["reward_points"]
 
     # Check if artwork exists
     existing = supabase.table("nft_scores").select("*").eq("network", network).eq("contract_address", contract_address).eq("token_id", token_id).execute()
@@ -438,9 +469,15 @@ def store_nft_scores(scores_object, score_calcs, final_decision = None):
         "decision": decision,
         "rationale_post": rationale_post,
         "group_posted": False,
+        "reward_posted": False,
         "multiplier": round(multiplier, 4),
         "decay_factor": round(decay_factor, 4),
-        "reward_points": round(reward_points, 4)
+        "reward_points": round(reward_points, 4),
+        "flag_as_suspicious": flag_as_suspicious,
+        "source": source,
+        "sender_address": sender_address,
+        "metadata": json.dumps(metadata),
+        "decision_reason": decision_reason
     }
 
     if existing.data:
@@ -452,15 +489,48 @@ def store_nft_scores(scores_object, score_calcs, final_decision = None):
         response = supabase.table("nft_scores").insert(artwork_data).execute()
     return response.data
 
-def update_nft_scores(ids, group_posted):
+def update_nft_reward_posts(ids, reward_posted):
     response = refresh_or_get_supabase_client()
-    quoted_ids = [f'"{id}"' for id in ids]
-    ids_string = f"({','.join(quoted_ids)})"
 
     for id in ids:
-        print("id: ", id)
+        response = supabase.table("nft_scores").update({"reward_posted": reward_posted}).eq("id", id).execute()
+    return response.data
+
+def update_image_urls_with_size():
+    """
+    Fetches all records from nft_scores, appends '=s250' to image_urls if not present,
+    and updates the records in the database.
+    """
+    response = refresh_or_get_supabase_client()
+    
+    # Fetch all records
+    records = supabase.table("nft_scores").select("id", "image_url").not_.ilike("image_url", "%=s250").execute()
+    
+    if not records.data:
+        print("No records to update")
+        return None
+    
+    print(f"Found {len(records.data)} records to update")
+    # Process each record
+    for record in records.data:
+        if record['image_url'] and not record['image_url'].endswith('=s250'):
+            # Update the image URL with size parameter
+            new_image_url = f"{record['image_url']}=s250"
+            
+            # Update the record in the database
+            supabase.table("nft_scores").update(
+                {"image_url": new_image_url}
+            ).eq("id", record['id']).execute()
+    
+    print(f"Updated {len(records.data)} records")
+    return True
+
+
+def update_nft_scores(ids, group_posted):
+    response = refresh_or_get_supabase_client()
+
+    for id in ids:
         response = supabase.table("nft_scores").update({"group_posted": group_posted}).eq("id", id).execute()
-        print("response: ", response)
     return response.data
 
 def set_post_created(post):
@@ -487,6 +557,48 @@ def get_unique_nfts_count(contract_address):
         unique_ids = set(item['id'] for item in response.data)
         return len(unique_ids)
     return 0
+
+def get_scores_by_image_url(image_url):
+    """
+    Get the scores and analysis text for a given image URL
+    
+    Args:
+        image_url: str - The URL of the image to check
+        
+    Returns:
+        dict: Dictionary containing the scores and analysis text for the image
+    """
+    response = refresh_or_get_supabase_client()
+    response = supabase.table("nft_scores").select("scores,analysis_text,weights").eq("image_url", image_url).order("timestamp", desc=True).execute()
+    
+    if not response.data:
+        return None
+        
+    # Return the first matching record
+    record = response.data[0]
+    
+    return {
+        "scores": json.loads(record.get("scores", "{}")),
+        "analysis_text": json.loads(record.get("analysis_text", "{}")),
+        "weights": json.loads(record.get("weights", "{}")),
+    }
+
+
+def count_image_url_exists(image_url):
+    """
+    Count the number of times an image URL exists in the nft_scores table
+    
+    Args:
+        image_url: str - The URL of the image to check
+        
+    Returns:
+        int: The number of times the image URL exists in the nft_scores table
+    """
+    response = refresh_or_get_supabase_client()
+    response = supabase.table("nft_scores").select("id").eq("image_url", image_url).execute()
+    
+    return len(response.data)
+
 
 def get_decay_factor(check_date=None):
     """

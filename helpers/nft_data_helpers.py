@@ -246,7 +246,7 @@ def get_wallet_valuation(wallet_address: str, api_key: str = SIMPLEHASH_API_KEY)
     Returns:
         float: The USD value of NFTs in the wallet, or None if request fails
     """
-    url = f"https://api.simplehash.com/api/v0/nfts/owners/value?wallet_addresses={wallet_address}"
+    url = f"https://api.simplehash.com/api/v0/nfts/owners/value?wallet_addresses={wallet_address}&spam_score__lte=70"
 
     headers = {
         "accept": "application/json",
@@ -308,6 +308,7 @@ def filter_nft_metadata(response):
     filtered_response = {
         'nft_id': None if not response.get('nft_id') else response.get('nft_id'),
         'chain': None if not response.get('chain') else response.get('chain'),
+        'created_date': None if not response.get('created_date') else response.get('created_date'),
         'contract_address': None if not response.get('contract_address') else response.get('contract_address'),
         'name': None if not response.get('name') else response.get('name'),
         'description': None if not response.get('description') else response.get('description'),
@@ -359,10 +360,11 @@ def format_collections(response, time_period):
 
 
 async def is_top_collection(collection_id, time_period='30d'):
-    top_collections = await get_top_collections(time_period=time_period, chains=['ethereum', 'base'], limit=100)
+    with open('helpers/top_collections.json', 'r') as f:
+        top_collections = json.load(f)
     return collection_id in [collection['collection_id'] for collection in top_collections['collections']]
 
-async def get_top_collections(time_period='24h', chains=['ethereum', 'base', 'solana'], limit=20, api_key=SIMPLEHASH_API_KEY):
+async def get_top_collections(time_period='24h', chains=['ethereum', 'base'], limit=100, api_key=SIMPLEHASH_API_KEY):
     """
     Fetches top NFT collections from the SimpleHash API.
 

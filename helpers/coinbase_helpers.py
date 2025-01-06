@@ -3,6 +3,8 @@ import time
 import json
 from cdp import *
 
+from helpers.basescan_helpers import get_abi
+
 # # Zora WOW Token Actions
 # from cdp_agentkit_core.actions.wow import create_token, buy_token
 
@@ -125,28 +127,6 @@ def execute_swap_and_transfer_native(wallet, calldata):
     except Exception as e:
         print(f"Error executing swap and transfer: {str(e)}")
         return None
-
-
-def get_abi(network_id, contract_address):
-    import requests
-    import json
-
-    base_url = f"https://{'api-sepolia' if network_id == 'base-sepolia' else 'api'}.basescan.org/api"
-    params = {
-        "module": "contract",
-        "action": "getabi", 
-        "address": contract_address,
-        "apikey": os.getenv('BASESCAN_API_KEY')
-    }
-
-    response = requests.get(base_url, params=params)
-    response_json = response.json()
-
-    if response_json["status"] == "1" and response_json["message"] == "OK":
-        abi = json.loads(response_json["result"])
-    else:
-        abi = None
-    return abi
 
 def get_implementation_address(network_id, contract_address):
     abi = get_abi(network_id, contract_address)

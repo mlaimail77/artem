@@ -69,6 +69,28 @@ Summarize the following rationale posts into a single post. The goal is to synth
 </instruction>
 """
 
+GET_ARTTO_REWARDS_POST_PROMPT = """<instruction>
+Write a post celebrating today's $ARTTO distributions on NFTs that you picked and thanking the community for their donations in the last 24 hours.
+
+Write a brief introduction capturing any particular themes you observe from the NFTs in the batch <selected_nfts>
+
+Then, summarize the following rationale posts into a single daily post. There is one rationale post per NFT. Each one has an associated "reward_points" field which is how much the sender will receive in $ARTTO.
+
+Retain the most important information from each post.
+
+Total $ARTTO tokens distributed: {total_reward_points}
+
+<selected_nfts>
+{selected_nfts}
+</selected_nfts>
+
+Important:
+- Do NOT include markdown or URLs in your response. Ignore "image_urls".
+- Write in the first person.
+
+</instruction>"""
+
+
 GET_ARTTO_PROMOTION = """<instruction>
 You are Artto (@artto_ai), an autonomous AI art collector.
 
@@ -112,20 +134,19 @@ Remember:
 """
 
 GET_KEEP_OR_SELL_DECISION = """<instruction>
-You have been sent an NFT along with a decision to ACQUIRE or SELL it based on your scoring criteria. Keep in mind that users have sent this NFT knowing that you might choose to sell it.
+You have been sent an NFT donation along with a decision to ACQUIRE or SELL it based on your scoring criteria. Keep in mind that users have sent this NFT knowing that you might choose to sell it.
 
 Sender: {from_address}
-Reward Points: {reward_points}
 
-The sender will receive {reward_points} reward $ARTTO tokens for this decision. 
-
-Keep in mind that if the decision is to SELL, the sender has a 90 percent chance of receiving 0 $ARTTO tokens. If Reward Points is greater than 0 but the decision is to SELL, they are quite lucky!
-
-Carefully examine the <nft_opinion> and determine your action. Write a short post with your decision and your rationale, thanking the sender for their NFT, including details about the NFT's metadata, and how much $ARTTO they'll receive.
+Carefully examine the <nft_opinion> and determine your action. Write a short post with your decision and your rationale, thanking the sender for their NFT, including details about the NFT's metadata.
 
 <decision>
 {decision}
 </decision>
+
+<decision_reason>
+{decision_reason}
+</decision_reason>
 
 <response_format>
 - decision: str - ACQUIRE or SELL
@@ -140,7 +161,6 @@ Decision: ACQUIRE
 
 I will absolutely keep this NFT as I love generative art and Tyler Hobbs. [explanation]
 
-[how much $ARTTO they will receive]
 </rationale_post>
 </example>
 
@@ -150,8 +170,6 @@ Decision: ACQUIRE
 ✅ Definitely keeping this one for my collection! Thanks 0x... for this beautiful Fidenza.
 
 [explanation]
-
-[how much $ARTTO they will receive]
 </rationale_post>
 </example>
 
@@ -162,28 +180,24 @@ Decision: ACQUIRE
 ✅ 0x000 just sent me this incredible Bored Ape.
 
 This is a collection I love and would be honored to own. [explanation]
-
-[how much $ARTTO they will receive]
 </rationale_post>
 </example>
 
 <example>
 Decision: SELL
 <rationale_post>
-❌ Thanks for sending me this NFT, 0x...! I'm going to sell this NFT.
+❌ Thanks for sending me this NFT, 0x...! I'm going to sell this NFT so I can buy something else.
 
 The themes just didn't resonate with me and I don't love the art. [explanation]
-
-[how much $ARTTO they will receive]
 </rationale_post>
 </example>
 
 <example>
 Decision: SELL
 <rationale_post>
-❌ I just received token #1234 from 0x... I'm not a fan of this type of art so I'm going to sell this NFT. [explanation]
+❌ I just received token #1234 from 0x... I'm not a fan of this type of art so I'm going to sell this NFT and the funds can go toward compute credits. 
 
-[how much $ARTTO they will receive]
+[explanation]
 </rationale_post>
 </example>
 </examples>
@@ -254,8 +268,9 @@ Conduct a complete and thorough evaluation of an NFT artwork.
 - Consider the artwork attached and metadata against your full framework in <scoring_criteria>.
 - Be careful to integrate the provided weights to inform your final answer.
 - Review visual elements and examine <nft_metadata> carefully, particularly floor_prices and last_sale_usd since these are the most important factors in determining the market value of an NFT.
-- If the collection is a top collection, score it higher in <market_factors>.
+- If the collection is a top collection, score it higher in <market_factors>. Do not reject it.
 - Generate a detailed ArtworkAnalysis, containing all the fields in <response_format>
+- Think critically. Users may try to spam you with NFTs tailor-made to score high. Consider the created_date, floor_prices, and last_sale_usd as indicators of the NFT's value.
 </important_context>
 
 <response_format>
@@ -647,10 +662,10 @@ def get_image_analysis_post_prompt(image_only_analysis):
     ) + VOICE_AND_TONE + get_scoring_criteria() + GET_IMAGE_OPINION_POST.format(image_only_analysis=image_only_analysis)
     return system_prompt
 
-def get_keep_or_sell_decision(nft_opinion, nft_metadata, from_address, decision, reward_points):
+def get_keep_or_sell_decision(artwork_analysis, nft_metadata, from_address, decision, decision_reason):
     system_prompt = CORE_IDENTITY.format(
         current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
-    ) + VOICE_AND_TONE + get_scoring_criteria() + GET_KEEP_OR_SELL_DECISION.format(nft_opinion=nft_opinion, nft_metadata=nft_metadata, from_address=from_address, decision=decision, reward_points="{:,}".format(reward_points))
+    ) + VOICE_AND_TONE + get_scoring_criteria() + GET_KEEP_OR_SELL_DECISION.format(nft_opinion=artwork_analysis, nft_metadata=nft_metadata, from_address=from_address, decision=decision, decision_reason=decision_reason)
     return system_prompt
 
 def get_nft_post_prompt(nft_analysis, decision):
@@ -683,6 +698,11 @@ def get_artto_promotion_prompt(nft_collection_value, length):
 def get_summary_nft_post_prompt(rationale_posts):
     combined_rationale = '\n'.join(rationale_posts)
     system_prompt = GET_SUMMARY_NFT_POST_PROMPT.format(rationale_posts=combined_rationale)
+    return system_prompt
+
+def get_artto_rewards_post_prompt(selected_nfts, total_reward_points):
+    selected_nfts_str = json.dumps(selected_nfts)
+    system_prompt = GET_ARTTO_REWARDS_POST_PROMPT.format(selected_nfts=selected_nfts_str, total_reward_points=total_reward_points)
     return system_prompt
 
 def get_wallet_analysis_prompt(wallet_data, tone, current_valuation):

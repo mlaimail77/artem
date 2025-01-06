@@ -2,6 +2,7 @@ from helpers.utils import *
 from helpers.llm_helpers import *
 from helpers.farcaster_helpers import *
 from helpers.twitter_helpers import *
+from helpers.coinbase_helpers import *
 
 import time
 import random
@@ -23,7 +24,90 @@ POST_CLASSES = {
 def refresh_twitter_token():
     refresh_token()
 
-async def twitter_post_batch_nfts():
+async def post_rewards_summary():
+    print("Running post_rewards_summary")
+    refreshed_token = refresh_token()
+    time_now_utc = datetime.now(timezone.utc)
+    one_day_ago = time_now_utc - timedelta(days=1)
+    one_day_ago_utc_iso = one_day_ago.isoformat()
+    print(one_day_ago_utc_iso)
+    nft_batch = get_artto_reward_batch_post(
+        since_timestamp=one_day_ago_utc_iso
+        )
+    
+    selected_nfts = select_nfts_for_rewards(nft_batch, max_rewards=20)
+
+    if len(selected_nfts) == 0:
+        print("No NFTs to post")
+        return
+    
+    # Calculate total reward points
+    total_reward_points = sum(nft['reward_points'] for nft in selected_nfts)
+    ids = [nft['id'] for nft in selected_nfts]
+
+    summary_post = get_artto_rewards_post(selected_nfts, total_reward_points)
+
+    print("Summary post: ", summary_post)
+
+    image_urls = [nft['image_url'] for nft in selected_nfts]
+    payload = {
+        "text": summary_post
+    }
+
+    if len(image_urls) > 0:
+        payload["media"] = {
+            "media_ids": []
+        }
+        for image_url in random.sample(image_urls, min(4, len(image_urls))):  # Pick 4 random images
+            response = upload_media(image_url)
+            media = response['media']
+            media_ids = media['media_ids'] # array of media ids
+            payload["media"]["media_ids"].extend(media_ids)
+    
+
+    print("Final Payload: ", payload)
+    response = await post_tweet(payload, refreshed_token, parent=None)
+    if response:
+        set_post_created(response)
+
+
+    # Send the tokens
+    for nft in selected_nfts:
+        # Transfer ARTTO tokens to the sender
+        try:
+            artto_wallet_address = os.getenv('WALLET_ID_MAINNET')
+            print("Reward points:", nft['reward_points'])
+
+            response = transfer_artto_token(
+                wallet_mainnet,
+                round(nft['reward_points']),
+                nft['sender_address']
+            )
+
+            print(response)
+
+            set_wallet_activity(
+                event_type="ERC20_TRANSFER",
+                from_address=artto_wallet_address,
+                to_address=nft['sender_address'],
+                token_id="None",
+                network='BASE_MAINNET',
+                contract_address="0x9239e9f9e325e706ef8b89936ece9d48896abbe3",
+                amount=round(nft['reward_points'])
+            )
+        except Exception as e:
+            print(f"Error transferring ARTTO tokens: {str(e)}")
+
+
+
+    update_nft_reward_posts(ids, True)
+
+
+
+async def post_batch_nfts():
+    # Posts a summary post to Twitter and Farcaster
+    # regarding the NFTs that were sent to Artto in the last hour
+
     refreshed_token = refresh_token()
     time_now_utc = datetime.now(timezone.utc)
     one_hour_ago = time_now_utc - timedelta(hours=1)
@@ -77,7 +161,12 @@ async def twitter_post_batch_nfts():
         response = await post_tweet(payload, refreshed_token, parent=None)
         if response:
             set_post_created(response)
+
+        # Post to Farcaster
+        post_long_cast(summary_post)
+
         update_nft_scores(ids, True)
+
     else:
         print("No NFTs to post")
 
@@ -125,9 +214,8 @@ async def reply_to_followers():
         post_params = generate_post_params()
 
         try:
-            reply, scores = await get_reply(tweet, post_params)
-            print(f"Reply: {reply}")
-            print(f"Scores: {scores}")
+            reply, nft_details, score_details = await get_reply(tweet, post_params)
+
             payload = {
                 "text": reply,
                 "reply": {
@@ -139,9 +227,8 @@ async def reply_to_followers():
                 set_post_created(response)
                 set_post_to_ignore(tweet['id'], "parent")
                 replied_authors.add(author_id)
-            if scores:
-                score_calcs = get_total_score(scores["artwork_analysis"])
-                store_nft_scores(scores, score_calcs)
+            if score_details and nft_details:
+                store_nft_scores(score_details, nft_details)
             print("Waiting 10-30 seconds")
             time.sleep(random.randint(10, 30))
         except Exception as e:
@@ -205,10 +292,9 @@ async def post_channel_casts():
     for cast in channel_casts["casts"]:
         cast_details = get_cast_details(cast)
         post_params = generate_post_params()
-        reply, scores = await get_reply(cast_details, post_params)
-        if scores:
-            score_calcs = get_total_score(scores["artwork_analysis"])
-            store_nft_scores(scores, score_calcs)
+        reply, nft_details, score_details = await get_reply(cast_details, post_params)
+        if score_details and nft_details:
+            store_nft_scores(nft_details, score_details)
         react_cast('like', cast["hash"])
         print(reply)
         response = post_long_cast(reply, parent=cast["hash"])
@@ -325,9 +411,8 @@ async def reply_twitter_mentions():
         post_params = generate_post_params()
 
         try:
-            reply, scores = await get_reply(mention, post_params)
-            print(f"Reply: {reply}")
-            print(f"Scores: {scores}")
+            reply, nft_details, score_details = await get_reply(mention, post_params)
+
             payload = {
                 "text": reply,
                 "reply": {
@@ -338,9 +423,8 @@ async def reply_twitter_mentions():
             if response:
                 set_post_created(response)
                 set_post_to_ignore(mention['id'], "parent")
-            if scores:
-                score_calcs = get_total_score(scores["artwork_analysis"])
-                store_nft_scores(scores, score_calcs)
+            if score_details and nft_details:
+                store_nft_scores(nft_details, score_details)
             print("Waiting 10-30 seconds")
             time.sleep(random.randint(10, 30))
         except Exception as e:
@@ -354,10 +438,9 @@ async def post_following_casts():
     for cast in following_casts["casts"]:
         cast_details = get_cast_details(cast)
         post_params = generate_post_params()
-        reply, scores = await get_reply(cast_details, post_params)
-        if scores:
-            score_calcs = get_total_score(scores["artwork_analysis"])
-            store_nft_scores(scores, score_calcs)
+        reply, nft_details, score_details = await get_reply(cast_details, post_params)
+        if score_details and nft_details:
+            store_nft_scores(nft_details, score_details)
         react_cast('like', cast["hash"])
         print(reply)
         response = post_long_cast(reply, parent=cast["hash"])
@@ -370,7 +453,7 @@ async def answer_specific_cast(hash):
     print(cast)
     cast_details = get_cast_details(cast)
     post_params = generate_post_params()
-    reply, scores = await get_reply(cast_details, post_params)
+    reply, nft_details, score_details = await get_reply(cast_details, post_params)
     print(reply)
     react_cast('like', cast["hash"])
     try:
@@ -378,9 +461,8 @@ async def answer_specific_cast(hash):
         print(response)
     except Exception as e:
         print(f"Error posting to Farcaster: {str(e)}")
-    if scores:
-        score_calcs = get_total_score(scores["artwork_analysis"])
-        store_nft_scores(scores, score_calcs)
+    if score_details and nft_details:
+        store_nft_scores(nft_details, score_details)
 
 
 async def post_thought_about_feed(post_on_twitter=True, post_on_farcaster=True):

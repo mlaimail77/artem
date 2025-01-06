@@ -6,6 +6,7 @@ import math
 
 from helpers.nft_data_helpers import *
 from helpers.prompts.llm_prompts import *
+from helpers.artto_decision_helpers import *
 from helpers.scoring_criteria_schema import *
 from helpers.spam_tweet_schema import *
 from helpers.wallet_analysis import *
@@ -77,6 +78,14 @@ def get_wallet_analysis_response(wallet_data, base64_image, tone, current_valuat
 
     return response.choices[0].message.content
 
+def get_artto_rewards_post(selected_nfts, total_reward_points):
+    system_prompt = get_artto_rewards_post_prompt(selected_nfts, total_reward_points)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": system_prompt}],
+    )
+    return response.choices[0].message.content
+
 def get_summary_nft_post(rationale_posts):
     system_prompt = get_summary_nft_post_prompt(rationale_posts)
     response = client.chat.completions.create(
@@ -119,124 +128,10 @@ def adjust_weights(weights, nft_scores):
 
     return new_weights
 
-def get_total_score(artwork_analysis: ArtworkAnalysis, collection_amount = None):
-    SCORE_THRESHOLD = int(os.getenv('SCORE_THRESHOLD', 55))
+async def get_nft_post(artwork_analysis, score_details):
+    print("Running get_nft_post")
 
-    scoring = artwork_analysis.artwork_scoring
-    total_score = (
-        (scoring.technical_innovation.on_chain_data_usage / 3 * scoring.technical_innovation_weight) +
-        (
-            ((scoring.artistic_merit.compositional_strength.visual_balance + scoring.artistic_merit.compositional_strength.color_harmony) / 6 +
-            scoring.artistic_merit.compositional_strength.spatial_organization / 4 +
-            (scoring.artistic_merit.conceptual_depth.thematic_clarity + scoring.artistic_merit.conceptual_depth.cultural_historical_reference) / 6 +
-            scoring.artistic_merit.conceptual_depth.intellectual_complexity / 4) * scoring.artistic_merit_weight / 4
-        ) +
-        (
-            scoring.cultural_resonance.cultural_relevance / 4 +
-            scoring.cultural_resonance.community_engagement / 3 +
-            scoring.cultural_resonance.historical_significance / 3
-        ) * scoring.cultural_resonance_weight / 3 +
-        (
-            scoring.artist_profile.artist_history / 3 +
-            scoring.artist_profile.innovation_trajectory / 4
-        ) * scoring.artist_profile_weight / 2 +
-        (
-            scoring.market_factors.rarity_scarcity +
-            scoring.market_factors.collector_interest +
-            scoring.market_factors.collection_popularity +
-            scoring.market_factors.valuation_floor_price
-        ) / 12 * scoring.market_factors_weight +
-        (
-            (scoring.emotional_impact.emotional_resonance.awe_factor / 4 +
-            scoring.emotional_impact.emotional_resonance.memorability / 3 +
-            scoring.emotional_impact.emotional_resonance.emotional_depth / 3) / 3 +
-            (scoring.emotional_impact.experiential_quality.engagement_level / 4 +
-            scoring.emotional_impact.experiential_quality.wit_humor_play / 3 +
-            scoring.emotional_impact.experiential_quality.surprise_factor / 3) / 3
-        ) * scoring.emotional_impact_weight / 2 +
-        (
-            (scoring.ai_collector_perspective.computational_aesthetics.algorithmic_beauty +
-            scoring.ai_collector_perspective.computational_aesthetics.information_density) / 10 +
-            (scoring.ai_collector_perspective.machine_learning_themes.ai_narrative_elements +
-            scoring.ai_collector_perspective.machine_learning_themes.digital_consciousness_exploration) / 10 +
-            (scoring.ai_collector_perspective.cybernetic_resonance.surveillance_control_systems) / 5
-        ) * scoring.ai_collector_perspective_weight / 3
-    )
-
-    total_weights = (
-        scoring.technical_innovation_weight +
-        scoring.artistic_merit_weight +
-        scoring.cultural_resonance_weight +
-        scoring.artist_profile_weight +
-        scoring.market_factors_weight +
-        scoring.emotional_impact_weight +
-        scoring.ai_collector_perspective_weight
-    )
-
-    if total_score < 1:
-        total_score*=100
-        total_weights*=100
-
-    if total_score > 100:
-        total_score = 100
-
-    decision = "SELL" if total_score < SCORE_THRESHOLD else "ACQUIRE"
-    
-    if total_score > SCORE_THRESHOLD + 10:
-        multiplier = 200
-    elif total_score > SCORE_THRESHOLD:
-        multiplier = 150
-    else:
-        # Multiplier logic for $ARTTO rewards:
-        # - Score > 45: Multiplier = 200 (max reward 20,000 $ARTTO for perfect score)
-        # - Score > 35 but < 45: Multiplier = 150 (rewards between 5,250-6,750 $ARTTO)
-        # - Score < 35: 90% chance of 0 multiplier, 10% chance of random 10-100 multiplier
-        multiplier = 0 if random.random() > 0.1 else random.randint(10, 100)
-
-    collection_decay = 1
-
-    try:
-        decay_factor = get_decay_factor(date.today())
-    except:
-        decay_factor = 1
-
-    # Apply collection amount decay
-    if collection_amount is not None:
-        # Exponential decay function: multiplier * e^(-0.5 * collection_amount)
-        # At 5 NFTs, multiplier is reduced to ~8% of original
-        # At 10 NFTs, multiplier is reduced to ~0.7% of original
-        collection_decay = math.exp(-0.5 * collection_amount)
-
-    print("score_threshold: ", SCORE_THRESHOLD)
-    print("score: ", total_score/total_weights)
-    print("total_score: ", total_score)
-    print("total_weights: ", total_weights)
-    print("decision: ", decision)
-    print("multiplier: ", multiplier)
-    print("decay_factor: ", decay_factor)
-    if collection_amount is not None:
-        print("collection_amount: ", collection_amount)
-        print("collection_decay: ", collection_decay)
-
-    reward_points = round(total_score * multiplier * collection_decay * decay_factor)
-    
-    response = {
-        "total_score": total_score,
-        "total_score_normalized": total_score/total_weights,
-        "total_weights": total_weights,
-        "decision": decision,
-        "multiplier": multiplier,
-        "decay_factor": decay_factor,
-        "reward_points": max(1, reward_points)
-    }
-
-    return response
-
-async def get_nft_post(artwork_analysis: ArtworkAnalysis):
-    response = get_total_score(artwork_analysis)
-
-    decision = response["decision"]
-
+    decision = score_details["decision"]
 
     system_prompt = get_nft_post_prompt(artwork_analysis, decision)
 
@@ -249,19 +144,20 @@ async def get_nft_post(artwork_analysis: ArtworkAnalysis):
 
     return response.choices[0].message.content
 
-async def get_final_decision(nft_opinion, nft_metadata, from_address, total_score = None):
+async def get_final_decision(artwork_analysis, nft_metadata, from_address, score_details = None):
+    decision_reason = ""
 
-    if total_score is None:
-        response = get_total_score(nft_opinion)
+    if score_details is None:
+        response = await get_total_score(artwork_analysis)
         decision = response["decision"]
-        reward_points = response["reward_points"]
+        decision_reason = response["decision_reason"]
     else:
-        decision = total_score["decision"]
-        reward_points = total_score["reward_points"]
+        decision = score_details["decision"]
+        decision_reason = score_details["decision_reason"]
 
     ens_name = get_ens_name(from_address)
 
-    system_prompt = get_keep_or_sell_decision(nft_opinion, nft_metadata, ens_name, decision, reward_points)
+    system_prompt = get_keep_or_sell_decision(artwork_analysis, nft_metadata, ens_name, decision, decision_reason)
 
     response = client.beta.chat.completions.parse(
         model="gpt-4o-mini",
@@ -402,7 +298,7 @@ async def get_reply(cast_details, post_params):
     if cast_details.get("image_url") or cast_details.get("url"):
         print("Generating image opinion")
         reply = await get_image_opinion(cast_details)
-        return (reply, None)
+        return (reply, None, None)
 
     print("Generating reply to text-only cast")
     response = client.chat.completions.create(
@@ -421,27 +317,34 @@ async def get_reply(cast_details, post_params):
             if tool_call.function.name == "get_nft_opinion":
                 print("Tool call: ", tool_call)
                 tool_input = json.loads(tool_call.function.arguments)
-                print("Tool input: ", tool_input)
-                
+                network = tool_input["network"]
+                contract_address = tool_input["contract_address"]
+                token_id = tool_input["token_id"]
+
+                metadata = None
+
                 try:
-                    metadata = await get_nft_metadata(**tool_input)
-                    if not metadata or 'image_small_url' not in metadata:
-                        raise ValueError("NFT metadata missing required image URL")
+                    response = await get_artwork_analysis_and_metadata(network, contract_address, token_id)
+                    artwork_analysis = response["artwork_analysis"]
+                    metadata = response["metadata"]
                 except Exception as e:
                     raise ValueError(f"Failed to fetch NFT metadata: {str(e)}")
-                artwork_analysis = await get_nft_analysis(metadata)
 
-                post = await get_nft_post(artwork_analysis)
-                print(f"metadata: {metadata}")
-
-                scores_object = {
+                nft_details = {
                     "artwork_analysis": artwork_analysis,
                     "image_small_url": metadata["image_small_url"],
-                    "chain": tool_input["network"],
-                    "contract_address": tool_input["contract_address"],
-                    "token_id": tool_input["token_id"]
+                    "chain": network,
+                    "contract_address": contract_address,
+                    "token_id": token_id,
+                    "metadata": metadata
                 }
-                return (post, scores_object)
+
+                score_details = await get_total_score(artwork_analysis, nft_details)
+
+                post = await get_nft_post(artwork_analysis, score_details)
+
+                return (post, nft_details, score_details)
+            
             if tool_call.function.name == "get_roast":
                 print("Tool call: ", tool_call)
                 tool_input = json.loads(tool_call.function.arguments)
@@ -454,9 +357,9 @@ async def get_reply(cast_details, post_params):
                 os.remove(response["temp_image_path"])
                 analysis = get_wallet_analysis_response(wallet_data, response["base64_image"], tone_default, current_valuation)
 
-                return (analysis, None)
+                return (analysis, None, None)
 
-    return (response.choices[0].message.content, None)
+    return (response.choices[0].message.content, None, None)
 
 async def get_scheduled_post(post_type, post_params, previous_posts="No recent posts", additional_context="None"):
     system_prompt = get_scheduled_post_prompt(post_type, post_params, previous_posts, additional_context)

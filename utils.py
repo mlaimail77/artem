@@ -38,6 +38,12 @@ def create_app() -> Flask:
                     "schedule": crontab(minute=5, hour='9,21')
                 },
 
+                # Rewards Summary at 12:40
+                "post_rewards_summary_every_12_hours": {
+                    "task": "post_rewards_summary",
+                    "schedule": crontab(minute=40, hour='12')
+                },
+
                 # Farcaster Only
                 "post_channel_casts_every_2_hours": {
                     "task": "post_channel_casts",
@@ -62,9 +68,8 @@ def create_app() -> Flask:
                     "schedule": crontab(minute=12, hour='20')
                 },
 
-                # Twitter Only
-                "twitter_post_batch_nfts_every_1_hour": {
-                    "task": "twitter_post_batch_nfts",
+                "post_batch_nfts_every_1_hour": {
+                    "task": "post_batch_nfts",
                     "schedule": crontab(minute=10, hour='*/1')
                 },
 
