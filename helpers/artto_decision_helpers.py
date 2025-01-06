@@ -9,6 +9,8 @@ from helpers.scoring_criteria_schema import *
 from helpers.nft_data_helpers import *
 from helpers.basescan_helpers import *
 
+
+
 def calculate_score(scoring: ScoringCriteria):
     total_score = (
         (scoring.technical_innovation.on_chain_data_usage / 3 * scoring.technical_innovation_weight) +
@@ -166,16 +168,21 @@ async def get_artwork_analysis_and_metadata(network, contract_address, token_id)
     
 
 
-async def get_total_score(artwork_analysis: ArtworkAnalysis, scores_object = None, sender_address = None):
+async def get_total_score(artwork_analysis: ArtworkAnalysis, nft_details = None, sender_address = None):
     """
     Get the total score for a given NFT
     """
-
+    print("Running get_total_score")
     collection_amount = 0
+    metadata = None
+    last_sale_usd = None
 
-    if scores_object is not None:
-        image_url = scores_object["image_small_url"]
-        contract_address = scores_object["contract_address"]
+    if nft_details is not None:
+        image_url = nft_details["image_small_url"]
+        contract_address = nft_details["contract_address"]
+        metadata = nft_details["metadata"]
+        if metadata is not None:
+            last_sale_usd = metadata["last_sale_usd"]
 
         existing_nfts_with_image = count_image_url_exists(image_url)
         existing_nfts_with_contract = get_unique_nfts_count(contract_address)
@@ -202,17 +209,15 @@ async def get_total_score(artwork_analysis: ArtworkAnalysis, scores_object = Non
     )
 
     decision = "SELL" if total_score < SCORE_THRESHOLD else "ACQUIRE"
-    
+    decision_reason = "Score is below threshold" if total_score < SCORE_THRESHOLD else "Score is above threshold"
+
+    multiplier_min = int(os.getenv('MULTIPLIER_MIN', 10))
+    multiplier_max = int(os.getenv('MULTIPLIER_MAX', 50))
     if total_score > SCORE_THRESHOLD:
-        # Smooth curve from 100 to 150 for scores above threshold
         score_above = total_score - SCORE_THRESHOLD
-        multiplier = 100 + (50 * (1 - math.exp(-0.1 * score_above)))
+        multiplier = multiplier_min + (multiplier_max - multiplier_min) * (1 - math.exp(-0.1 * score_above))
     else:
-        # Multiplier logic for $ARTTO rewards:
-        # - Score > 45: Multiplier = 200 (max reward 20,000 $ARTTO for perfect score)
-        # - Score > 35 but < 45: Multiplier = 150 (rewards between 5,250-6,750 $ARTTO)
-        # - Score < 35: 90% chance of 0 multiplier, 10% chance of random 10-100 multiplier
-        multiplier = 0 if random.random() > 0.1 else random.randint(10, 100)
+        multiplier = 0 if random.random() > 0.1 else random.randint(10, multiplier_max)
 
     collection_amount_decay = 1
 
@@ -227,6 +232,11 @@ async def get_total_score(artwork_analysis: ArtworkAnalysis, scores_object = Non
         # At 5 NFTs, multiplier is reduced to ~0.7% of original
         # At 10 NFTs, multiplier is reduced to ~0.005% of original
         collection_amount_decay = math.exp(-1.0 * collection_amount)
+        if collection_amount >= 3:
+            decision = "SELL"
+            decision_reason = f"Already have {collection_amount} of this NFT in collection"
+
+    flag_as_suspicious = False
 
     print("score_threshold: ", SCORE_THRESHOLD)
     print("score: ", total_score/total_weights)
@@ -235,13 +245,19 @@ async def get_total_score(artwork_analysis: ArtworkAnalysis, scores_object = Non
     print("decision: ", decision)
     print("multiplier: ", multiplier)
     print("decay_factor: ", decay_factor)
+    print("decision_reason: ", decision_reason)
     if collection_amount is not None:
+        if collection_amount > 10:
+            flag_as_suspicious = True
         print("collection_amount: ", collection_amount)
         print("collection_decay: ", collection_amount_decay)
 
     reward_points = round(total_score * multiplier * collection_amount_decay * decay_factor)
-    
+    print("reward_points: ", reward_points)
+
+    source = "simple-analysis"
     if sender_address is not None:
+        source = "donation"
         time_now_utc = datetime.now(timezone.utc)
 
         # Check last 7 days
@@ -262,25 +278,29 @@ async def get_total_score(artwork_analysis: ArtworkAnalysis, scores_object = Non
 
         if tokens_1h > hourly_limit:
             print(f"Hourly token limit exceeded ({tokens_1h} > {hourly_limit}). Setting reward points to 0.")
-            reward_points = 0
+            reward_points = 0   
+            flag_as_suspicious = True
         elif tokens_7d > weekly_limit:
             print(f"Weekly token limit exceeded ({tokens_7d} > {weekly_limit}). Setting reward points to 0.")
             reward_points = 0
+            flag_as_suspicious = True
         elif total_tokens > total_limit:
             print(f"Total tokens {total_tokens} exceeds cap of {total_limit}. Setting reward points to 0.")
             reward_points = 0
-        
-        sender_wallet_creation = get_first_transaction_timestamp(sender_address)
-        if sender_wallet_creation is not None:
-            sender_wallet_age = (time_now_utc - datetime.fromtimestamp(sender_wallet_creation, tz=timezone.utc)).total_seconds() / (3600 * 24)
-            print(f"Sender wallet age: {sender_wallet_age} days")
+            flag_as_suspicious = True
 
-        if sender_wallet_age < int(os.getenv('WALLET_AGE_MINIMUM')):
-            print(f"Sender wallet age {sender_wallet_age} days is less than minimum {os.getenv('WALLET_AGE_MINIMUM')} days, setting reward points to 0.")
-            reward_points = 0
-            total_score = 0
-            decision = "SELL"
-            multiplier = 0
+        if last_sale_usd is not None and last_sale_usd < 100:
+            sender_wallet_creation = get_first_transaction_timestamp(sender_address)
+            if sender_wallet_creation is not None:
+                sender_wallet_age = (time_now_utc - datetime.fromtimestamp(sender_wallet_creation, tz=timezone.utc)).total_seconds() / (3600 * 24)
+                print(f"Sender wallet age: {sender_wallet_age} days")
+
+            if sender_wallet_age < int(os.getenv('WALLET_AGE_MINIMUM')):
+                print(f"Sender wallet age {sender_wallet_age} days is less than minimum {os.getenv('WALLET_AGE_MINIMUM')} days, setting reward points to 0.")
+                reward_points = 0
+                total_score = 0
+                multiplier = 0
+                flag_as_suspicious = True
 
 
     response = {
@@ -288,9 +308,49 @@ async def get_total_score(artwork_analysis: ArtworkAnalysis, scores_object = Non
         "total_score_normalized": total_score/total_weights,
         "total_weights": total_weights,
         "decision": decision,
+        "decision_reason": decision_reason,
         "multiplier": multiplier,
         "decay_factor": decay_factor,
-        "reward_points": max(1, reward_points)
+        "reward_points": max(1, reward_points),
+        "flag_as_suspicious": flag_as_suspicious,
+        "source": source,
+        "sender_address": str(sender_address)
     }
 
     return response
+
+
+def select_nfts_for_rewards(nft_data, max_rewards=10):
+    # Calculate the number of NFTs to select based on submissions
+    submissions_count = len(nft_data)
+    nfts_to_select = min(max(3, submissions_count // 2), max_rewards)
+
+    # Filter out duplicate image_urls and contract addresses
+    unique_images = {}
+    unique_contracts = {}
+    selected_nfts = []
+    
+    for nft in nft_data:
+        image_url = nft['image_url']
+        contract_address = nft['contract_address']
+        
+        if (image_url not in unique_images and 
+            contract_address not in unique_contracts):
+            
+            selected_nft = {
+                'id': nft['id'],
+                'rationale_post': nft['rationale_post'],
+                'image_url': nft['image_url'],
+                'reward_points': nft['reward_points']
+            }
+            unique_images[image_url] = selected_nft
+            unique_contracts[contract_address] = selected_nft
+            selected_nfts.append(selected_nft)
+            
+            if len(selected_nfts) >= nfts_to_select:
+                break
+                
+    # Sort by reward points in descending order
+    selected_nfts.sort(key=lambda x: x['reward_points'], reverse=True)
+    
+    return selected_nfts[:nfts_to_select]

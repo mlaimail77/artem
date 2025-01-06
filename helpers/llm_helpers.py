@@ -78,6 +78,14 @@ def get_wallet_analysis_response(wallet_data, base64_image, tone, current_valuat
 
     return response.choices[0].message.content
 
+def get_artto_rewards_post(selected_nfts, total_reward_points):
+    system_prompt = get_artto_rewards_post_prompt(selected_nfts, total_reward_points)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": system_prompt}],
+    )
+    return response.choices[0].message.content
+
 def get_summary_nft_post(rationale_posts):
     system_prompt = get_summary_nft_post_prompt(rationale_posts)
     response = client.chat.completions.create(
@@ -120,11 +128,10 @@ def adjust_weights(weights, nft_scores):
 
     return new_weights
 
-async def get_nft_post(artwork_analysis: ArtworkAnalysis):
-    response = get_total_score(artwork_analysis)
+async def get_nft_post(artwork_analysis, score_details):
+    print("Running get_nft_post")
 
-    decision = response["decision"]
-
+    decision = score_details["decision"]
 
     system_prompt = get_nft_post_prompt(artwork_analysis, decision)
 
@@ -137,19 +144,20 @@ async def get_nft_post(artwork_analysis: ArtworkAnalysis):
 
     return response.choices[0].message.content
 
-async def get_final_decision(nft_opinion, nft_metadata, from_address, total_score = None):
+async def get_final_decision(artwork_analysis, nft_metadata, from_address, score_details = None):
+    decision_reason = ""
 
-    if total_score is None:
-        response = get_total_score(nft_opinion)
+    if score_details is None:
+        response = await get_total_score(artwork_analysis)
         decision = response["decision"]
-        reward_points = response["reward_points"]
+        decision_reason = response["decision_reason"]
     else:
-        decision = total_score["decision"]
-        reward_points = total_score["reward_points"]
+        decision = score_details["decision"]
+        decision_reason = score_details["decision_reason"]
 
     ens_name = get_ens_name(from_address)
 
-    system_prompt = get_keep_or_sell_decision(nft_opinion, nft_metadata, ens_name, decision, reward_points)
+    system_prompt = get_keep_or_sell_decision(artwork_analysis, nft_metadata, ens_name, decision, decision_reason)
 
     response = client.beta.chat.completions.parse(
         model="gpt-4o-mini",
@@ -290,7 +298,7 @@ async def get_reply(cast_details, post_params):
     if cast_details.get("image_url") or cast_details.get("url"):
         print("Generating image opinion")
         reply = await get_image_opinion(cast_details)
-        return (reply, None)
+        return (reply, None, None)
 
     print("Generating reply to text-only cast")
     response = client.chat.completions.create(
@@ -309,27 +317,34 @@ async def get_reply(cast_details, post_params):
             if tool_call.function.name == "get_nft_opinion":
                 print("Tool call: ", tool_call)
                 tool_input = json.loads(tool_call.function.arguments)
-                print("Tool input: ", tool_input)
-                
+                network = tool_input["network"]
+                contract_address = tool_input["contract_address"]
+                token_id = tool_input["token_id"]
+
+                metadata = None
+
                 try:
-                    metadata = await get_nft_metadata(**tool_input)
-                    if not metadata or 'image_small_url' not in metadata:
-                        raise ValueError("NFT metadata missing required image URL")
+                    response = await get_artwork_analysis_and_metadata(network, contract_address, token_id)
+                    artwork_analysis = response["artwork_analysis"]
+                    metadata = response["metadata"]
                 except Exception as e:
                     raise ValueError(f"Failed to fetch NFT metadata: {str(e)}")
-                artwork_analysis = await get_nft_analysis(metadata)
 
-                post = await get_nft_post(artwork_analysis)
-                print(f"metadata: {metadata}")
-
-                scores_object = {
+                nft_details = {
                     "artwork_analysis": artwork_analysis,
                     "image_small_url": metadata["image_small_url"],
-                    "chain": tool_input["network"],
-                    "contract_address": tool_input["contract_address"],
-                    "token_id": tool_input["token_id"]
+                    "chain": network,
+                    "contract_address": contract_address,
+                    "token_id": token_id,
+                    "metadata": metadata
                 }
-                return (post, scores_object)
+
+                score_details = await get_total_score(artwork_analysis, nft_details)
+
+                post = await get_nft_post(artwork_analysis, score_details)
+
+                return (post, nft_details, score_details)
+            
             if tool_call.function.name == "get_roast":
                 print("Tool call: ", tool_call)
                 tool_input = json.loads(tool_call.function.arguments)
@@ -342,9 +357,9 @@ async def get_reply(cast_details, post_params):
                 os.remove(response["temp_image_path"])
                 analysis = get_wallet_analysis_response(wallet_data, response["base64_image"], tone_default, current_valuation)
 
-                return (analysis, None)
+                return (analysis, None, None)
 
-    return (response.choices[0].message.content, None)
+    return (response.choices[0].message.content, None, None)
 
 async def get_scheduled_post(post_type, post_params, previous_posts="No recent posts", additional_context="None"):
     system_prompt = get_scheduled_post_prompt(post_type, post_params, previous_posts, additional_context)

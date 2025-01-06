@@ -54,6 +54,8 @@ def get_wallet_info(wallet_address):
     valuable_nft_data = get_nfts_by_token_list(valuable_nfts_to_analyze)['nfts']
     random_nft_data = get_nfts_by_token_list(random_nfts_to_analyze)['nfts']
 
+    # Trait Floor Prices by NFT
+
     # Map NFT images to their collection IDs for both valuable and recent collections
     for nft in valuable_nft_data + random_nft_data:
         for collection in most_valuable_collections + random_collections:

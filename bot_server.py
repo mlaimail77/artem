@@ -92,12 +92,10 @@ async def analyze_nft():
     scores = None
     reply = None
     try:
-        reply, scores = await get_reply(cast_details, post_params)
-        if scores:
-
-            score_calcs = get_total_score(scores["artwork_analysis"], scores)
-            store_nft_scores(scores, score_calcs)
-        return jsonify({'analysis': reply, 'score_calcs': score_calcs})
+        reply, nft_details, score_details = await get_reply(cast_details, post_params)
+        if score_details and nft_details:
+            store_nft_scores(nft_details, score_details)
+        return jsonify({'analysis': reply, 'score_calcs': score_details})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
