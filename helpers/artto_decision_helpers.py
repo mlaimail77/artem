@@ -294,13 +294,12 @@ async def get_total_score(artwork_analysis: ArtworkAnalysis, nft_details = None,
             if sender_wallet_creation is not None:
                 sender_wallet_age = (time_now_utc - datetime.fromtimestamp(sender_wallet_creation, tz=timezone.utc)).total_seconds() / (3600 * 24)
                 print(f"Sender wallet age: {sender_wallet_age} days")
-
-            if sender_wallet_age < int(os.getenv('WALLET_AGE_MINIMUM')):
-                print(f"Sender wallet age {sender_wallet_age} days is less than minimum {os.getenv('WALLET_AGE_MINIMUM')} days, setting reward points to 0.")
-                reward_points = 0
-                total_score = 0
-                multiplier = 0
-                flag_as_suspicious = True
+                if sender_wallet_age < int(os.getenv('WALLET_AGE_MINIMUM')):
+                    print(f"Sender wallet age {sender_wallet_age} days is less than minimum {os.getenv('WALLET_AGE_MINIMUM')} days, setting reward points to 0.")
+                    reward_points = 0
+                    total_score = 0
+                    multiplier = 0
+                    flag_as_suspicious = True
 
 
     response = {
