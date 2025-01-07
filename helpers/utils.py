@@ -551,10 +551,10 @@ def set_post_created(post):
 
 def get_unique_nfts_count(contract_address):
     response = refresh_or_get_supabase_client()
-    response = supabase.table("nft_scores").select("id").eq("contract_address", contract_address).execute()
+    response = supabase.table("nft_scores").select("image_url").eq("contract_address", contract_address).execute()
     
     if response.data:
-        unique_ids = set(item['id'] for item in response.data)
+        unique_ids = set(item['image_url'] for item in response.data)
         return len(unique_ids)
     return 0
 
