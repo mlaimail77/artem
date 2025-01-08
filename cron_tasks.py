@@ -156,13 +156,25 @@ async def post_batch_nfts():
     one_hour_ago = time_now_utc - timedelta(hours=1)
     one_hour_ago_utc_iso = one_hour_ago.isoformat()
     print(one_hour_ago_utc_iso)
+    # Get initial NFT batch
     nft_batch = get_nft_batch_post(
         since_timestamp=one_hour_ago_utc_iso
-        )
+    )
+    
+    # Filter out duplicate image URLs while preserving order
+    seen_urls = set()
+    unique_nft_batch = []
+    for nft in nft_batch:
+        if nft['image_url'] not in seen_urls:
+            seen_urls.add(nft['image_url'])
+            unique_nft_batch.append(nft)
+    
+    nft_batch = unique_nft_batch
     
     # Count number of NFTs in batch
     nft_batch_count = len(nft_batch)
     print(f"Number of NFTs in batch: {nft_batch_count}")
+
 
     # Collect all rationale posts from NFT batch
     rationale_posts = []
