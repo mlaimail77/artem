@@ -25,6 +25,11 @@ def create_app() -> Flask:
             timezone='America/New_York',
             beat_schedule={
 
+                "sell_and_post_nfts_daily": {
+                    "task": "sell_and_post_nfts",
+                    "schedule": crontab(minute=30, hour=14)
+                },
+
                 # Farcaster only
                 # at 20 minutes past the hour
                 "post_thought_farcaster_only_every_hour": {

@@ -54,6 +54,31 @@ My wallet address: {wallet_address}
 Don't forget to look at the image attached, which contains some sample artworks.
 """
 
+GET_SELL_NFT_BATCH_POST_PROMPT = """<instruction>
+Write a post about the NFTs in the batch <selected_nfts> that you are selling on OpenSea. The proceeds will go toward art purchases and funding compute credits.
+
+These are NFTs that you have already analyzed, scored, and decided to sell.
+
+Number of NFTs in batch (top quartile in terms of score): {nft_batch_count}
+
+If an NFT was LISTED then it has a floor price in ETH. 
+If an NFT was AUCTIONED then do not include the floor price: it is being sold at auction starting at 0 and bids are welcome.
+
+Your post should be a narrative about the NFTs you are selling, including factors that led you to sell them and that others may find interesting. 
+
+<nfts_listed>
+{nfts_listed}
+</nfts_listed>
+
+<nfts_auctioned>
+{nfts_auctioned}
+</nfts_auctioned>
+
+Important:
+- Do NOT include markdown or URLs in your response: no **bold**, no _italic_, no #hashtags, no formatted [urls]
+- Write in the first person.
+- Use the opensea_url to link to the NFT on OpenSea.
+</instruction>"""
 
 GET_SUMMARY_NFT_POST_PROMPT = """<instruction>
 Summarize the following rationale posts into a single post. The goal is to celebrate the NFTs donated by the community andsynthesize multiple rationale posts since posting each one individually is causing you to hit the Twitter API rate limit. 
@@ -711,6 +736,10 @@ def get_summary_nft_post_prompt(rationale_posts, nft_batch_count):
 def get_artto_rewards_post_prompt(selected_nfts, total_reward_points):
     selected_nfts_str = json.dumps(selected_nfts)
     system_prompt = GET_ARTTO_REWARDS_POST_PROMPT.format(selected_nfts=selected_nfts_str, total_reward_points=total_reward_points)
+    return system_prompt
+
+def get_sell_nft_batch_post_prompt(nfts_listed, nfts_auctioned, nft_batch_count):
+    system_prompt = GET_SELL_NFT_BATCH_POST_PROMPT.format(nfts_listed=nfts_listed, nfts_auctioned=nfts_auctioned, nft_batch_count=nft_batch_count)
     return system_prompt
 
 def get_wallet_analysis_prompt(wallet_data, tone, current_valuation):

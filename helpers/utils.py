@@ -94,6 +94,64 @@ def refresh_or_get_supabase_client():
             print(f"Error getting new session: {str(e)}")
     return supabase
 
+def update_nft_scores_status(nft_ids, status):
+    """
+    Update the status field for multiple NFT records in nft_scores table
+    
+    Args:
+        nft_ids (list): List of NFT IDs to update
+        status (str): New status value to set
+        
+    Returns:
+        dict: Response from Supabase update operation
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        result = supabase.table("nft_scores") \
+            .update({"status": status}) \
+            .in_("id", nft_ids) \
+            .execute()
+        return result.data
+    except Exception as e:
+        print(f"Error updating NFT scores status: {str(e)}")
+        return None
+
+
+def get_nfts_to_sell(since_timestamp=None, max_amount=50):
+    """
+    Get NFTs from nft_scores table that were marked for selling
+    
+    Args:
+        since_timestamp: Optional timestamp to filter scores from. If not provided,
+                        returns oldest NFTs first
+        max_amount: Maximum number of NFTs to return (default 50)
+        
+    Returns:
+        list: NFT score records marked for selling
+    """
+    response = refresh_or_get_supabase_client()
+    
+    # Build query
+    query = supabase.table("nft_scores") \
+        .select("*") \
+        .eq("decision", "SELL") \
+        .is_("status", None)
+        
+    if since_timestamp:
+        # Get newer NFTs if timestamp provided
+        query = query.gte("timestamp", since_timestamp) \
+            .order("timestamp", desc=True)
+    else:
+        # Get oldest NFTs first if no timestamp
+        query = query.order("timestamp", desc=False)
+        
+    query = query.limit(max_amount)
+    
+    result = query.execute()
+    
+    return result.data
+
 
 def get_full_scoring_criteria():
     from helpers.prompts.scoring_criteria import SCORING_CRITERIA_TEMPLATE

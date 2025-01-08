@@ -175,3 +175,4 @@ helpers/.DS_Store
 
 *.jpg
 opensea_poc.py
+test_sell.py

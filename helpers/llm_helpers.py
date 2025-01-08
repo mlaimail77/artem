@@ -51,6 +51,39 @@ tools = [
     }
 ]
 
+def get_sell_nft_batch_post(nft_batch):
+    filtered_batch = []
+    for nft in nft_batch:
+        filtered_nft = {
+            'received_timestamp': nft.get('timestamp', ''),
+            'analysis_text': nft.get('analysis_text', ''),
+            'decision_reason': nft.get('decision_reason', ''),
+            'floor_price_in_eth': nft.get('floor_price', 0),
+            'sender_address': nft.get('sender_address', ''),
+            'network': nft.get('network', ''),
+            'contract_address': nft.get('contract_address', ''), 
+            'token_id': nft.get('token_id', ''),
+            'total_score': nft.get('total_score', ''),
+            'listing_type': nft.get('listing_type', ''),
+            'opensea_url': nft.get('opensea_url', '')
+        }
+        filtered_batch.append(filtered_nft)
+
+    # Split NFTs into listed and auctioned batches
+    nfts_listed = [nft for nft in filtered_batch if nft['listing_type'] == 'LISTED']
+    nfts_auctioned = [nft for nft in filtered_batch if nft['listing_type'] == 'AUCTIONED']
+
+    # Convert to strings
+    nfts_listed_str = json.dumps(nfts_listed, indent=2) if nfts_listed else "None"
+    nfts_auctioned_str = json.dumps(nfts_auctioned, indent=2) if nfts_auctioned else "None"
+
+    system_prompt = get_sell_nft_batch_post_prompt(nfts_listed_str, nfts_auctioned_str, len(filtered_batch))
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": system_prompt}],
+    )
+    return response.choices[0].message.content
+
 def get_wallet_analysis_response(wallet_data, base64_image, tone, current_valuation):
     system_prompt, user_prompt = get_wallet_analysis_prompt(wallet_data, tone, current_valuation)
     response = client.chat.completions.create(

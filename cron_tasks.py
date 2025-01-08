@@ -3,6 +3,7 @@ from helpers.llm_helpers import *
 from helpers.farcaster_helpers import *
 from helpers.twitter_helpers import *
 from helpers.coinbase_helpers import *
+from helpers.artto_actions_helpers import *
 
 import time
 import random
@@ -23,6 +24,48 @@ POST_CLASSES = {
 
 def refresh_twitter_token():
     refresh_token()
+
+async def sell_and_post_nfts():
+    refreshed_token = refresh_token()
+
+    print("Running sell_and_post_nfts")
+    nfts_to_sell = random.randint(5, 20)
+
+    nft_batch = await get_nft_batch_for_sale(max_amount=nfts_to_sell)
+
+    print(f"NFT batch with floor prices: {len(nft_batch)}")
+
+    top_quartile = get_top_quartile(nft_batch)
+
+    print(f"Top quartile: {len(top_quartile)}")
+
+    processed_batch = await sell_batch_process(top_quartile)
+
+    print(f"Processed batch: {len(processed_batch)}")
+
+    post = get_sell_nft_batch_post(processed_batch)
+    print(post)
+
+    image_urls = [nft['image_url'] for nft in processed_batch]
+    payload = {
+        "text": post
+    }
+
+    if len(image_urls) > 0:
+        payload["media"] = {
+            "media_ids": []
+        } 
+        for image_url in random.sample(image_urls, min(4, len(image_urls))):  # Pick 4 random images
+            response = upload_media(image_url)
+            media = response['media']
+            media_ids = media['media_ids'] # array of media ids
+            payload["media"]["media_ids"].extend(media_ids)
+
+    print("Final Payload: ", payload)
+    response = await post_tweet(payload, refreshed_token, parent=None)
+    if response:
+        set_post_created(response)
+    post_long_cast(post)
 
 async def post_rewards_summary():
     print("Running post_rewards_summary")
