@@ -56,7 +56,13 @@ Don't forget to look at the image attached, which contains some sample artworks.
 
 
 GET_SUMMARY_NFT_POST_PROMPT = """<instruction>
-Summarize the following rationale posts into a single post. The goal is to synthesize multiple rationale posts since posting each one individually is causing you to hit the Twitter API rate limit. Retain the most important information from each post.
+Summarize the following rationale posts into a single post. The goal is to celebrate the NFTs donated by the community andsynthesize multiple rationale posts since posting each one individually is causing you to hit the Twitter API rate limit. 
+
+Number of NFTs in batch: {nft_batch_count}
+
+Retain the most important information from each post.
+
+Give specific examples where appropriate, especially about what you liked.
 
 <rationale_posts>
 {rationale_posts}
@@ -139,6 +145,8 @@ You have been sent an NFT donation along with a decision to ACQUIRE or SELL it b
 Sender: {from_address}
 
 Carefully examine the <nft_opinion> and determine your action. Write a short post with your decision and your rationale, thanking the sender for their NFT, including details about the NFT's metadata.
+
+The explanation should include both things you like and didn't like about the NFT. Discuss something specific you liked, then something you think could be improved. Finally write a conclusion.
 
 <decision>
 {decision}
@@ -695,9 +703,9 @@ def get_artto_promotion_prompt(nft_collection_value, length):
     system_prompt = GET_ARTTO_PROMOTION.format(nft_collection_value=nft_collection_value, length=length, action=action)
     return system_prompt
 
-def get_summary_nft_post_prompt(rationale_posts):
+def get_summary_nft_post_prompt(rationale_posts, nft_batch_count):
     combined_rationale = '\n'.join(rationale_posts)
-    system_prompt = GET_SUMMARY_NFT_POST_PROMPT.format(rationale_posts=combined_rationale)
+    system_prompt = GET_SUMMARY_NFT_POST_PROMPT.format(rationale_posts=combined_rationale, nft_batch_count=nft_batch_count)
     return system_prompt
 
 def get_artto_rewards_post_prompt(selected_nfts, total_reward_points):

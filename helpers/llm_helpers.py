@@ -86,8 +86,8 @@ def get_artto_rewards_post(selected_nfts, total_reward_points):
     )
     return response.choices[0].message.content
 
-def get_summary_nft_post(rationale_posts):
-    system_prompt = get_summary_nft_post_prompt(rationale_posts)
+def get_summary_nft_post(rationale_posts, nft_batch_count):
+    system_prompt = get_summary_nft_post_prompt(rationale_posts, nft_batch_count)
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "system", "content": system_prompt}],

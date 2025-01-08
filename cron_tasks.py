@@ -35,7 +35,7 @@ async def post_rewards_summary():
         since_timestamp=one_day_ago_utc_iso
         )
     
-    selected_nfts = select_nfts_for_rewards(nft_batch, max_rewards=20)
+    selected_nfts = select_nfts_for_rewards(nft_batch, max_rewards=10)
 
     if len(selected_nfts) == 0:
         print("No NFTs to post")
@@ -117,6 +117,10 @@ async def post_batch_nfts():
         since_timestamp=one_hour_ago_utc_iso
         )
     
+    # Count number of NFTs in batch
+    nft_batch_count = len(nft_batch)
+    print(f"Number of NFTs in batch: {nft_batch_count}")
+
     # Collect all rationale posts from NFT batch
     rationale_posts = []
     ids = []
@@ -154,7 +158,7 @@ async def post_batch_nfts():
             }
 
         else:
-            summary_post = get_summary_nft_post(rationale_posts)
+            summary_post = get_summary_nft_post(rationale_posts, nft_batch_count)
             payload["text"] = summary_post
 
         print("Final Payload: ", payload)

@@ -9,8 +9,6 @@ from helpers.scoring_criteria_schema import *
 from helpers.nft_data_helpers import *
 from helpers.basescan_helpers import *
 
-
-
 def calculate_score(scoring: ScoringCriteria):
     total_score = (
         (scoring.technical_innovation.on_chain_data_usage / 3 * scoring.technical_innovation_weight) +
