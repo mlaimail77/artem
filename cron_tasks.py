@@ -4,6 +4,7 @@ from helpers.farcaster_helpers import *
 from helpers.twitter_helpers import *
 from helpers.coinbase_helpers import *
 from helpers.artto_actions_helpers import *
+from helpers.openrouter_helpers import *
 
 import time
 import random
@@ -21,6 +22,15 @@ POST_CLASSES = {
     "random_thoughts": 0.2,
     "shitpost": 0.1
 }
+
+def check_balance_and_top_up():
+    TOP_UP_AMOUNT = 10
+    print("Checking OpenRouter balance")
+    balance = get_openrouter_balance()
+    if balance['need_top_up']:
+        print("Need to top up OpenRouter balance")
+        response = purchase_openrouter_credits(TOP_UP_AMOUNT)
+        print(response)
 
 def refresh_twitter_token():
     refresh_token()

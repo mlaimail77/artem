@@ -30,52 +30,53 @@ def get_openrouter_balance():
         print(f"Error fetching OpenRouter balance: {str(e)}")
         return None
 
-def get_credit_purchase_calldata(amount: float, sender: str = os.getenv('ARTTO_ADDRESS_MAINNET'), chain_id: int = 8453):
+def purchase_openrouter_credits(amount_usd, bearer_token=os.getenv('OPENSEA_ARTTO_SERVER_BEARER_TOKEN'), endpoint=None):
     """
-    Gets the calldata needed to purchase OpenRouter API credits.
+    Purchases OpenRouter credits.
     
     Args:
-        amount (float): Amount of credits to purchase in USD (max $2000)
-        sender (str): Wallet address that will send the transaction
-        chain_id (int): Chain ID of the network to use. Default is Base (8453).
-                       Also supports Ethereum (1) and Polygon (137).
-    
+        amount_usd (int): Amount in USD to purchase
+        
     Returns:
-        dict: Response data containing charge details and transaction data
+        dict: Response from the OpenSea endpoint
         None: If the request fails
     """
-    url = "https://openrouter.ai/api/v1/credits/coinbase"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}"
-    }
+    if endpoint is None:
+        endpoint = "http://artto-opensea:10000/fund-openrouter"
     
+    headers = {
+        "Authorization": f"Bearer {bearer_token}",
+        "Content-Type": "application/json"
+    }
+
     payload = {
-        "amount": amount,
-        "sender": sender,
-        "chain_id": chain_id
+        "amount_usd": amount_usd
     }
 
     try:
-        response = requests.post(url, headers=headers, json=payload)
+        print("Making request to: ", endpoint)
+        print("Headers: ", headers)
+        print("Payload: ", payload)
+        response = requests.post(endpoint, headers=headers, json=payload)
+        print("Response: ", response)
         if response.status_code == 200:
-            return response.json().get("data")
+            print(f"Successfully purchased {amount_usd} credits")
+            return response.json()
         return None
     except Exception as e:
-        print(f"Error getting credit purchase calldata: {str(e)}")
+        print(f"Error purchasing OpenRouter credits: {str(e)}")
         return None
 
 
 if __name__ == "__main__":
 
     # # Example usage
-    # balance = get_openrouter_balance()
-    # print(f"Current OpenRouter balance: {balance}")
+    balance = get_openrouter_balance()
+    print(f"Current OpenRouter balance: {balance}")
+    TOP_UP_AMOUNT = 10
+    print("Need to top up OpenRouter balance")
+    response = purchase_openrouter_credits(TOP_UP_AMOUNT, endpoint="http://localhost:3001/fund-openrouter")
+    print(response)
 
-    amount = 10  # $10 USD
-    calldata = get_credit_purchase_calldata(amount)
-    if calldata:
-        print(f"Credit purchase calldata: {calldata}")
-    else:
-        print("Failed to get credit purchase calldata")
+
         

@@ -30,7 +30,7 @@ CHAIN_IDS = {
     "b3_sepolia": "B3Sepolia"
 }
 
-def make_opensea_listing(chain, token_address, token_id, amount, bearer_token, endpoint=None):
+def make_opensea_listing(chain, token_address, token_id, amount, bearer_token=os.getenv('OPENSEA_ARTTO_SERVER_BEARER_TOKEN'), endpoint=None):
     """
     Creates a listing on OpenSea through private endpoint
     
@@ -76,7 +76,7 @@ def make_opensea_listing(chain, token_address, token_id, amount, bearer_token, e
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
 
-def make_opensea_auction(chain, token_address, token_id, amount, bearer_token, endpoint=None):
+def make_opensea_auction(chain, token_address, token_id, amount, bearer_token=os.getenv('OPENSEA_ARTTO_SERVER_BEARER_TOKEN'), endpoint=None):
     """
     Creates an auction listing on OpenSea through private endpoint
     
@@ -126,7 +126,7 @@ def make_opensea_auction(chain, token_address, token_id, amount, bearer_token, e
         return {"error": str(e)}
 
 
-def make_opensea_offer(chain, token_address, token_id, amount, bearer_token, endpoint=None):
+def make_opensea_offer(chain, token_address, token_id, amount, bearer_token=os.getenv('OPENSEA_ARTTO_SERVER_BEARER_TOKEN'), endpoint=None):
     """
     Makes an offer on OpenSea through private endpoint
     

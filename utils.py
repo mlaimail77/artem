@@ -108,6 +108,11 @@ def create_app() -> Flask:
                     "task": "post_trending_nfts",
                     "schedule": crontab(minute=30, hour='10')
                 },
+
+                "check_balance_and_top_up": {
+                    "task": "check_balance_and_top_up",
+                    "schedule": crontab(minute=0, hour='6')
+                },
             },
         ),
     )
