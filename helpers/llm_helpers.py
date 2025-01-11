@@ -127,6 +127,22 @@ def get_summary_nft_post(rationale_posts, nft_batch_count):
     )
     return response.choices[0].message.content
 
+def get_simple_analysis_summary_nft_post(nft_batch):
+    nft_analyses = []
+    for nft in nft_batch:
+        analysis = {
+            "analysis_text": nft.get("analysis_text", ""),
+            "acquire_recommendation": nft.get("acquire_recommendation", False)
+        }
+        nft_analyses.append(analysis)
+    nft_analyses_str = json.dumps(nft_analyses)
+    system_prompt = get_simple_analysis_summary_nft_post_prompt(nft_analyses_str, len(nft_batch))
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": system_prompt}],
+    )
+    return response.choices[0].message.content
+
 def get_artto_promotion(nft_collection_value, length):
     system_prompt = get_artto_promotion_prompt(nft_collection_value, length)
     response = client.chat.completions.create(

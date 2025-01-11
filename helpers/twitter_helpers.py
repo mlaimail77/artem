@@ -193,7 +193,7 @@ def search_twitter(query, bearer_token, max_results=10, start_time=None):
     search_url = "https://api.twitter.com/2/tweets/search/recent"
     query_params = {
         'query': query,
-        'tweet.fields': 'author_id',
+        'tweet.fields': 'author_id,entities',
         'expansions': 'attachments.media_keys', 
         'media.fields': 'preview_image_url,url,type',
         'max_results': max_results
@@ -226,6 +226,32 @@ def format_tweets(response):
     for tweet in tweets:
         formatted_tweets.append(f"{tweet['text']}")
     return "\n\n## Tweet:\n\n".join(formatted_tweets)
+
+def get_opensea_url_tweets(bearer_token, max_results=25, network="ethereum"):
+    # Get tweets with Opensea.io/assets
+    query = f'url:"opensea.io/assets/{network}"'
+    response = search_twitter(query, bearer_token, max_results)
+
+    tweets = []
+
+    if 'data' in response:
+        seen_urls = set()
+        for tweet in response['data']:
+            processed_tweet = {}
+            if 'entities' in tweet and 'urls' in tweet['entities'] and len(tweet['entities']['urls']) > 0:
+                url = tweet['entities']['urls'][0]['expanded_url']
+                if url not in seen_urls:
+                    seen_urls.add(url)
+                    processed_tweet['url'] = url
+                    processed_tweet['text'] = tweet['text']
+                    # Parse network, contract_address, and token_id from OpenSea URL
+                    url_parts = url.split('/')
+                    if len(url_parts) >= 7:
+                        processed_tweet['network'] = url_parts[4]
+                        processed_tweet['contract_address'] = url_parts[5]
+                        processed_tweet['token_id'] = url_parts[6]
+                    tweets.append(processed_tweet)
+    return tweets
 
 def get_24_HOA_tweets_formatted(bearer_token, max_results=25):
     # Get tweets from the last 7 days

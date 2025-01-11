@@ -48,6 +48,21 @@ def create_app() -> Flask:
                     "schedule": crontab(minute=0, hour='11,23')
                 },
 
+                "post_simple_analysis_nfts_every_4_hours": {
+                    "task": "post_simple_analysis_nfts",
+                    "schedule": crontab(minute=45, hour='*/4')
+                },
+
+                "add_nfts_to_discovery_every_4_hours": {
+                    "task": "add_nfts_to_discovery",
+                    "schedule": crontab(minute=0, hour='*/4')
+                },
+
+                "analyze_nfts_in_discovery_every_4_hours": {
+                    "task": "analyze_nfts_in_discovery",
+                    "schedule": crontab(minute=10, hour='*/4')
+                },
+
                 # Farcaster Only
                 "post_channel_casts_every_2_hours": {
                     "task": "post_channel_casts",

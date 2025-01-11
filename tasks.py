@@ -21,6 +21,18 @@ celery_app = flask_app.extensions["celery"]
 
 logger = get_task_logger(__name__)
 
+@shared_task(ignore_result=False, name="add_nfts_to_discovery")
+def sync_add_nfts_to_discovery():
+    async_to_sync(add_nfts_to_discovery)()
+
+@shared_task(ignore_result=False, name="analyze_nfts_in_discovery")
+def sync_analyze_nfts_in_discovery():
+    async_to_sync(analyze_nfts_in_discovery)()
+
+@shared_task(ignore_result=False, name="post_simple_analysis_nfts")
+def sync_post_nft_summary_post():
+    async_to_sync(post_simple_analysis_nfts)()
+
 @shared_task(ignore_result=False, name="check_balance_and_top_up")
 def sync_check_balance_and_top_up():
     async_to_sync(check_balance_and_top_up)()

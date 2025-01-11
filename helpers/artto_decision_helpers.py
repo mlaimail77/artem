@@ -76,9 +76,9 @@ async def get_artwork_analysis_and_metadata(network, contract_address, token_id)
             'error': str(e)
         }
     
-    existing_nfts_with_image = count_image_url_exists(metadata["image_small_url"])
+    existing_nfts_with_image = check_image_url_exists(metadata["image_small_url"])
     print(f"Existing NFTs with image: {existing_nfts_with_image}")
-    if existing_nfts_with_image > 0:
+    if existing_nfts_with_image:
         print("Image already exists in database, getting the most recent artwork_analysis")
         nft_scores = get_scores_by_image_url(metadata["image_small_url"])
         scores = nft_scores["scores"]

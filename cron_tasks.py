@@ -23,7 +23,71 @@ POST_CLASSES = {
     "shitpost": 0.1
 }
 
-def check_balance_and_top_up():
+
+async def analyze_nfts_in_discovery():
+    nfts = get_unprocessed_nfts(max_amount=10)
+    print(f"Got {len(nfts)} NFTs to analyze")
+    for nft in nfts:
+        try:
+            response = await get_artwork_analysis_and_metadata(nft['network'], nft['contract_address'], nft['token_id'])
+            artwork_analysis = response["artwork_analysis"]
+            metadata = response["metadata"]
+            print(artwork_analysis)
+            print(metadata)
+
+            nft_details = {
+                "artwork_analysis": artwork_analysis,
+                "image_small_url": metadata["image_small_url"],
+                "chain": nft['network'],
+                "contract_address": nft['contract_address'],
+                "token_id": nft['token_id'],
+                "metadata": metadata
+            }
+
+            score_details = await get_total_score(artwork_analysis, nft_details)
+            store_nft_scores(nft_details, score_details)
+            update_nft_processed_status(nft['network'], nft['contract_address'], nft['token_id'])
+        except Exception as e:
+            print(f"Error analyzing NFT: {str(e)}")
+            update_nft_processed_status(nft['network'], nft['contract_address'], nft['token_id'], "error")
+            continue
+
+
+async def add_nfts_to_discovery():
+    # Option 1: Search for tweets with Opensea.io/assets
+    refreshed_token = refresh_token()
+    opensea_tweets = get_opensea_url_tweets(refreshed_token["access_token"], max_results=25)
+
+    print(f"Got {len(opensea_tweets)} tweets")
+
+    # Sample 10 random NFTs from the opensea tweets
+
+    sampled_tweets = None
+    if opensea_tweets:
+        sampled_tweets = random.sample(opensea_tweets, min(10, len(opensea_tweets)))
+        
+        for tweet in sampled_tweets:
+            try:
+                print(tweet)
+                # Extract NFT details from tweet
+                network = tweet.get('network', 'ethereum')
+                contract_address = tweet.get('contract_address')
+                token_id = tweet.get('token_id') 
+                opensea_url = tweet.get('url')
+                
+                # Skip if missing required fields
+                if not all([contract_address, token_id, opensea_url]):
+                    continue
+                    
+                # Check if NFT already exists before inserting
+                if not check_nft_exists(network, contract_address, token_id):
+                    insert_nft_discovery(network, contract_address, token_id, opensea_url)
+                    
+            except Exception as e:
+                print(f"Error processing tweet: {str(e)}")
+                continue
+
+async def check_balance_and_top_up():
     TOP_UP_AMOUNT = 10
     print("Checking OpenRouter balance")
     balance = get_openrouter_balance()
@@ -94,6 +158,15 @@ async def post_rewards_summary():
         print("No NFTs to post")
         return
     
+    # Remove duplicates based on image_url while preserving order
+    seen_urls = set()
+    unique_nfts = []
+    for nft in selected_nfts:
+        if nft['image_url'] not in seen_urls:
+            seen_urls.add(nft['image_url'])
+            unique_nfts.append(nft)
+    selected_nfts = unique_nfts
+    
     # Calculate total reward points
     total_reward_points = sum(nft['reward_points'] for nft in selected_nfts)
     ids = [nft['id'] for nft in selected_nfts]
@@ -119,10 +192,13 @@ async def post_rewards_summary():
     
 
     print("Final Payload: ", payload)
-    response = await post_tweet(payload, refreshed_token, parent=None)
-    if response:
-        set_post_created(response)
 
+    try:
+        response = await post_tweet(payload, refreshed_token, parent=None)
+        if response:
+            set_post_created(response)
+    except Exception as e:
+        print(f"Error posting to Twitter: {str(e)}")
 
     # Send the tokens
     for nft in selected_nfts:
@@ -154,6 +230,73 @@ async def post_rewards_summary():
 
 
     update_nft_reward_posts(ids, True)
+
+
+
+async def post_simple_analysis_nfts():
+    # Every 4 hours, post a summary of the NFTs that have been analyzed in the last 4 hours
+    refreshed_token = refresh_token()
+    time_now_utc = datetime.now(timezone.utc)
+    four_hours_ago = time_now_utc - timedelta(hours=4)
+    four_hours_ago_utc_iso = four_hours_ago.isoformat()
+    print(four_hours_ago_utc_iso)
+    # Get initial NFT batch
+    nft_batch = get_simple_analysis_nft_batch(
+        since_timestamp=four_hours_ago_utc_iso
+    )
+    print(f"NFT batch: {len(nft_batch)}")
+    # Filter out duplicate image URLs while preserving order
+    seen_urls = set()
+    unique_nft_batch = []
+    for nft in nft_batch:
+        if nft['image_url'] not in seen_urls:
+            seen_urls.add(nft['image_url'])
+            unique_nft_batch.append(nft)
+    
+    nft_batch = unique_nft_batch
+
+    if len(nft_batch) == 0:
+        print("No NFTs to post")
+        return
+
+    image_urls = [nft['image_url'] for nft in nft_batch]
+    ids = [nft['id'] for nft in nft_batch]
+
+    payload = {
+        "text": ""
+    }
+
+    print("Uploading media")
+    print("image_urls: ", image_urls)
+    if len(image_urls) > 0:
+        payload["media"] = {
+            "media_ids": []
+        }
+        for image_url in random.sample(image_urls, min(4, len(image_urls))):  # Pick 4 random images
+            response = upload_media(image_url)
+            media = response['media']
+            media_ids = media['media_ids'] # array of media ids
+            payload["media"]["media_ids"].extend(media_ids)
+
+    summary_post = get_simple_analysis_summary_nft_post(nft_batch)
+    payload["text"] = summary_post
+
+    print("Final Payload: ", payload)
+
+    try:
+        response = await post_tweet(payload, refreshed_token, parent=None)
+        if response:
+            set_post_created(response)
+    except Exception as e:
+        print(f"Error posting to Twitter: {str(e)}")
+
+    # Post to Farcaster
+    try:
+        post_long_cast(summary_post)
+    except Exception as e:
+        print(f"Error posting to Farcaster: {str(e)}")
+
+    update_nft_scores(ids, True)
 
 
 
@@ -227,12 +370,18 @@ async def post_batch_nfts():
             payload["text"] = summary_post
 
         print("Final Payload: ", payload)
-        response = await post_tweet(payload, refreshed_token, parent=None)
-        if response:
-            set_post_created(response)
+        try:
+            response = await post_tweet(payload, refreshed_token, parent=None)
+            if response:
+                set_post_created(response)
+        except Exception as e:
+            print(f"Error posting to Twitter: {str(e)}")
 
         # Post to Farcaster
-        post_long_cast(summary_post)
+        try:
+            post_long_cast(summary_post)
+        except Exception as e:
+            print(f"Error posting to Farcaster: {str(e)}")
 
         update_nft_scores(ids, True)
 

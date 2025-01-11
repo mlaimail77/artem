@@ -227,6 +227,20 @@ def get_artto_reward_batch_post(since_timestamp=None):
     response = query.order("timestamp", desc=True).execute()
     return response.data
 
+def get_simple_analysis_nft_batch(since_timestamp=None):
+    print("Getting simple analysis NFT batch; since_timestamp: ", since_timestamp)
+    response = refresh_or_get_supabase_client()
+    query = supabase.table("nft_scores").select(
+        "id,analysis_text,image_url,acquire_recommendation"
+    ).eq("source", "simple-analysis")
+    
+    if since_timestamp:
+        query = query.gte("timestamp", since_timestamp)
+        
+    response = query.order("timestamp", desc=True).execute()
+    return response.data
+
+
 def get_nft_batch_post(since_timestamp=None):
     response = refresh_or_get_supabase_client()
     query = supabase.table("nft_scores").select(
@@ -609,7 +623,7 @@ def set_post_created(post):
 
 def get_unique_nfts_count(contract_address):
     response = refresh_or_get_supabase_client()
-    response = supabase.table("nft_scores").select("image_url").eq("contract_address", contract_address).execute()
+    response = supabase.table("nft_scores").select("image_url").eq("contract_address", contract_address).neq("source", "simple-analysis").execute()
     
     if response.data:
         unique_ids = set(item['image_url'] for item in response.data)
@@ -657,6 +671,20 @@ def count_image_url_exists(image_url):
     
     return len(response.data)
 
+def check_image_url_exists(image_url):
+    """
+    Check if an image URL exists in the nft_scores table
+    
+    Args:
+        image_url: str - The URL of the image to check
+        
+    Returns:
+        bool: True if the image URL exists, False otherwise
+    """
+    response = refresh_or_get_supabase_client()
+    response = supabase.table("nft_scores").select("id").eq("image_url", image_url).neq("source", "simple-analysis").execute()
+    
+    return len(response.data) > 0
 
 def get_decay_factor(check_date=None):
     """
@@ -694,6 +722,117 @@ def get_decay_factor(check_date=None):
     daily_rate = 0.001265  # 0.1265%
     return max(0.1, (1 - daily_rate) ** days_since_start)
 
+def insert_nft_discovery(network, contract_address, token_id, opensea_url):
+    """
+    Insert a new NFT discovery record into the nft_discovery table
+    
+    Args:
+        network (str): The blockchain network (e.g. 'ethereum', 'polygon')
+        contract_address (str): The NFT contract address
+        token_id (str): The token ID of the NFT
+        opensea_url (str): The OpenSea URL for the NFT
+        
+    Returns:
+        dict: Response from Supabase insert operation
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        data = {
+            "id": hashlib.sha256(f"{network}:{contract_address}:{token_id}:{str(datetime.now())}".encode()).hexdigest(),
+            "timestamp": str(datetime.now()),
+            "network": network,
+            "contract_address": contract_address, 
+            "token_id": token_id,
+            "opensea_url": opensea_url,
+            "processed_status": "false"
+        }
+        
+        result = supabase.table("nft_discovery").insert(data).execute()
+        return result.data
+    except Exception as e:
+        print(f"Error inserting NFT discovery: {str(e)}")
+        return None
+
+def update_nft_processed_status(network, contract_address, token_id, status = "true"):
+    """
+    Update the processed_status for a given NFT in the nft_discovery table
+    
+    Args:
+        network (str): The blockchain network (e.g. 'ethereum', 'polygon')
+        contract_address (str): The NFT contract address
+        token_id (str): The token ID of the NFT
+        status (str): The status to set (default is "true")
+    Returns:
+        dict: Response from Supabase update operation
+    """
+    print(f"Updating NFT processed status for {network}:{contract_address}:{token_id} to {status}")
+    response = refresh_or_get_supabase_client()
+    
+    try:        
+        result = supabase.table("nft_discovery") \
+            .update({"processed_status": status}) \
+            .eq("network", network) \
+            .eq("contract_address", contract_address) \
+            .eq("token_id", token_id) \
+            .execute()
+            
+        return result.data
+    except Exception as e:
+        print(f"Error updating NFT processed status: {str(e)}")
+        return None
+
+def check_nft_exists(network, contract_address, token_id):
+    """
+    Check if an NFT already exists in the nft_discovery table
+    
+    Args:
+        network (str): The blockchain network (e.g. 'ethereum', 'polygon')
+        contract_address (str): The NFT contract address
+        token_id (str): The token ID of the NFT
+        
+    Returns:
+        bool: True if NFT exists, False otherwise
+    """
+    response = refresh_or_get_supabase_client()
+
+    id = hashlib.sha256(f"{network}:{contract_address}:{token_id}:{str(datetime.now())}".encode()).hexdigest()
+    
+    try:
+        result = supabase.table("nft_discovery") \
+            .select("*") \
+            .eq("id", id) \
+            .execute()
+            
+        return len(result.data) > 0
+    except Exception as e:
+        print(f"Error checking NFT existence: {str(e)}")
+        return False
+
+def get_unprocessed_nfts(max_amount=10):
+    """
+    Get unprocessed NFTs from the nft_discovery table
+    
+    Args:
+        max_amount (int): Maximum number of NFTs to return
+        
+    Returns:
+        list: List of unprocessed NFT records
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        result = supabase.table("nft_discovery") \
+            .select("*") \
+            .eq("processed_status", "false") \
+            .order("timestamp", desc=True) \
+            .limit(max_amount) \
+            .execute()
+            
+        return result.data
+    except Exception as e:
+        print(f"Error getting unprocessed NFTs: {str(e)}")
+        return []
 
 def main():
     supabase = get_supabase_client()

@@ -80,6 +80,51 @@ Important:
 - Use the opensea_url to link to the NFT on OpenSea.
 </instruction>"""
 
+GET_SIMPLE_ANALYSIS_SUMMARY_NFT_POST_PROMPT = """<instruction>
+Summarize the following NFT analyses into a single post.
+
+The goal is to share with the community any interesting NFTs you've come across over the last 4 hours.
+Some NFTs will have acquire_recommendation set to true, meaning they pass your scoring criteria. Others will have it set to false, meaning they do not pass your scoring criteria.
+
+You will be provided a few <nft_analyses> and your task is to synthesize them, noting any noteworthy NFTs.
+
+Number of NFTs in batch: {nft_batch_count}
+
+Give specific examples where appropriate, especially about what you liked.
+
+<nft_analyses>
+{nft_analyses}
+</nft_analyses>
+
+- Do NOT use markdown in your response
+- Do NOT return a preamble or anything like "Here is the summary of the rationale posts:"
+- Just return the summary post
+
+</instruction>
+"""
+
+GET_ARTTO_REWARDS_POST_PROMPT = """<instruction>
+Write a post celebrating today's $ARTTO distributions on NFTs that you picked and thanking the community for their donations in the last 24 hours.
+
+Write a brief introduction capturing any particular themes you observe from the NFTs in the batch <selected_nfts>
+
+Then, summarize the following rationale posts into a single daily post. There is one rationale post per NFT. Each one has an associated "reward_points" field which is how much the sender will receive in $ARTTO.
+
+Retain the most important information from each post.
+
+Total $ARTTO tokens distributed: {total_reward_points}
+
+<selected_nfts>
+{selected_nfts}
+</selected_nfts>
+
+Important:
+- Do NOT include markdown or URLs in your response. Ignore "image_urls".
+- Write in the first person.
+
+</instruction>"""
+
+
 GET_SUMMARY_NFT_POST_PROMPT = """<instruction>
 Summarize the following rationale posts into a single post. The goal is to celebrate the NFTs donated by the community andsynthesize multiple rationale posts since posting each one individually is causing you to hit the Twitter API rate limit. 
 
@@ -731,6 +776,11 @@ def get_artto_promotion_prompt(nft_collection_value, length):
 def get_summary_nft_post_prompt(rationale_posts, nft_batch_count):
     combined_rationale = '\n'.join(rationale_posts)
     system_prompt = GET_SUMMARY_NFT_POST_PROMPT.format(rationale_posts=combined_rationale, nft_batch_count=nft_batch_count)
+    return system_prompt
+
+def get_simple_analysis_summary_nft_post_prompt(nft_analyses, nft_batch_count):
+    combined_nft_analyses = '\n'.join(nft_analyses)
+    system_prompt = GET_SIMPLE_ANALYSIS_SUMMARY_NFT_POST_PROMPT.format(nft_analyses=combined_nft_analyses, nft_batch_count=nft_batch_count)
     return system_prompt
 
 def get_artto_rewards_post_prompt(selected_nfts, total_reward_points):
