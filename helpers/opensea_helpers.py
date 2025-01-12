@@ -47,7 +47,7 @@ def make_opensea_listing(chain, token_address, token_id, amount, bearer_token=os
     amount = max(0.00001, float(amount))
     amount = "{:.5f}".format(amount).rstrip('0')
     if endpoint is None:
-        endpoint = "http://artto-opensea:10000/create-listing"
+        endpoint = "http://artto-opensea:10000/sell-nft"
     
     headers = {
         "Authorization": f"Bearer {bearer_token}",

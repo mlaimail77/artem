@@ -98,8 +98,7 @@ async def sell_batch_process(nft_batch):
                 token_address=nft['contract_address'],
                 token_id=nft['token_id'],
                 amount=nft['floor_price'],
-                bearer_token=os.getenv('OPENSEA_ARTTO_SERVER_BEARER_TOKEN'),
-                endpoint="http://localhost:3001/sell-nft"
+                bearer_token=os.getenv('OPENSEA_ARTTO_SERVER_BEARER_TOKEN')
             )
             print(response)
             nfts_with_floor_ids.append(nft['id'])
