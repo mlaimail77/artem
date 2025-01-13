@@ -65,17 +65,38 @@ async def analyze_nfts_in_discovery():
 
 
 async def add_nfts_to_discovery():
-    # Option 1: Search for tweets with Opensea.io/assets
     refreshed_token = refresh_token()
-    opensea_tweets = get_opensea_url_tweets(refreshed_token["access_token"], max_results=25)
-
+    opensea_tweets = get_nft_url_tweets(
+        refreshed_token["access_token"], 
+        "opensea.io/assets/ethereum", 
+        "ethereum", 
+        max_results=25
+    )
+    superrare_tweets = get_nft_url_tweets(
+        refreshed_token["access_token"], 
+        "superrare.com/artwork/eth", 
+        "ethereum", 
+        max_results=25
+    )
+    foundation_tweets = get_nft_url_tweets(
+        refreshed_token["access_token"], 
+        "foundation.app/mint/eth", 
+        "ethereum", 
+        max_results=25
+    )
     print(f"Got {len(opensea_tweets)} tweets")
+    print(f"Got {len(superrare_tweets)} tweets")
+    print(f"Got {len(foundation_tweets)} tweets")
 
-    # Sample 10 random NFTs from the opensea tweets
+    # Combine all tweets into one array
+    all_tweets = []
+    all_tweets.extend(opensea_tweets or [])
+    all_tweets.extend(superrare_tweets or [])
+    all_tweets.extend(foundation_tweets or [])
 
-    sampled_tweets = None
-    if opensea_tweets:
-        sampled_tweets = random.sample(opensea_tweets, min(10, len(opensea_tweets)))
+    # Sample 10 random NFTs from all tweets
+    if all_tweets:
+        sampled_tweets = random.sample(all_tweets, min(10, len(all_tweets)))
         
         for tweet in sampled_tweets:
             try:

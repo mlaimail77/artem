@@ -227,9 +227,9 @@ def format_tweets(response):
         formatted_tweets.append(f"{tweet['text']}")
     return "\n\n## Tweet:\n\n".join(formatted_tweets)
 
-def get_opensea_url_tweets(bearer_token, max_results=25, network="ethereum"):
+def get_nft_url_tweets(bearer_token, query, network, max_results=25):
     # Get tweets with Opensea.io/assets
-    query = f'url:"opensea.io/assets/{network}"'
+    query = f'url:"{query}"'
     response = search_twitter(query, bearer_token, max_results)
 
     tweets = []
@@ -244,12 +244,13 @@ def get_opensea_url_tweets(bearer_token, max_results=25, network="ethereum"):
                     seen_urls.add(url)
                     processed_tweet['url'] = url
                     processed_tweet['text'] = tweet['text']
-                    # Parse network, contract_address, and token_id from OpenSea URL
+
+                    # Parse network, contract_address, and token_id from URL
+                    url = url.rstrip('/')
                     url_parts = url.split('/')
-                    if len(url_parts) >= 7:
-                        processed_tweet['network'] = url_parts[4]
-                        processed_tweet['contract_address'] = url_parts[5]
-                        processed_tweet['token_id'] = url_parts[6]
+                    processed_tweet['network'] = network
+                    processed_tweet['contract_address'] = url_parts[-2]
+                    processed_tweet['token_id'] = url_parts[-1]
                     tweets.append(processed_tweet)
     return tweets
 
