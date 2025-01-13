@@ -782,6 +782,30 @@ def update_nft_processed_status(network, contract_address, token_id, status = "t
         print(f"Error updating NFT processed status: {str(e)}")
         return None
 
+def count_nfts_by_contract(contract_address):
+    """
+    Count how many NFTs exist in nft_discovery table for a given contract address
+    
+    Args:
+        contract_address (str): The NFT contract address to check
+        
+    Returns:
+        int: Number of NFTs found for the contract address, or 0 if error occurs
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        result = supabase.table("nft_discovery") \
+            .select("*", count="exact") \
+            .eq("contract_address", contract_address) \
+            .execute()
+            
+        return result.count
+    except Exception as e:
+        print(f"Error counting NFTs for contract {contract_address}: {str(e)}")
+        return 0
+
+
 def check_nft_exists(network, contract_address, token_id):
     """
     Check if an NFT already exists in the nft_discovery table

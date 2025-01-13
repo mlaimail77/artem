@@ -117,8 +117,7 @@ async def sell_batch_process(nft_batch):
                     token_address=nft['contract_address'],
                     token_id=nft['token_id'],
                     amount=0.0001,
-                    bearer_token=os.getenv('OPENSEA_ARTTO_SERVER_BEARER_TOKEN'),
-                    endpoint="http://localhost:3001/sell-nft"
+                    bearer_token=os.getenv('OPENSEA_ARTTO_SERVER_BEARER_TOKEN')
                 )
                 print(response)
                 nfts_without_floor_ids.append(nft['id'])
@@ -130,8 +129,7 @@ async def sell_batch_process(nft_batch):
                         token_address=nft['contract_address'],
                         token_id=nft['token_id'],
                         amount=0.01,
-                        bearer_token=os.getenv('OPENSEA_ARTTO_SERVER_BEARER_TOKEN'),
-                        endpoint="http://localhost:3001/sell-nft"
+                        bearer_token=os.getenv('OPENSEA_ARTTO_SERVER_BEARER_TOKEN')
                     )
                     print(response)
                 except Exception as e:

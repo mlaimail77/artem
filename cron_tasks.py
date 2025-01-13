@@ -26,6 +26,17 @@ POST_CLASSES = {
 
 async def analyze_nfts_in_discovery():
     nfts = get_unprocessed_nfts(max_amount=10)
+
+    # Filter out duplicates by contract address
+    seen_contracts = set()
+    unique_nfts = []
+    
+    for nft in nfts:
+        if nft['contract_address'] not in seen_contracts:
+            seen_contracts.add(nft['contract_address'])
+            unique_nfts.append(nft)
+    
+    nfts = unique_nfts
     print(f"Got {len(nfts)} NFTs to analyze")
     for nft in nfts:
         try:
@@ -81,7 +92,8 @@ async def add_nfts_to_discovery():
                     
                 # Check if NFT already exists before inserting
                 if not check_nft_exists(network, contract_address, token_id):
-                    insert_nft_discovery(network, contract_address, token_id, opensea_url)
+                    if count_nfts_by_contract(contract_address) < 10:
+                        insert_nft_discovery(network, contract_address, token_id, opensea_url)
                     
             except Exception as e:
                 print(f"Error processing tweet: {str(e)}")
