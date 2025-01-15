@@ -47,7 +47,7 @@ def make_opensea_listing(chain, token_address, token_id, amount, bearer_token=os
     amount = max(0.00001, float(amount))
     amount = "{:.5f}".format(amount).rstrip('0')
     if endpoint is None:
-        endpoint = "http://artto-opensea:10000/sell-nft"
+        endpoint = "artto-opensea:10000/sell-nft"
     
     headers = {
         "Authorization": f"Bearer {bearer_token}",
@@ -95,7 +95,7 @@ def make_opensea_auction(chain, token_address, token_id, amount, bearer_token=os
         amount = "{:.5f}".format(amount).rstrip('0')
 
     if endpoint is None:
-        endpoint = "http://artto-opensea:10000/create-auction"
+        endpoint = "artto-opensea:10000/create-auction"
     
     headers = {
         "Authorization": f"Bearer {bearer_token}",
@@ -141,7 +141,7 @@ def make_opensea_offer(chain, token_address, token_id, amount, bearer_token=os.g
         dict: Response from the OpenSea endpoint
     """
     if endpoint is None:
-        endpoint = "http://artto-opensea:10000/make-offer"
+        endpoint = "artto-opensea:10000/make-offer"
     
     headers = {
         "Authorization": f"Bearer {bearer_token}",
