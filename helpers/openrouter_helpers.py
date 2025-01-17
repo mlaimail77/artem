@@ -42,7 +42,7 @@ def purchase_openrouter_credits(amount_usd, bearer_token=os.getenv('OPENSEA_ARTT
         None: If the request fails
     """
     if endpoint is None:
-        endpoint = "artto-opensea:10000/fund-openrouter"
+        endpoint = "https://artto-node-server.onrender.com/fund-openrouter"
     
     headers = {
         "Authorization": f"Bearer {bearer_token}",
