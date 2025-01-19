@@ -231,7 +231,7 @@ def get_simple_analysis_nft_batch(since_timestamp=None):
     print("Getting simple analysis NFT batch; since_timestamp: ", since_timestamp)
     response = refresh_or_get_supabase_client()
     query = supabase.table("nft_scores").select(
-        "id,analysis_text,image_url,acquire_recommendation"
+        "id,analysis_text,total_score,image_url,acquire_recommendation"
     ).eq("source", "simple-analysis")
     
     if since_timestamp:

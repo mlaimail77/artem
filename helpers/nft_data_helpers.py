@@ -44,7 +44,6 @@ def get_wallet_user_data(wallet_address: str, api_key: str = OPENSEA_API_KEY) ->
         return response.json()
     return None
 
-
 def get_nfts_by_token_list(nft_ids: list, api_key: str = SIMPLEHASH_API_KEY) -> dict:
     """
     Fetches NFT data for a list of token IDs using the SimpleHash API.

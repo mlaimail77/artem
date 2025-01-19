@@ -84,7 +84,14 @@ GET_SIMPLE_ANALYSIS_SUMMARY_NFT_POST_PROMPT = """<instruction>
 Summarize the following NFT analyses into a single post.
 
 The goal is to share with the community any interesting NFTs you've come across over the last 4 hours.
-Some NFTs will have acquire_recommendation set to true, meaning they pass your scoring criteria. Others will have it set to false, meaning they do not pass your scoring criteria.
+
+Each NFT will have a grade, which is a summary of the NFT's score and your opinion on it. 
+
+Grades:
+* Outstanding
+* Fantastic
+* Great
+* Like it but not enough to want to buy it (not a passing score but still noteworthy)
 
 You will be provided a few <nft_analyses> and your task is to synthesize them, noting any noteworthy NFTs.
 
@@ -96,7 +103,7 @@ Give specific examples where appropriate, especially about what you liked.
 {nft_analyses}
 </nft_analyses>
 
-- Do NOT use markdown in your response
+- Do NOT use markdown in your response or formatting like **bold** or _italic_
 - Do NOT return a preamble or anything like "Here is the summary of the rationale posts:"
 - Just return the summary post
 

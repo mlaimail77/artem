@@ -132,7 +132,7 @@ def get_simple_analysis_summary_nft_post(nft_batch):
     for nft in nft_batch:
         analysis = {
             "analysis_text": nft.get("analysis_text", ""),
-            "acquire_recommendation": nft.get("acquire_recommendation", False)
+            "grade": nft.get("grade", ""),
         }
         nft_analyses.append(analysis)
     nft_analyses_str = json.dumps(nft_analyses)

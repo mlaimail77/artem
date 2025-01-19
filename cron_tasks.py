@@ -183,7 +183,7 @@ async def post_rewards_summary():
     print(one_day_ago_utc_iso)
     nft_batch = get_artto_reward_batch_post(
         since_timestamp=one_day_ago_utc_iso
-        )
+    )
     
     selected_nfts = select_nfts_for_rewards(nft_batch, max_rewards=10)
 
@@ -277,6 +277,24 @@ async def post_simple_analysis_nfts():
     nft_batch = get_simple_analysis_nft_batch(
         since_timestamp=four_hours_ago_utc_iso
     )
+    # Add grade based on total_score and filter scores under 40
+    graded_batch = []
+    for nft in nft_batch:
+        if nft['total_score'] >= 40:
+            if nft['total_score'] >= 70:
+                grade = "Outstanding 🤩"
+            elif nft['total_score'] >= 60:
+                grade = "Fantastic 😃"
+            elif nft['total_score'] >= 50:
+                grade = "Great 🙂"
+            else:
+                grade = "Like it but not enough to want to buy it 🤔"
+            
+            nft['grade'] = grade
+            graded_batch.append(nft)
+    
+    nft_batch = graded_batch
+    
     print(f"NFT batch: {len(nft_batch)}")
     # Filter out duplicate image URLs while preserving order
     seen_urls = set()
