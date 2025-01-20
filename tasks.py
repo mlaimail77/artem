@@ -21,6 +21,10 @@ celery_app = flask_app.extensions["celery"]
 
 logger = get_task_logger(__name__)
 
+@shared_task(ignore_result=False, name="generate_memory")
+def sync_generate_memory():
+    async_to_sync(generate_memory)()
+
 @shared_task(ignore_result=False, name="add_nfts_to_discovery")
 def sync_add_nfts_to_discovery():
     async_to_sync(add_nfts_to_discovery)()

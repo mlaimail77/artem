@@ -128,6 +128,11 @@ def create_app() -> Flask:
                     "task": "check_balance_and_top_up",
                     "schedule": crontab(minute=0, hour='6')
                 },
+
+                "generate_memory": {
+                    "task": "generate_memory",
+                    "schedule": crontab(minute=0, hour='0,12')
+                },
             },
         ),
     )

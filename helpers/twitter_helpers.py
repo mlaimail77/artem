@@ -90,6 +90,32 @@ def upload_media(url):
     os.remove(temp_file)
     return payload
 
+def get_usernames_from_ids(ids, bearer_token):
+    """
+    Convert Twitter user IDs to usernames using the Twitter API
+    
+    Args:
+        ids (list): List of Twitter user IDs
+        bearer_token (str): Twitter API bearer token
+        
+    Returns:
+        list: List of usernames corresponding to the provided IDs
+    """
+    ids = ",".join(ids)
+    url = f"https://api.twitter.com/2/users?ids={ids}"
+
+    def bearer_oauth(r):
+        r.headers["Authorization"] = f"Bearer {bearer_token}"
+        r.headers["User-Agent"] = "v2UsersLookupPython"
+        return r
+
+    response = requests.get(url, auth=bearer_oauth)
+    if response.status_code != 200:
+        raise Exception(response.status_code, response.text)
+    
+    response = response.json()
+    return [x['username'] for x in response['data']]
+
 
 def get_ids_from_usernames(usernames, bearer_token):
 
@@ -193,10 +219,10 @@ def search_twitter(query, bearer_token, max_results=10, start_time=None):
     search_url = "https://api.twitter.com/2/tweets/search/recent"
     query_params = {
         'query': query,
-        'tweet.fields': 'author_id,entities',
-        'expansions': 'attachments.media_keys', 
+        'tweet.fields': 'author_id,entities,note_tweet',
+        'expansions': 'attachments.media_keys,referenced_tweets.id', 
         'media.fields': 'preview_image_url,url,type',
-        'max_results': max_results
+        'max_results': max_results,
     }
 
     if start_time:
@@ -211,11 +237,33 @@ def search_twitter(query, bearer_token, max_results=10, start_time=None):
     print(response.status_code)
     if response.status_code != 200:
         raise Exception(response.status_code, response.text)
-    return response.json()
+    
+    response = response.json()
 
-def get_twitter_mentions(bearer_token, max_results=50):
-    query = "@artto__agent"
-    return search_twitter(query, bearer_token, max_results)
+    try:
+        ids = [x['author_id'] for x in response['data']]
+        usernames = get_usernames_from_ids(ids, bearer_token)
+        for i, tweet in enumerate(response['data']):
+            tweet['username'] = usernames[i]
+    except Exception as e:
+        print(f"Error getting usernames: {e}")
+
+    # Append note_tweet text to main text if present
+    if 'data' in response:
+        for tweet in response['data']:
+            if 'note_tweet' in tweet:
+                tweet['text'] = tweet['note_tweet']['text']
+    return response
+
+def get_twitter_mentions(bearer_token, max_results=50, save_to_db=True):
+    query = "@artto_ai"
+    response = search_twitter(query, bearer_token, max_results)
+    if save_to_db:
+        try:
+            save_posts(response, "twitter_mentions")
+        except Exception as e:
+            print(f"Error saving tweets: {e}")
+    return response
 
 def format_tweets(response):
     if response['data']:
@@ -224,8 +272,11 @@ def format_tweets(response):
         return ""
     formatted_tweets = []
     for tweet in tweets:
-        formatted_tweets.append(f"{tweet['text']}")
-    return "\n\n## Tweet:\n\n".join(formatted_tweets)
+        if "username" in tweet:
+            formatted_tweets.append(f"Author: {tweet['username']}\nTweet: {tweet['text']}")
+        else:
+            formatted_tweets.append(f"Author: Unknown\nTweet: {tweet['text']}")
+    return "\n---\n\n---\n".join(formatted_tweets)
 
 def get_nft_url_tweets(bearer_token, query, network, max_results=25):
     # Get tweets with Opensea.io/assets
@@ -254,18 +305,28 @@ def get_nft_url_tweets(bearer_token, query, network, max_results=25):
                     tweets.append(processed_tweet)
     return tweets
 
-def get_24_HOA_tweets_formatted(bearer_token, max_results=25):
+def get_24_HOA_tweets_formatted(bearer_token, max_results=25, save_to_db=True):
     # Get tweets from the last 7 days
     start_time = (datetime.now() - timedelta(days=6))
     query = f'"24 Hours of Art" -is:reply -is:retweet from:RogerDickerman'
     response = search_twitter(query, bearer_token, max_results, start_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    if save_to_db:
+        try:
+            save_posts(response, "24_HOA_tweets")
+        except Exception as e:
+            print(f"Error saving tweets: {e}")
     formatted_response = format_tweets(response)
     return formatted_response
 
-def get_kol_tweets_formatted(bearer_token, max_results=25):
+def get_kol_tweets_formatted(bearer_token, max_results=25, min_selected_followers=10, save_to_db=True):
     start_time = (datetime.now() - timedelta(days=1))
-    selected_followers = random.sample(FOLLOWING_ACCOUNTS, min(10, len(FOLLOWING_ACCOUNTS)))
+    selected_followers = random.sample(FOLLOWING_ACCOUNTS, min(min_selected_followers, len(FOLLOWING_ACCOUNTS)))
     response = search_twitter("(" + " OR ".join([f"from:{user}" for user in selected_followers]) + ") -is:reply -is:retweet", bearer_token, max_results, start_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    if save_to_db:
+        try:
+            save_posts(response, "kol_tweets")
+        except Exception as e:
+            print(f"Error saving tweets: {e}")
     formatted_response = format_tweets(response)
     return formatted_response
 

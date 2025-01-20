@@ -51,6 +51,23 @@ tools = [
     }
 ]
 
+def get_generate_memory(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, previous_memory):
+    system_prompt = get_generate_memory_prompt(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, previous_memory)
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "system", "content": system_prompt}],
+    )
+    print(response)
+    return response.choices[0].message.content
+
+def get_summarize_seen_posts(seen_posts):
+    system_prompt = get_summarize_seen_posts_prompt(seen_posts)
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "system", "content": system_prompt}],
+    )
+    return response.choices[0].message.content
+
 def get_sell_nft_batch_post(nft_batch):
     filtered_batch = []
     for nft in nft_batch:

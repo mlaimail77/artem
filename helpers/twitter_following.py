@@ -27,7 +27,6 @@ FOLLOWING_ACCOUNTS = [
     "Pepe__wtf",
     "TungstenDAO",
     "GrantYun2",
-    "exlawyernft",
     "krybharat",
     "6529capital",
     "SuperRareRoses",
@@ -83,5 +82,17 @@ FOLLOWING_ACCOUNTS = [
     "pravijn",
     "ripcache",
     "thepropgallery",
-    "0x_vertigo"
+    "0x_vertigo",
+    "bottoproject",
+    "newrafael",
+    "beeple",
+    "kimasendorf", 
+    "station3NYC",
+    "FellowshipAi",
+    "Mdiac_",
+    "JordanLyall",
+    "Anonymoux2311",
+    "gmoneyNFT",
+    "seedphrase",
+    "DeeZe"
 ]

@@ -24,6 +24,51 @@ POST_CLASSES = {
 }
 
 
+async def generate_memory():
+    refreshed_token = refresh_token()
+
+    # Get latest taste profile
+    latest_taste_profile = get_taste_weights()
+
+    # Get top collections
+    time_period = '24h'
+    chains = ['ethereum']
+    top_collections = await get_top_collections(time_period=time_period, chains=chains, limit=10)
+    formatted_top_collections = format_collections(top_collections, time_period)
+
+    # Last 24hrs NFTs with ACQUIRED decision
+    time_now_utc = datetime.now(timezone.utc)
+    one_day_ago = time_now_utc - timedelta(days=1)
+    one_day_ago_utc_iso = one_day_ago.isoformat()
+
+    nft_batch = get_artto_reward_batch_post(
+        since_timestamp=one_day_ago_utc_iso
+    )
+
+    # Add KOL posts to seen_posts table
+    get_kol_tweets_formatted(
+        refreshed_token["access_token"], 
+        max_results=50, 
+        min_selected_followers=20
+    )
+
+    # Generate summary of seen posts
+    seen_posts = get_seen_posts(
+        since_timestamp=one_day_ago_utc_iso,
+        max_results=100
+    )
+    summary = get_summarize_seen_posts(json.dumps(seen_posts, indent=2))
+
+    # Get previous memory or None if no memories exist
+    previous_memory = get_latest_memory()
+
+    memory = get_generate_memory(latest_taste_profile, formatted_top_collections, nft_batch, summary, previous_memory)
+
+    insert_memory(memory)
+
+    return memory
+
+
 async def analyze_nfts_in_discovery():
     nfts = get_unprocessed_nfts(max_amount=10)
 
@@ -530,15 +575,15 @@ async def process_adjust_weights():
     set_taste_weights(new_weights)
 
     text = f"""💫 I just updated my NFT evaluation weights:
-    Technical Innovation: {new_weights.updated_weights.TECHNICAL_INNOVATION_WEIGHT}
-    Artistic Merit: {new_weights.updated_weights.ARTISTIC_MERIT_WEIGHT}
-    Cultural Resonance: {new_weights.updated_weights.CULTURAL_RESONANCE_WEIGHT} 
-    Artist Profile: {new_weights.updated_weights.ARTIST_PROFILE_WEIGHT}
-    Market Factors: {new_weights.updated_weights.MARKET_FACTORS_WEIGHT}
-    Emotional Impact: {new_weights.updated_weights.EMOTIONAL_IMPACT_WEIGHT}
-    AI Collector Perspective: {new_weights.updated_weights.AI_COLLECTOR_PERSPECTIVE_WEIGHT}
+Technical Innovation: {new_weights.updated_weights.TECHNICAL_INNOVATION_WEIGHT}
+Artistic Merit: {new_weights.updated_weights.ARTISTIC_MERIT_WEIGHT}
+Cultural Resonance: {new_weights.updated_weights.CULTURAL_RESONANCE_WEIGHT} 
+Artist Profile: {new_weights.updated_weights.ARTIST_PROFILE_WEIGHT}
+Market Factors: {new_weights.updated_weights.MARKET_FACTORS_WEIGHT}
+Emotional Impact: {new_weights.updated_weights.EMOTIONAL_IMPACT_WEIGHT}
+AI Collector Perspective: {new_weights.updated_weights.AI_COLLECTOR_PERSPECTIVE_WEIGHT}
 
-    Reason for update: {new_weights.reason}"""
+Reason for update: {new_weights.reason}"""
 
     try:
         response = post_long_cast(text)

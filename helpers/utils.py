@@ -753,6 +753,69 @@ def insert_nft_discovery(network, contract_address, token_id, opensea_url):
     except Exception as e:
         print(f"Error inserting NFT discovery: {str(e)}")
         return None
+    
+
+def save_posts(posts, type):
+    """
+    Save an array of posts to the seen_posts table
+    
+    Args:
+        posts (list): Array of post objects containing content and author
+        
+    Returns:
+        dict: Response from Supabase insert operation
+    """
+    response = refresh_or_get_supabase_client()
+    timestamp = str(datetime.now())
+
+    try:
+        # First get existing post IDs
+        existing_ids = supabase.table("seen_posts").select("id").execute()
+        existing_id_set = {post["id"] for post in existing_ids.data}
+
+        # Filter out posts that already exist
+        data = [{
+            "id": str(post["id"]),
+            "timestamp": timestamp,
+            "content": post["text"],
+            "author": post["username"] if "username" in post else None,
+            "type": type
+        } for post in posts['data'] if str(post["id"]) not in existing_id_set]
+
+        if data:  # Only insert if there are new posts
+            result = supabase.table("seen_posts").insert(data).execute()
+            return result.data
+        return []
+    except Exception as e:
+        print(f"Error saving posts: {str(e)}")
+        return None
+
+def get_seen_posts(since_timestamp=None, max_results=100):
+    """
+    Get posts from the seen_posts table, optionally filtered by timestamp
+    
+    Args:
+        since_timestamp (str, optional): Only return posts after this timestamp
+        max_results (int, optional): Maximum number of results to return (default 100)
+        
+    Returns:
+        list: Array of post objects from the seen_posts table
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        query = supabase.table("seen_posts").select("*")
+        
+        if since_timestamp:
+            query = query.gte("timestamp", since_timestamp)
+            
+        query = query.limit(max_results)
+            
+        result = query.execute()
+        return result.data
+    except Exception as e:
+        print(f"Error getting seen posts: {str(e)}")
+        return None
 
 def update_nft_processed_status(network, contract_address, token_id, status = "true"):
     """
@@ -857,6 +920,56 @@ def get_unprocessed_nfts(max_amount=10):
     except Exception as e:
         print(f"Error getting unprocessed NFTs: {str(e)}")
         return []
+
+def get_latest_memory():
+    """
+    Get the latest memory object from the memory table, sorted by timestamp
+    
+    Returns:
+        dict: The latest memory object or None if no memories exist
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        result = supabase.table("memory") \
+            .select("memory_object") \
+            .order("timestamp", desc=True) \
+            .limit(1) \
+            .execute()
+            
+        if result.data:
+            return result.data[0]["memory_object"]
+        return None
+    except Exception as e:
+        print(f"Error getting latest memory: {str(e)}")
+        return "None"
+
+def insert_memory(memory_object):
+    """
+    Insert a new memory object with current timestamp
+    
+    Args:
+        memory_object (dict): The memory object to insert
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        result = supabase.table("memory") \
+            .insert({
+                "id": hashlib.sha256(f"{str(datetime.now())}".encode()).hexdigest(),
+                "memory_object": memory_object,
+                "timestamp": str(datetime.now())
+            }) \
+            .execute()
+            
+        return True
+    except Exception as e:
+        print(f"Error inserting memory: {str(e)}")
+        return False
+
 
 def main():
     supabase = get_supabase_client()

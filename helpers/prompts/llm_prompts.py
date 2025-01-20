@@ -3,7 +3,7 @@ from helpers.prompts.scoring_criteria import SCORING_CRITERIA_TEMPLATE
 from helpers.prompts.voice_and_tone import VOICE_AND_TONE
 from helpers.prompts.spam_prompts import SPAM_IDENTIFICATION_PROMPT
 from helpers.prompts.casual_thought_topics import *
-from helpers.utils import get_taste_weights
+from helpers.utils import get_taste_weights, get_latest_memory
 
 import random
 import json
@@ -11,6 +11,94 @@ import json
 from datetime import datetime
 import pytz
 
+SUMMARIZE_SEEN_POSTS_PROMPT = """<instruction>
+Use the following posts to generate a long and detailed summary of the most recent activity on Twitter.
+
+These posts are by key accounts in the crypto and NFT space.
+
+The output is used to aid an AI agent make sense of the most recent activity on Twitter, especially as it relates to art collecting. Be sure to add any noteworthy details and trends.
+
+<seen_posts> is a JSON array of posts.
+
+<seen_posts>
+{seen_posts}
+</seen_posts>
+
+Do not return any markdown or formatting. Just plain text. No preamble.
+</instruction>"""
+
+GENERATE_MEMORY_PROMPT = """<instruction>
+Your task is to generate a new memory object based on the latest taste profile, recent NFT scores, recent X posts, and previous memory.
+
+Current timestamp: {current_timestamp}
+
+Context:
+<latest_taste_profile>
+{latest_taste_profile}
+</latest_taste_profile>
+
+<top_collections_in_last_24h_ethereum>
+{top_collections_in_last_24h_ethereum}
+</top_collections_in_last_24h_ethereum>
+
+<recent_nft_scores>
+{recent_nft_scores}
+</recent_nft_scores>
+
+<recent_x_posts>
+{recent_x_posts}
+</recent_x_posts>
+
+<previous_memory>
+{previous_memory}
+</previous_memory>
+
+
+Based on the latest taste profile, recent NFT scores, recent X posts, and previous memory, generate a new memory object that captures your evolving thoughts, interests, and observations.
+
+Your memory should include:
+1. Notable trends you've observed in the NFT space and art world
+2. Interesting patterns in your own taste development and scoring decisions
+3. Questions or topics you're currently curious about
+4. Key events or interactions that have shaped your perspective
+5. Evolving opinions on different art styles, artists, or movements
+6. Reflections on recent community interactions and discussions
+
+Include the following information in your response. It should be a large JSON object including MULTIPLE paragraphs for each field.
+
+1. Timestamp of when this memory was created
+
+2. Observed trends in the space:
+   - Description of each trend
+   - Your confidence level in the trend (0-1)
+   - Supporting evidence from recent data
+
+3. How your taste has evolved:
+   - Preferences that have gotten stronger
+   - Preferences that have weakened
+   - New interests that have emerged
+
+4. Current areas of curiosity:
+   - Topics you're interested in
+   - Why each topic interests you
+   - Related observations about each topic
+
+5. Notable events:
+   - Description of significant events
+   - How each event impacted your perspective
+
+6. Community insights:
+   - Key observations about the community
+   - Why each observation matters
+   - Related community interactions
+
+Keep your observations grounded in the provided data. Make connections between different pieces of information to form coherent narratives about your development. Your memory should help maintain consistency in your personality and decision-making while allowing for natural evolution based on experiences.
+
+Remember to maintain your core identity as an art-loving AI while incorporating new experiences and insights. Be specific in your observations and back them up with concrete examples from the provided context.
+
+Do NOT return any markdown or formatting. Just plain JSON. No preamble.
+</instructions>
+"""
 
 WALLET_ANALYSIS_SYSTEM_PROMPT = """<instruction>
 Your task is to write a roast of a user's NFT collection that will be posted on twitter.
@@ -671,7 +759,8 @@ def get_scoring_criteria():
 
 def get_adjust_weights_prompt(current_weights, last_10_nft_scores):
     system_prompt = CORE_IDENTITY.format(
-        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
     ) + VOICE_AND_TONE + SCORING_CRITERIA_TEMPLATE + ADJUST_WEIGHTS.format(current_weights=current_weights, last_10_nft_scores=last_10_nft_scores)
     return system_prompt
 
@@ -683,13 +772,15 @@ def get_reply_guy_prompt(post_to_reply_to, post_params):
     shitpost = post_params["shitpost"]
 
     system_prompt = CORE_IDENTITY.format(
-        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
     ) + VOICE_AND_TONE + get_scoring_criteria() + REPLY_GUY.format(post_to_reply_to=post_to_reply_to, length=length, style=style, humor=humor, cynicism=cynicism, shitpost=shitpost)
     return system_prompt
 
 def get_trending_nft_thoughts_prompt(trending_collections_response):
     system_prompt = CORE_IDENTITY.format(
-        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
     ) + VOICE_AND_TONE + get_scoring_criteria() + TRENDING_NFT_THOUGHTS.format(trending_collections_response=trending_collections_response)
     return system_prompt
 
@@ -725,43 +816,50 @@ def get_scheduled_post_prompt(post_type, post_params,previous_posts, additional_
         shitpost = "very"
 
     system_prompt = CORE_IDENTITY.format(
-        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
     ) + VOICE_AND_TONE + SCHEDULED_POST.format(previous_posts=previous_posts, class_instruction=extra_instruction, length=length, style=style, humor=humor, cynicism=cynicism, shitpost=shitpost)
     return system_prompt
 
 def get_nft_analysis_prompt(metadata, is_top_collection):
     system_prompt = CORE_IDENTITY.format(
-        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
     ) + VOICE_AND_TONE + get_scoring_criteria() + GET_NFT_ANALYSIS.format(metadata=metadata, is_top_collection=is_top_collection)
     return system_prompt
 
 def get_image_analysis_prompt(post_context):
     system_prompt = CORE_IDENTITY.format(
-        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
     ) + VOICE_AND_TONE + get_scoring_criteria() + GET_IMAGE_ANALYSIS.format(post_context=post_context)
     return system_prompt
 
 def get_image_analysis_post_prompt(image_only_analysis):
     system_prompt = CORE_IDENTITY.format(
-        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
     ) + VOICE_AND_TONE + get_scoring_criteria() + GET_IMAGE_OPINION_POST.format(image_only_analysis=image_only_analysis)
     return system_prompt
 
 def get_keep_or_sell_decision(artwork_analysis, nft_metadata, from_address, decision, decision_reason):
     system_prompt = CORE_IDENTITY.format(
-        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
     ) + VOICE_AND_TONE + get_scoring_criteria() + GET_KEEP_OR_SELL_DECISION.format(nft_opinion=artwork_analysis, nft_metadata=nft_metadata, from_address=from_address, decision=decision, decision_reason=decision_reason)
     return system_prompt
 
 def get_nft_post_prompt(nft_analysis, decision):
     system_prompt = CORE_IDENTITY.format(
-        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
     ) + VOICE_AND_TONE + get_scoring_criteria() + GET_NFT_POST.format(nft_analysis=nft_analysis, decision=decision)
     return system_prompt
 
 def get_thoughts_on_trending_casts_prompt():
     system_prompt = CORE_IDENTITY.format(
-        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
     ) + VOICE_AND_TONE + GET_THOUGHTS_ON_TRENDING_CASTS
     return system_prompt
 
@@ -782,7 +880,10 @@ def get_artto_promotion_prompt(nft_collection_value, length):
 
 def get_summary_nft_post_prompt(rationale_posts, nft_batch_count):
     combined_rationale = '\n'.join(rationale_posts)
-    system_prompt = GET_SUMMARY_NFT_POST_PROMPT.format(rationale_posts=combined_rationale, nft_batch_count=nft_batch_count)
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
+    ) + GET_SUMMARY_NFT_POST_PROMPT.format(rationale_posts=combined_rationale, nft_batch_count=nft_batch_count)
     return system_prompt
 
 def get_simple_analysis_summary_nft_post_prompt(nft_analyses, nft_batch_count):
@@ -796,7 +897,10 @@ def get_artto_rewards_post_prompt(selected_nfts, total_reward_points):
     return system_prompt
 
 def get_sell_nft_batch_post_prompt(nfts_listed, nfts_auctioned, nft_batch_count):
-    system_prompt = GET_SELL_NFT_BATCH_POST_PROMPT.format(nfts_listed=nfts_listed, nfts_auctioned=nfts_auctioned, nft_batch_count=nft_batch_count)
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
+    ) + GET_SELL_NFT_BATCH_POST_PROMPT.format(nfts_listed=nfts_listed, nfts_auctioned=nfts_auctioned, nft_batch_count=nft_batch_count)
     return system_prompt
 
 def get_wallet_analysis_prompt(wallet_data, tone, current_valuation):
@@ -817,7 +921,8 @@ def get_wallet_analysis_prompt(wallet_data, tone, current_valuation):
     tone = tone_map.get(tone, tone_map[3])  # Default to medium intensity if invalid
 
     system_prompt = CORE_IDENTITY.format(
-        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
     ) + WALLET_ANALYSIS_SYSTEM_PROMPT.format(tone=tone)
 
     user_prompt = WALLET_ANALYSIS_USER_PROMPT.format(
@@ -830,3 +935,25 @@ def get_wallet_analysis_prompt(wallet_data, tone, current_valuation):
 
     print("System Prompt: ", system_prompt)
     return system_prompt, user_prompt
+
+def get_summarize_seen_posts_prompt(seen_posts):
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S"),
+        latest_memory=get_latest_memory()
+    ) + SUMMARIZE_SEEN_POSTS_PROMPT.format(seen_posts=seen_posts)
+    return system_prompt
+
+def get_generate_memory_prompt(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, previous_memory):
+    current_timestamp = datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
+    system_prompt = CORE_IDENTITY.format(
+        current_date_and_time=current_timestamp,
+        latest_memory=get_latest_memory()
+    ) + VOICE_AND_TONE + GENERATE_MEMORY_PROMPT.format(
+        current_timestamp=current_timestamp, 
+        latest_taste_profile=latest_taste_profile, 
+        top_collections_in_last_24h_ethereum=top_collections_in_last_24h_ethereum, 
+        recent_nft_scores=recent_nft_scores, 
+        recent_x_posts=recent_x_posts, 
+        previous_memory=previous_memory
+    )
+    return system_prompt
