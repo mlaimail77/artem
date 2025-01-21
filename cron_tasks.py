@@ -494,15 +494,16 @@ async def reply_to_followers():
     NUM_TWEETS = 5
     sampled_tweets = random.sample(tweets, min(NUM_TWEETS, len(tweets)))
     
-    ignore_posts = get_posts_to_ignore()
-    ignore_posts_ids = [post['id'] for post in ignore_posts]
-    
     # Keep track of authors we've already replied to
     replied_authors = set()
     
     for tweet in sampled_tweets:
-        if tweet['id'] in ignore_posts_ids:
+        if check_ignore_post(tweet['id']):
             print("Skipping ignored post")
+            continue
+
+        if check_post_replied_to(tweet['id']):
+            print("Skipping already replied to post")
             continue
 
         author_id = tweet.get('author_id')
@@ -685,17 +686,11 @@ async def post_thought(post_on_twitter=True, post_on_farcaster=True, post_type=N
         except Exception as e:
             print(f"Error posting to Twitter: {str(e)}")
 
-# TWITTER
 async def reply_twitter_mentions():
     print("Replying to Twitter mentions")
     refreshed_token = refresh_token()
     # ids = get_ids_from_usernames(FOLLOWING_ACCOUNTS, refreshed_token["access_token"])
     tweets = search_twitter_images("(@artto_ai) -is:reply -is:retweet", refreshed_token["access_token"], 25)
-    ignore_posts = get_posts_to_ignore()
-    ignore_posts_ids = [post['id'] for post in ignore_posts]
-
-    # Filter out ignored tweets
-    tweets = [tweet for tweet in tweets if tweet['id'] not in ignore_posts_ids]
 
     # Randomly sample 5 tweets if more than 5 exist
     if len(tweets) > 8:
@@ -704,8 +699,12 @@ async def reply_twitter_mentions():
     print("Replying to tweets: ", tweets)
 
     for mention in tweets:
-        if mention['id'] in ignore_posts_ids:
+        if check_ignore_post(mention['id']):
             print("Skipping ignored post")
+            continue
+
+        if check_post_replied_to(mention['id']):
+            print("Skipping already replied to post")
             continue
 
         if mention.get('author_id', None) == os.getenv('X_ARTTO_USER_ID'):
@@ -724,6 +723,11 @@ async def reply_twitter_mentions():
         print(f"Replying to mention: {mention['text']}")
         post_params = generate_post_params()
 
+        response = None
+        reply = None
+        nft_details = None
+        score_details = None
+
         try:
             reply, nft_details, score_details = await get_reply(mention, post_params)
 
@@ -734,16 +738,24 @@ async def reply_twitter_mentions():
                 }
             }
             response = await post_tweet(payload, refreshed_token, parent=mention['id'])
-            if response:
+        except Exception as e:
+            print(f"Error generating reply: {str(e)}")
+            continue
+        
+        if response:
+            try:
                 set_post_created(response)
+            except Exception as e:
+                print(f"Error setting post to ignore: {str(e)}")
+            try:
                 set_post_to_ignore(mention['id'], "parent")
+            except Exception as e:
+                print(f"Error setting post to ignore: {str(e)}")
             if score_details and nft_details:
                 store_nft_scores(nft_details, score_details)
             print("Waiting 10-30 seconds")
             time.sleep(random.randint(10, 30))
-        except Exception as e:
-            print(f"Error processing Twitter mention: {str(e)}")
-            continue
+
 
 
 async def post_following_casts():

@@ -343,6 +343,42 @@ def get_last_n_posts(n=10):
     posts_text = "\n".join([post["content"] for post in response.data])
     return posts_text
 
+def check_ignore_post(post_id):
+    """
+    Check if a post ID exists in the ignore_posts table
+    
+    Args:
+        post_id: The ID of the post to check
+        
+    Returns:
+        bool: True if post ID exists in ignore_posts, False otherwise
+    """
+    response = refresh_or_get_supabase_client()
+    result = supabase.table("ignore_posts") \
+        .select("id") \
+        .eq("id", str(post_id)) \
+        .execute()
+    
+    return len(result.data) > 0
+
+def check_post_replied_to(post_id):
+    """
+    Check if a post ID exists in the parent_id column of posts_created table
+    
+    Args:
+        post_id: The ID of the post to check
+        
+    Returns:
+        bool: True if post ID exists as a parent_id in posts_created, False otherwise
+    """
+    response = refresh_or_get_supabase_client()
+    result = supabase.table("posts_created") \
+        .select("parent_id") \
+        .eq("parent_id", str(post_id)) \
+        .execute()
+    
+    return len(result.data) > 0
+
 def set_post_to_ignore(post_id, reason="None"):
     response = refresh_or_get_supabase_client()
     insert_data = {
@@ -351,11 +387,6 @@ def set_post_to_ignore(post_id, reason="None"):
         "reason": reason
     }
     response = supabase.table("ignore_posts").insert(insert_data).execute()
-    return response.data
-
-def get_posts_to_ignore():
-    response = refresh_or_get_supabase_client()
-    response = supabase.table("ignore_posts").select("id").execute()
     return response.data
 
 def get_all_posts_replied_to():
