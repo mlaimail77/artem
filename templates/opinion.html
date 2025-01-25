@@ -3,21 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Image Opinion</title>
+  <title>Artto - Art Opinion</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <style>
+    :root {
+      --primary-color: #6200EA;
+      --secondary-color: #03DAC6;
+      --background-color: #121212;
+      --text-color: #FFFFFF;
+      --card-bg-color: #1E1E1E;
+    }
+
+    body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .navbar {
+      background-color: var(--primary-color) !important;
+    }
+
+    .jumbotron {
+      background-color: var(--card-bg-color);
+      border-radius: 15px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
     .opinion-result {
-      background-color: #f8f9fa;
+      background-color: var(--card-bg-color);
       padding: 1.5rem;
       border-radius: 0.5rem;
       margin-top: 2rem;
       white-space: pre-wrap;
       display: none;
     }
+
     .input-group {
       max-width: 600px;
       margin: 0 auto;
     }
+
     .preview-image {
       max-width: 400px;
       max-height: 400px;
@@ -25,19 +54,32 @@
       margin: 1rem auto;
       display: none;
     }
+
     .error-message {
       color: #dc3545;
       display: none;
       text-align: center;
       margin-top: 1rem;
     }
+
     .input-section {
       display: none;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--secondary-color);
+      border-color: var(--secondary-color);
+      color: var(--background-color);
     }
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
       <a class="navbar-brand" href="/">Artto 🎨🤖</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,19 +88,22 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item">
-            <a class="nav-link" href="/">Home</a>
+            <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/gallery">Gallery</a>
+            <a class="nav-link" href="/gallery"><i class="fas fa-images"></i> Gallery</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/taste_profile">Taste Profile</a>
+            <a class="nav-link" href="/taste_profile"><i class="fas fa-palette"></i> Taste Profile</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/roast">Wallet Roast</a>
+            <a class="nav-link" href="/roast"><i class="fas fa-fire"></i> Wallet Roast</a>
           </li>
           <li class="nav-item active">
-            <a class="nav-link" href="/opinion">Artto's Assessment</a>
+            <a class="nav-link" href="/opinion"><i class="fas fa-comment-alt"></i> Artto's Assessment</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/chat_with_artto"><i class="fas fa-comments"></i> Chat with Artto</a>
           </li>
         </ul>
       </div>
@@ -66,8 +111,11 @@
   </nav>
 
   <div class="container my-5">
-    <h1 class="text-center mb-4">🎨 Artto's Assessment 🤖</h1>
-    <p class="text-center mb-4">Get Artto's opinion on an artwork. Every day, Artto analyzes submissions from the community may decide to place an offer on them.</p>
+    <div class="jumbotron text-center">
+      <h1 class="display-4">🎨 Artto's Assessment 🤖</h1>
+      <p class="lead">Get Artto's opinion on an artwork. Every day, Artto analyzes submissions from the community and may decide to place an offer on them.</p>
+    </div>
+
     <div class="text-center mb-5">
       <div class="btn-group" role="group">
         <button type="button" class="btn btn-primary mx-2" onclick="showSection('image')">🖼️ Analyze Image</button>
@@ -111,6 +159,34 @@
       <p id="opinion-text"></p>
     </div>
   </div>
+
+  <footer class="bg-dark text-light py-4 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5>Quick Links</h5>
+          <ul class="list-unstyled">
+            <li><a href="/gallery">Gallery</a></li>
+            <li><a href="/taste_profile">Taste Profile</a></li>
+            <li><a href="/roast">Wallet Roast</a></li>
+            <li><a href="/opinion">Artto's Assessment</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5>Community</h5>
+          <ul class="list-unstyled">
+            <li><a href="https://x.com/artto_ai">X (Twitter)</a></li>
+            <li><a href="https://warpcast.com/artto-ai">Farcaster</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5>About</h5>
+          <p>Artto is an <a href="https://github.com/mr-spaghetti-code/artto-ai">open-source project</a> exploring how AI might appreciate and collect art.</p>
+          <p>Created with ❤️ by <a href="https://x.com/jay_wooow">Jay Wooow</a></p>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>

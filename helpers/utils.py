@@ -303,7 +303,7 @@ def get_nft_scores(n=10):
 def get_gallery_nft_scores(n=100):
     response = refresh_or_get_supabase_client()
     response = supabase.table("nft_scores").select(
-        "network,contract_address,token_id,scores,analysis_text,image_url,acquire_recommendation"
+        "network,contract_address,timestamp,token_id,scores,analysis_text,image_url,acquire_recommendation,total_score"
     ).eq("acquire_recommendation", True).filter("decision", "in", '("ACQUIRE","REJECT","BURN","SELL")').order("timestamp", desc=True).limit(n).execute()
     return response.data
 
@@ -1000,6 +1000,34 @@ def insert_memory(memory_object):
     except Exception as e:
         print(f"Error inserting memory: {str(e)}")
         return False
+
+def save_chat_message(user_message, artto_reply, wallet):
+    """
+    Save a chat message pair (user message and Artto's reply) to the user_chats table in Supabase
+    
+    Args:
+        user_message (str): The content of the user's message
+        artto_reply (str): The content of Artto's reply
+        wallet (str): The wallet address of the user
+    Returns:
+        dict: Response from Supabase insert operation
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        data = {
+            "id": hashlib.sha256(f"{user_message}:{artto_reply}:{str(datetime.now())}".encode()).hexdigest(),
+            "timestamp": str(datetime.now()),
+            "user_message": user_message,
+            "artto_reply": artto_reply,
+            "wallet": wallet
+        }
+        
+        result = supabase.table("user_chats").insert(data).execute()
+        return result.data
+    except Exception as e:
+        print(f"Error saving chat message pair: {str(e)}")
+        return None
 
 
 def main():

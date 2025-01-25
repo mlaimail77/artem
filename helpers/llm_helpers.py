@@ -51,6 +51,65 @@ tools = [
     }
 ]
 
+chat_tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_nft_opinion",
+            "description": "Get the opinion of an NFT provided by as a link by the user",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "network": {"type": "string"},
+                    "contract_address": {"type": "string"},
+                    "token_id": {"type": "string"},
+                },
+                "required": ["network", "contract_address", "token_id"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function", 
+        "function": {
+            "name": "get_roast",
+            "description": "Get a roast of a wallet address",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "wallet_address": {"type": "string"}
+                },
+                "required": ["wallet_address"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_top_collections",
+            "description": "Get the top collections in the last N hours",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "time_period": {
+                        "type": "string",
+                        "description": "Time period for trending data. Options: '24h', '1d', '7d', '30d'. Default: '24h'"
+                    },
+                    "chains": {
+                        "type": "array",
+                        "description": "List of blockchain networks to include. Default: ['ethereum', 'base', 'solana']",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "additionalProperties": False
+            }
+        }
+    }
+]
+
 def get_generate_memory(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, previous_memory):
     system_prompt = get_generate_memory_prompt(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, previous_memory)
     response = client.chat.completions.create(
@@ -439,6 +498,105 @@ async def get_scheduled_post(post_type, post_params, previous_posts="No recent p
     )
     return response.choices[0].message.content
 
+async def get_chat_reply(messages):
+    
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": get_chat_system_prompt()},
+            *messages
+        ],
+        tools=chat_tools,
+        max_tokens=1000
+    )
+
+    if response.choices[0].message.tool_calls:
+        for tool_call in response.choices[0].message.tool_calls:
+            if tool_call.function.name == "get_nft_opinion":
+                tool_input = json.loads(tool_call.function.arguments)
+                network = tool_input["network"]
+                contract_address = tool_input["contract_address"]
+                token_id = tool_input["token_id"]
+
+                print("Tool input variables:")
+                print(f"  network: {network}")
+                print(f"  contract_address: {contract_address}") 
+                print(f"  token_id: {token_id}")
+
+                try:
+                    response = await get_artwork_analysis_and_metadata(network, contract_address, token_id)
+                    artwork_analysis = response["artwork_analysis"]
+                    metadata = response["metadata"]
+
+                    nft_details = {
+                        "artwork_analysis": artwork_analysis,
+                        "image_small_url": metadata["image_small_url"],
+                        "chain": network,
+                        "contract_address": contract_address,
+                        "token_id": token_id,
+                        "metadata": metadata
+                    }
+
+                    score_details = await get_total_score(artwork_analysis, nft_details)
+                    nft_post = await get_nft_post(artwork_analysis, score_details)
+                    
+                    return nft_post
+
+                except Exception as e:
+                    print("Error fetching NFT metadata: ", e)
+                    return f"I'm sorry, but I couldn't fetch the NFT metadata."
+
+            elif tool_call.function.name == "get_roast":
+                tool_input = json.loads(tool_call.function.arguments)
+                wallet_address = tool_input["wallet_address"]
+                
+                try:
+                    wallet_data = get_wallet_info(wallet_address)
+                    current_valuation = get_wallet_valuation(wallet_address)
+
+                    tone_default = 3
+                    response = get_analysis_params(wallet_data, tone_default, current_valuation)
+                    os.remove(response["temp_image_path"])
+                    analysis = get_wallet_analysis_response(wallet_data, response["base64_image"], tone_default, current_valuation)
+                    
+                    return analysis
+
+                except Exception as e:
+                    return f"I'm sorry, but I couldn't analyze the wallet: {str(e)}"
+            
+            elif tool_call.function.name == "get_top_collections":
+                tool_input = json.loads(tool_call.function.arguments)
+                time_period = tool_input["time_period"]
+                chains = tool_input["chains"]
+                print("Tool input variables:")
+                print(f"  time_period: {time_period}")
+                print(f"  chains: {chains}")
+                # Set defaults if not provided
+                if not time_period:
+                    time_period = "24h"
+                if not chains:
+                    chains = ["ethereum", "base", "solana"]
+                trending_collections = await get_trending_collections(time_period=time_period, chains=chains)
+
+                # Create assistant message with the trending collections data
+                messages.append({
+                    "role": "assistant",
+                    "content": f"Here are the trending collections: {json.dumps(trending_collections)}"
+                })
+
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system", "content": get_chat_system_prompt()},
+                        *messages
+                    ],
+                    tools=chat_tools,
+                    max_tokens=1000
+                )
+
+                return response.choices[0].message.content
+
+    return response.choices[0].message.content
 
 async def main():
     # pass

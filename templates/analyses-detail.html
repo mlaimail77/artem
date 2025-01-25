@@ -4,26 +4,91 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Artto - Recent Analyses</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <style>
-    .score-cell {
+    :root {
+      --primary-color: #6200EA;
+      --secondary-color: #03DAC6;
+      --background-color: #121212;
+      --text-color: #FFFFFF;
+      --card-bg-color: #1E1E1E;
+    }
+
+    body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .navbar {
+      background-color: var(--primary-color) !important;
+    }
+
+    .score-cell, .impression-cell {
       cursor: pointer;
       text-decoration: underline;
-      color: #007bff;
+      color: var(--secondary-color);
     }
+
     .modal-body {
       white-space: pre-wrap;
       font-family: monospace;
     }
-    .impression-cell {
-      cursor: pointer;
-      text-decoration: underline;
-      color: #007bff;
+
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .table {
+      width: 100%;
+      max-width: 100%;
+      color: var(--text-color);
+    }
+
+    .table th, .table td {
+      border-color: var(--card-bg-color);
+    }
+
+    .modal-content {
+      background-color: var(--card-bg-color);
+      color: var(--text-color);
+    }
+
+    .modal-header {
+      border-bottom-color: var(--primary-color);
+    }
+
+    .modal-header .close {
+      color: var(--text-color);
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--secondary-color);
+      border-color: var(--secondary-color);
+      color: var(--background-color);
+    }
+
+    @media screen and (max-width: 767px) {
+      .table td, .table th {
+        font-size: 14px;
+        padding: 0.3rem;
+      }
+      .table img {
+        max-width: 100px;
+      }
     }
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
       <a class="navbar-brand" href="/">Artto 🎨🤖</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,19 +97,22 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item">
-            <a class="nav-link" href="/">Home</a>
-          </li>
-          <li class="nav-item active">
-            <a class="nav-link" href="/gallery">Gallery</a>
+            <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/taste_profile">Taste Profile</a>
+            <a class="nav-link" href="/gallery"><i class="fas fa-images"></i> Gallery</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/roast">Wallet Roast</a>
+            <a class="nav-link" href="/taste_profile"><i class="fas fa-palette"></i> Taste Profile</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/opinion">Artto's Assessment</a>
+            <a class="nav-link" href="/roast"><i class="fas fa-fire"></i> Wallet Roast</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/opinion"><i class="fas fa-comment-alt"></i> Artto's Assessment</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/chat_with_artto"><i class="fas fa-comments"></i> Chat with Artto</a>
           </li>
         </ul>
       </div>
@@ -52,78 +120,108 @@
   </nav>
 
   <div class="container my-5">
-    <h2 class="mb-4">Recent Analyses</h2>
-    <p>Here are the most recent NFTs that Artto has analyzed. A green checkmark indicates that Artto would recommend acquiring the NFT or did acquire it, while a red X indicates it wouldn't or didn't.</p>
+    <h2 class="mb-4 text-center">Recent Analyses</h2>
+    <p class="text-center">Here are the most recent NFTs that Artto has analyzed. A green checkmark indicates that Artto would recommend acquiring the NFT or did acquire it, while a red X indicates it wouldn't or didn't.</p>
     
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Image</th>
-          <th>Network</th>
-          <th>Contract Address</th>
-          <th>Token ID</th>
-          <th>Initial Impression</th>
-          <th>Score</th>
-          <th>Recommendation</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for nft_score in recent_nft_scores %}
-        <tr>
-          <td><img src="{{ nft_score.image_url }}" alt="NFT Image" style="max-width: 150px;"></td>
-          <td>{{ nft_score.network }}</td>
-          <td>{{ nft_score.contract_address }}</td>
-          <td>{{ nft_score.token_id }}</td>
-          <td class="impression-cell" data-toggle="modal" data-target="#analysisModal{{ loop.index }}">{{ nft_score.analysis_text.initial_impression }}</td>
-          <td class="score-cell" data-toggle="modal" data-target="#scoreModal{{ loop.index }}">{{ nft_score.total_score }}</td>
-          <td>
-            {% if nft_score.acquire_recommendation %}
-            <span style="color: green; font-size: 1.5rem;">✅</span>
-            {% else %}
-            <span style="color: red; font-size: 1.5rem;">❌</span>
-            {% endif %}
-          </td>
-        </tr>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Network</th>
+            <th>Contract Address</th>
+            <th>Token ID</th>
+            <th>Initial Impression</th>
+            <th>Score</th>
+            <th>Recommendation</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for nft_score in recent_nft_scores %}
+          <tr>
+            <td><img src="{{ nft_score.image_url }}" alt="NFT Image" style="max-width: 150px;"></td>
+            <td>{{ nft_score.network }}</td>
+            <td>{{ nft_score.contract_address }}</td>
+            <td>{{ nft_score.token_id }}</td>
+            <td class="impression-cell" data-toggle="modal" data-target="#analysisModal{{ loop.index }}">{{ nft_score.analysis_text.initial_impression }}</td>
+            <td class="score-cell" data-toggle="modal" data-target="#scoreModal{{ loop.index }}">{{ nft_score.total_score }}</td>
+            <td>
+              {% if nft_score.acquire_recommendation %}
+              <span style="color: green; font-size: 1.5rem;">✅</span>
+              {% else %}
+              <span style="color: red; font-size: 1.5rem;">❌</span>
+              {% endif %}
+            </td>
+          </tr>
 
-        <!-- Modal for this NFT's scores -->
-        <div class="modal fade" id="scoreModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="scoreModalLabel{{ loop.index }}" aria-hidden="true">
-          <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="scoreModalLabel{{ loop.index }}">Detailed Scores</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div class="modal-body">{{ nft_score.scores | tojson(indent=2) }}
+          <!-- Modal for this NFT's scores -->
+          <div class="modal fade" id="scoreModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="scoreModalLabel{{ loop.index }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="scoreModalLabel{{ loop.index }}">Detailed Scores</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">{{ nft_score.scores | tojson(indent=2) }}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Modal for this NFT's detailed analysis -->
-        <div class="modal fade" id="analysisModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="analysisModalLabel{{ loop.index }}" aria-hidden="true">
-          <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="analysisModalLabel{{ loop.index }}">Detailed Analysis</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div class="modal-body">{{ nft_score.analysis_text.detailed_analysis }}
+          <!-- Modal for this NFT's detailed analysis -->
+          <div class="modal fade" id="analysisModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="analysisModalLabel{{ loop.index }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="analysisModalLabel{{ loop.index }}">Detailed Analysis</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">{{ nft_score.analysis_text.detailed_analysis }}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        {% endfor %}
-      </tbody>
-    </table>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
     <div class="text-center mt-4">
       <a href="/analyses-24-hours" class="btn btn-primary">See all the analysis over the last 24 hours</a>
     </div>
   </div>
+
+  <footer class="bg-dark text-light py-4 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5>Quick Links</h5>
+          <ul class="list-unstyled">
+            <li><a href="/gallery">Gallery</a></li>
+            <li><a href="/taste_profile">Taste Profile</a></li>
+            <li><a href="/roast">Wallet Roast</a></li>
+            <li><a href="/opinion">Artto's Assessment</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5>Community</h5>
+          <ul class="list-unstyled">
+            <li><a href="https://x.com/artto_ai">X (Twitter)</a></li>
+            <li><a href="https://warpcast.com/artto-ai">Farcaster</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5>About</h5>
+          <p>Artto is an <a href="https://github.com/mr-spaghetti-code/artto-ai">open-source project</a> exploring how AI might appreciate and collect art.</p>
+          <p>Created with ❤️ by <a href="https://x.com/jay_wooow">Jay Wooow</a></p>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
