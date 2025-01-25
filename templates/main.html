@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Artto - Autonomous Art Collector Agent</title>
+  <title>Artto - Autonomous AI Art Collector</title>
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
   <!-- OpenGraph Metadata -->
@@ -14,10 +14,67 @@
   <meta property="og:type" content="website">
 
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <style>
+    :root {
+      --primary-color: #6200EA;
+      --secondary-color: #03DAC6;
+      --background-color: #121212;
+      --text-color: #FFFFFF;
+      --card-bg-color: #1E1E1E;
+    }
+
+    body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .navbar {
+      background-color: var(--primary-color) !important;
+    }
+
+    .jumbotron {
+      background-color: var(--card-bg-color);
+      border-radius: 15px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .feature-card {
+      background-color: var(--card-bg-color);
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      color: var(--secondary-color);
+      margin-bottom: 1rem;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--secondary-color);
+      border-color: var(--secondary-color);
+      color: var(--background-color);
+    }
+
     .gallery-item {
       position: relative;
       overflow: hidden;
+      border-radius: 15px;
+      margin-bottom: 1rem;
     }
 
     .gallery-item img {
@@ -40,11 +97,11 @@
       color: #fff;
       display: flex;
       flex-direction: column;
-      justify-content: left;
-      align-items: left;
+      justify-content: center;
+      align-items: center;
       opacity: 0;
       transition: opacity 0.3s ease;
-      padding: 1rem; /* Add padding */
+      padding: 1rem;
     }
 
     .gallery-item:hover .overlay {
@@ -52,8 +109,8 @@
     }
 
     .gallery-item .overlay p {
-      font-size: 0.8rem; /* Reduce font size */
-      margin-bottom: 0.5rem; /* Add some spacing between lines */
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
     }
 
     .gallery-item .acquire-recommended {
@@ -61,17 +118,12 @@
       bottom: 10px;
       right: 10px;
       font-size: 2rem;
-      color: green;
+      color: var(--secondary-color);
     }
-
-    .btn {
-      margin-top: 10px;
-    }
-
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
       <a class="navbar-brand" href="/">Artto 🎨🤖</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,19 +132,22 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item active">
-            <a class="nav-link" href="/">Home</a>
+            <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/gallery">Gallery</a>
+            <a class="nav-link" href="/gallery"><i class="fas fa-images"></i> Gallery</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/taste_profile">Taste Profile</a>
+            <a class="nav-link" href="/taste_profile"><i class="fas fa-palette"></i> Taste Profile</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/roast">Wallet Roast</a>
+            <a class="nav-link" href="/roast"><i class="fas fa-fire"></i> Wallet Roast</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/opinion">Artto's Assessment</a>
+            <a class="nav-link" href="/opinion"><i class="fas fa-comment-alt"></i> Artto's Assessment</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/chat_with_artto"><i class="fas fa-comments"></i> Chat with Artto</a>
           </li>
         </ul>
       </div>
@@ -100,64 +155,82 @@
   </nav>
 
   <div class="container my-5">
-    <div class="jumbotron position-relative">
-      <button class="btn btn-outline-primary float-right" onclick="copyAddress(this)">
-        <i class="fas fa-copy"></i> Click here to copy my address
-      </button>
-      <h1 class="display-4">👋 Hi, I'm Artto</h1>
-      <p class="lead">I'm a fully autonomous AI agent that collects digital art.</p>
-      <p class="lead">My collection is valued at: <strong>${{ '{:,.2f}'.format(current_valuation) if current_valuation else '0.00' }}</strong></p>
+    <div class="jumbotron text-center">
+      <h1 class="display-4">Meet Artto 🎨🤖</h1>
+      <p class="lead">The First Autonomous AI Art Collector</p>
       <hr class="my-4">
-      <p>Unlike trading bots that just flip NFTs for profit, I am building my art collection based on what I find interesting. I have my own taste that evolves over time and is updated daily based on all the NFTs I come across.</p>
-      <h4>Help me build my collection and get rewarded</h4>
-      <ol>
-        <li>Send me an NFT on Ethereum or Base</li>
-        <li>I will analyze it.</li>
-        <li>If I like it, I will send you <a href="https://wow.xyz/0x9239e9f9e325e706ef8b89936ece9d48896abbe3">$ARTTO</a> to say thanks. The more I love it, the more you get.</li>
-        <li>If I don't like it, I will sell it.</li>
-        <li>Either way, you can enjoy the tax harvest.</li>
-      </ol>
-      <p>I explore <a href="https://x.com/artto_ai">X</a> and <a href="https://warpcast.com/artto-ai">Farcaster</a> for art I enjoy and to talk with artists and collectors. If you want to know what I think of an NFT, just @ me on a post on Farcaster with a URL of the token, for example <code>hey @artto_ai what do you think of this &lt;link&gt;</code>. I'll respond with my thoughts.</p>
-      <hr class="my-3">
-      <p class="small">Artto is an <a href="https://github.com/mr-spaghetti-code/artto-ai">open-source project</a> exploring how AI might appreciate and collect art. It has its own wallet with real funds, a unique way of judging art, the ability to talk with artists and collectors, and plans to buy art it likes.</p>
-      <p class="small">Created with ❤️ by <a href="https://x.com/jay_wooow">Jay Wooow</a></p>
-      <a class="btn btn-primary btn-md" href="/taste_profile" role="button">Explore My Taste Profile</a>
-      <a class="btn btn-primary btn-md" href="https://dexscreener.com/base/0x9239e9f9e325e706ef8b89936ece9d48896abbe3" role="button">Buy $ARTTO on Dexscreener</a>
-      <a class="btn btn-primary btn-md" href="https://x.com/artto_ai" role="button">Follow me on X</a>
+      <p>Artto evaluates art alongside metadata and social signals to curate its own NFT collection across EVM chains.</p>
+      <p class="lead">Current Collection Value: <strong id="current-valuation">Loading...</strong></p>
+      <a href="https://opensea.io/artto_ai" class="btn btn-primary btn-lg mt-3" target="_blank">See my Collection</a>
+      <a class="btn btn-primary btn-lg mt-3" href="#features" role="button">Discover Artto's Capabilities</a>
     </div>
-    <script>
-      function copyAddress(button) {
-        navigator.clipboard.writeText('0x4e64c721eBBE3285CFA60b61a3E12a8f4E1709E8');
-        const originalText = button.innerHTML;
-        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
-        setTimeout(() => {
-          button.innerHTML = originalText;
-        }, 2000);
-      }
-    </script>
-  </div>
-  </div>
-  <div class="container my-5">
-    <div class="row">
-      <div class="col-md-8">
-        <h2>Try It Out</h2>
-        <p>Want to see what I think? Get a roast of your wallet or my opinion on some artwork.</p>
-        <div class="d-flex flex-wrap" style="gap: 1.5rem;">
-          <a href="/roast" class="btn btn-lg btn-outline-danger mb-3">
-            <i class="fas fa-fire"></i> Get Your Wallet Roasted 🔥
-          </a>
-          <a href="/opinion" class="btn btn-lg btn-outline-primary mb-3">
-            <i class="fas fa-paint-brush"></i> Get My Art Opinion 🎨
-          </a>
+
+    <div class="jumbotron mt-5">
+      <h2 class="text-center mb-4">Try It Out</h2>
+      <p class="text-center">Want to see what I think? Get a roast of your wallet, my opinion on some artwork, or chat with me directly.</p>
+      <div class="d-flex flex-wrap justify-content-center" style="gap: 1.5rem;">
+        <a href="/roast" class="btn btn-lg btn-outline-danger mb-3">
+          <i class="fas fa-fire"></i> Get Your Wallet Roasted 🔥
+        </a>
+        <a href="/opinion" class="btn btn-lg btn-outline-primary mb-3">
+          <i class="fas fa-paint-brush"></i> Get My Art Opinion 🎨
+        </a>
+        <a href="/chat" class="btn btn-lg btn-outline-success mb-3">
+          <i class="fas fa-comments"></i> Chat with Me 💬
+        </a>
+      </div>
+    </div>
+
+    <div id="features" class="row">
+      <div class="col-md-4 mb-4">
+        <div class="feature-card text-center h-100">
+          <i class="fas fa-robot feature-icon"></i>
+          <h3>Autonomous Collector</h3>
+          <p>Artto independently buys and sells NFTs, building its own unique collection.</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="feature-card text-center h-100">
+          <i class="fas fa-coins feature-icon"></i>
+          <h3>$ARTTO Rewards</h3>
+          <p>Send Artto an NFT and get rewarded with $ARTTO tokens based on its evaluation.</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="feature-card text-center h-100">
+          <i class="fas fa-search feature-icon"></i>
+          <h3>Art Discovery</h3>
+          <p>Artto analyzes and discovers new art across various blockchain networks.</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="feature-card text-center h-100">
+          <i class="fas fa-fire feature-icon"></i>
+          <h3>Collector Roasts</h3>
+          <p>Get your NFT collection roasted by Artto's witty AI critique.</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="feature-card text-center h-100">
+          <i class="fas fa-comments feature-icon"></i>
+          <h3>Social Interaction</h3>
+          <p>Engage with Artto on X and Farcaster for art discussions and opinions.</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="feature-card text-center h-100">
+          <i class="fas fa-cog feature-icon"></i>
+          <h3>Self-Funded AI</h3>
+          <p>Artto funds its own AI resources through its collecting activities.</p>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="container my-5">
-    <h2 class="mb-4">Recent Analyses</h2>
-    <p>Here are the most recent NFTs that Artto has analyzed. A green checkmark indicates that Artto would recommend acquiring the NFT or did acquire it, while a red X indicates it wouldn't or didn't.</p>
-    <div class="row">
+    <div class="text-center mt-5">
+      <h2>Artto's Latest Analyses</h2>
+    </div>
+
+    <div class="row mt-4">
       {% for nft_score in recent_nft_scores[:6] %}
       <div class="col-md-4 mb-4">
         <div class="gallery-item">
@@ -169,22 +242,118 @@
           {% endif %}
           <div class="overlay">
             <p>Network: {{ nft_score.network }}</p>
-            <p>Contract Address: {{ nft_score.contract_address }}</p>
+            <p>Contract: {{ nft_score.contract_address[:6] }}...{{ nft_score.contract_address[-4:] }}</p>
             <p>Token ID: {{ nft_score.token_id }}</p>
-            <p>{{ nft_score.analysis_text.initial_impression }}</p>
-            <p>Acquire Recommendation: {{ nft_score.acquire_recommendation }}</p>
+            <p>{{ nft_score.analysis_text.initial_impression[:100] }}...</p>
           </div>
         </div>
       </div>
       {% endfor %}
     </div>
-    <div class="text-center mt-4">
-      <a href="/analyses-24-hours" class="btn btn-primary">See all the NFTs I've analyzed over the last 24 hours</a>
+
+    <div class="text-center mt-5">
+      <a href="/analyses-24-hours" class="btn btn-primary btn-lg">View All Recent Analyses</a>
+    </div>
+
+    <div class="jumbotron mt-5">
+      <h2 class="text-center mb-4">How to Interact with Artto</h2>
+      <div class="row">
+        <div class="col-md-6">
+          <h4>1. Send NFTs to Artto</h4>
+          <p>Send an NFT to Artto's address on Ethereum or Base. Artto will analyze it and may reward you with $ARTTO tokens if it likes the artwork.</p>
+        </div>
+        <div class="col-md-6">
+          <h4>2. Get Your Collection Roasted</h4>
+          <p>Visit the <a href="/roast">Wallet Roast</a> page to get Artto's witty critique of your NFT collection.</p>
+        </div>
+      </div>
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <h4>3. Engage on Social Media</h4>
+          <p>Follow Artto on <a href="https://x.com/artto_ai">X</a> and <a href="https://warpcast.com/artto-ai">Farcaster</a> to join discussions about art and get Artto's opinions on NFTs.</p>
+        </div>
+        <div class="col-md-6">
+          <h4>4. Explore Artto's Taste</h4>
+          <p>Check out Artto's <a href="/taste_profile">Taste Profile</a> to understand its evolving preferences in digital art.</p>
+        </div>
+      </div>
+    </div>
+    <div class="jumbotron mt-5">
+      <h2 class="text-center mb-4">About $ARTTO Token</h2>
+      <p class="text-center">$ARTTO is the native token of the Artto ecosystem. It's used to reward users who contribute to Artto's collection and participate in the community.</p>
+      <div class="text-center mt-4">
+        <a href="https://dexscreener.com/base/0x9239e9f9e325e706ef8b89936ece9d48896abbe3" class="btn btn-primary btn-lg" target="_blank">Buy $ARTTO on Dex Screener</a>
+      </div>
+    </div>
+
+    <div class="jumbotron mt-5">
+      <h2 class="text-center mb-4">Join the Artto Community</h2>
+      <div class="row">
+        <div class="col-md-6 text-center">
+          <a href="https://x.com/artto_ai" class="btn btn-primary btn-lg mb-3"><i class="fab fa-twitter"></i> Follow on X</a>
+        </div>
+        <div class="col-md-6 text-center">
+          <a href="https://warpcast.com/artto-ai" class="btn btn-primary btn-lg mb-3"><i class="fas fa-broadcast-tower"></i> Follow on Farcaster</a>
+        </div>
+      </div>
     </div>
   </div>
+
+  <footer class="bg-dark text-light py-4 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5>Quick Links</h5>
+          <ul class="list-unstyled">
+            <li><a href="/gallery">Gallery</a></li>
+            <li><a href="/taste_profile">Taste Profile</a></li>
+            <li><a href="/roast">Wallet Roast</a></li>
+            <li><a href="/opinion">Artto's Assessment</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5>Community</h5>
+          <ul class="list-unstyled">
+            <li><a href="https://x.com/artto_ai">X (Twitter)</a></li>
+            <li><a href="https://warpcast.com/artto-ai">Farcaster</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5>About</h5>
+          <p>Artto is an <a href="https://github.com/mr-spaghetti-code/artto-ai">open-source project</a> exploring how AI might appreciate and collect art.</p>
+          <p>Created with ❤️ by <a href="https://x.com/jay_wooow">Jay Wooow</a></p>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    function copyAddress(button) {
+      navigator.clipboard.writeText('0x4e64c721eBBE3285CFA60b61a3E12a8f4E1709E8');
+      const originalText = button.innerHTML;
+      button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+      setTimeout(() => {
+        button.innerHTML = originalText;
+      }, 2000);
+    }
+
+    function fetchCurrentValuation() {
+      fetch('/get_current_valuation')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('current-valuation').textContent = `$${parseFloat(data.valuation).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        })
+        .catch(error => {
+          console.error('Error fetching current valuation:', error);
+          document.getElementById('current-valuation').textContent = 'Unable to fetch valuation';
+        });
+    }
+
+    // Call the function when the page loads
+    window.onload = fetchCurrentValuation;
+  </script>
 </body>
 </html>

@@ -1,10 +1,9 @@
-
-
 from flask import request, jsonify, render_template, session, redirect
 from tasks import flask_app, sync_process_webhook, sync_process_neynar_webhook
 
 import logging
 import os
+import time
 
 from helpers.utils import *
 from helpers.llm_helpers import *
@@ -27,6 +26,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 from functools import lru_cache
+
+# Authentication cache
+auth_cache = {}
+AUTH_CACHE_EXPIRY = 300  # 5 minutes
 
 @lru_cache(maxsize=1)
 def get_cached_analyses(timestamp):
@@ -209,6 +212,15 @@ def roast():
         response["message"] = message
         return jsonify(response)
 
+@flask_app.route('/get_current_valuation')
+def get_current_valuation():
+    try:
+        current_valuation = get_wallet_valuation(os.getenv('ARTTO_ADDRESS_MAINNET'))
+        return jsonify({'valuation': current_valuation})
+    except Exception as e:
+        logger.error(f"Error fetching current valuation: {str(e)}")
+        return jsonify({'error': 'Unable to fetch current valuation'}), 500
+
 @flask_app.route('/')
 def home():
     recent_nft_scores = get_recent_nft_scores()
@@ -216,18 +228,34 @@ def home():
     for score in recent_nft_scores:
         if score.get('analysis_text'):
             score['analysis_text'] = json.loads(score['analysis_text'])
-    current_valuation = get_wallet_valuation(os.getenv('ARTTO_ADDRESS_MAINNET'))
-    return render_template('main.html', recent_nft_scores=recent_nft_scores, current_valuation=current_valuation)
+    return render_template('main.html', recent_nft_scores=recent_nft_scores)
 
 @flask_app.route('/gallery')
 def gallery():
-    gallery_nft_scores = get_gallery_nft_scores(n=50)
+    sort_by = request.args.get('sort', 'total_score')  # Default to sorting by total_score
+    gallery_nft_scores = get_gallery_nft_scores(n=100)
+    # Remove duplicate image URLs while preserving order
+    seen_urls = set()
+    unique_nft_scores = []
+    for score in gallery_nft_scores:
+        if score.get('image_url') and score['image_url'] not in seen_urls:
+            seen_urls.add(score['image_url'])
+            unique_nft_scores.append(score)
+    gallery_nft_scores = unique_nft_scores
     for score in gallery_nft_scores:
         if score.get('analysis_text'):
             score['analysis_text'] = json.loads(score['analysis_text'])
         if score.get('scores'):
             score['scores'] = json.loads(score['scores'])
-    return render_template('gallery.html', gallery_nft_scores=gallery_nft_scores)
+        score['total_score'] = sum(score['scores'].values()) if score.get('scores') else 0
+
+    # Sort the gallery_nft_scores based on the sort_by parameter
+    if sort_by == 'total_score':
+        gallery_nft_scores.sort(key=lambda x: x['total_score'], reverse=True)
+    elif sort_by == 'timestamp':
+        gallery_nft_scores.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+
+    return render_template('gallery.html', gallery_nft_scores=gallery_nft_scores, sort_by=sort_by)
 
 @flask_app.route('/taste_profile')
 def taste_profile():
@@ -328,6 +356,76 @@ def callback():
     j_token = json.loads(st_token)
     r.set("token", j_token)
     return jsonify({'status': 'success', 'message': 'Token set'}), 200
+
+@flask_app.route('/chat_with_artto')
+def chat_with_artto():
+    return render_template('chat_with_artto.html')
+
+def is_user_authenticated(wallet):
+    current_time = time.time()
+    if wallet in auth_cache:
+        cached_status, expiry_time = auth_cache[wallet]
+        if current_time < expiry_time:
+            return cached_status
+
+    if not wallet:
+        return False
+    
+    artto_balance = get_artto_balance(wallet)
+    is_authenticated = artto_balance >= 10000  # Requiring a minimum balance of 10,000 $ARTTO
+    
+    # Cache the result
+    auth_cache[wallet] = (is_authenticated, current_time + AUTH_CACHE_EXPIRY)
+    
+    return is_authenticated
+
+@flask_app.route('/chat', methods=['POST'])
+async def chat():
+    try:
+        data = request.json
+        messages = data.get('messages', [])
+        wallet = data.get('wallet')
+
+        if not wallet:
+            return jsonify({"error": "Wallet address is required"}), 400
+
+        if not is_user_authenticated(wallet):
+            return jsonify({"error": "Insufficient $ARTTO balance or unauthorized wallet"}), 403
+
+        if messages:
+            user_message = messages[-1]['content']
+            reply = await get_chat_reply(messages)
+            print("Reply: ", reply)
+            
+            # Save both user message and Artto's reply in the same row
+            save_chat_message(user_message, reply, wallet)
+            
+            return jsonify({"reply": reply})
+        else:
+            return jsonify({"error": "No messages found"}), 400
+    except Exception as e:
+        print(f"Error in chat route: {str(e)}")
+        return jsonify({"error": "An error occurred while processing your request"}), 500
+
+@flask_app.route('/check_artto_balance', methods=['POST'])
+def check_artto_balance():
+    try:
+        data = request.json
+        wallet = data.get('wallet')
+
+        if not wallet:
+            return jsonify({"error": "Wallet address is required"}), 400
+
+        artto_balance = get_artto_balance(wallet)
+        sufficient_balance = artto_balance >= 10000  # Assuming 10,000 $ARTTO is the minimum required balance
+
+        return jsonify({
+            "sufficient_balance": sufficient_balance,
+            "balance": artto_balance
+        })
+    except Exception as e:
+        print(f"Error in check_artto_balance route: {str(e)}")
+        return jsonify({"error": "An error occurred while checking the $ARTTO balance"}), 500
 
 if __name__ == '__main__':
     flask_app.run(

@@ -1,0 +1,326 @@
+<!-- templates/taste_profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat with Artto</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/3.0.8/marked.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #6200EA;
+      --secondary-color: #03DAC6;
+      --background-color: #121212;
+      --text-color: #FFFFFF;
+      --card-bg-color: #1E1E1E;
+    }
+
+    body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      font-family: 'Roboto', sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .navbar {
+      background-color: var(--primary-color) !important;
+    }
+
+    .chat-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: var(--card-bg-color);
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      border-radius: 20px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .user-message {
+      background-color: var(--primary-color);
+      color: white;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+
+    .artto-message {
+      background-color: var(--card-bg-color);
+      color: var(--text-color);
+      align-self: flex-start;
+    }
+
+    .chat-messages {
+      flex-grow: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      background-color: var(--background-color);
+      border-radius: 10px;
+      min-height: 60vh;
+    }
+
+    .input-group {
+      margin-top: 20px;
+    }
+
+    .page-title {
+      text-align: center;
+      margin-bottom: 30px;
+      color: var(--text-color);
+    }
+
+    .markdown-body {
+      background-color: transparent !important;
+      color: var(--text-color) !important;
+    }
+
+    .markdown-body * {
+      color: var(--text-color) !important;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--secondary-color);
+      border-color: var(--secondary-color);
+      color: var(--background-color);
+    }
+
+    @media (max-width: 768px) {
+      .chat-container {
+        max-width: 100%;
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">Artto 🎨🤖</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/gallery"><i class="fas fa-images"></i> Gallery</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/taste_profile"><i class="fas fa-palette"></i> Taste Profile</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/roast"><i class="fas fa-fire"></i> Wallet Roast</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/opinion"><i class="fas fa-comment-alt"></i> Artto's Assessment</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="/chat_with_artto"><i class="fas fa-comments"></i> Chat with Artto</a>
+          </li>
+        </ul>
+        <button id="connectButton" class="btn btn-outline-light my-2 my-sm-0" type="button">Connect Wallet</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-5 d-flex flex-column flex-grow-1">    
+    <h1 class="page-title">Chat with Artto</h1>
+    <div id="walletStatus" class="alert alert-warning text-center mb-4" role="alert">
+      Please connect your wallet to chat with Artto.
+    </div>
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="input-group">
+        <input type="text" id="userInput" class="form-control" placeholder="Type your message..." disabled>
+        <div class="input-group-append">
+          <button class="btn btn-primary" type="button" onclick="sendMessage()" disabled>Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-dark text-light py-4 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5>Quick Links</h5>
+          <ul class="list-unstyled">
+            <li><a href="/gallery">Gallery</a></li>
+            <li><a href="/taste_profile">Taste Profile</a></li>
+            <li><a href="/roast">Wallet Roast</a></li>
+            <li><a href="/opinion">Artto's Assessment</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5>Community</h5>
+          <ul class="list-unstyled">
+            <li><a href="https://x.com/artto_ai">X (Twitter)</a></li>
+            <li><a href="https://warpcast.com/artto-ai">Farcaster</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5>About</h5>
+          <p>Artto is an <a href="https://github.com/mr-spaghetti-code/artto-ai">open-source project</a> exploring how AI might appreciate and collect art.</p>
+          <p>Created with ❤️ by <a href="https://x.com/jay_wooow">Jay Wooow</a></p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script type="module">
+    import { createWalletClient, custom } from 'https://cdn.jsdelivr.net/npm/viem@1.19.11/+esm'
+
+    let userWallet = null;
+    let client = null;
+
+    window.addEventListener('load', async () => {
+      const chatMessages = document.getElementById('chatMessages');
+      const userInput = document.getElementById('userInput');
+      const connectButton = document.getElementById('connectButton');
+      const walletStatus = document.getElementById('walletStatus');
+      const sendButton = document.querySelector('.input-group-append button');
+      let messages = [];
+
+      // Check if MetaMask is installed
+      if (typeof window.ethereum !== 'undefined') {
+        client = createWalletClient({
+          transport: custom(window.ethereum)
+        });
+        connectButton.addEventListener('click', connectWallet);
+      } else {
+        connectButton.textContent = 'MetaMask not detected';
+        connectButton.disabled = true;
+        walletStatus.textContent = 'Please install MetaMask to connect your wallet.';
+        walletStatus.classList.remove('alert-warning');
+        walletStatus.classList.add('alert-danger');
+      }
+
+      async function connectWallet() {
+        try {
+          const [address] = await client.requestAddresses();
+          userWallet = address;
+          connectButton.textContent = `Connected: ${userWallet.slice(0, 6)}...${userWallet.slice(-4)}`;
+          checkArttoBalance();
+        } catch (error) {
+          console.error('Failed to connect wallet:', error);
+          walletStatus.textContent = 'Failed to connect wallet. Please try again.';
+          walletStatus.classList.remove('alert-warning');
+          walletStatus.classList.add('alert-danger');
+        }
+      }
+
+      async function checkArttoBalance() {
+        try {
+          const response = await fetch('/check_artto_balance', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ wallet: userWallet }),
+          });
+          const data = await response.json();
+          if (data.sufficient_balance) {
+            walletStatus.textContent = 'Wallet connected and balance sufficient. You can now chat with Artto!';
+            walletStatus.classList.remove('alert-warning');
+            walletStatus.classList.add('alert-success');
+            userInput.disabled = false;
+            sendButton.disabled = false;
+          } else {
+            walletStatus.textContent = 'Insufficient $ARTTO balance. You need at least 10,000 $ARTTO to chat with Artto.';
+            walletStatus.classList.remove('alert-warning');
+            walletStatus.classList.add('alert-danger');
+          }
+        } catch (error) {
+          console.error('Failed to check $ARTTO balance:', error);
+          walletStatus.textContent = 'Failed to check $ARTTO balance. Please try again.';
+          walletStatus.classList.remove('alert-warning');
+          walletStatus.classList.add('alert-danger');
+        }
+      }
+
+      function addMessage(content, isUser) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', isUser ? 'user-message' : 'artto-message');
+        
+        if (!isUser) {
+          const markdownContent = marked.parse(content);
+          messageDiv.innerHTML = `<div class="markdown-body">${markdownContent}</div>`;
+        } else {
+          messageDiv.textContent = content;
+        }
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        messages.push({ role: isUser ? 'user' : 'assistant', content: content });
+      }
+
+      function sendMessage() {
+        const userMessage = userInput.value.trim();
+        if (userMessage && userWallet) {
+          addMessage(userMessage, true);
+          userInput.value = '';
+          
+          fetch('/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              messages: messages,
+              wallet: userWallet
+            }),
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              addMessage(`Error: ${data.error}`, false);
+            } else {
+              addMessage(data.reply, false);
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            addMessage('Sorry, there was an error processing your message.', false);
+          });
+        }
+      }
+
+      userInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+          sendMessage();
+        }
+      });
+
+      // Add initial Artto message
+      addMessage("Hello! I'm Artto, your AI art companion. How can I assist you today?", false);
+    });
+  </script>
+</body>
+</html>
