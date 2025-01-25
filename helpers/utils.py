@@ -319,6 +319,18 @@ def get_recent_nft_scores(n=6, start_timestamp=None):
     response = query.limit(n).execute()
     return response.data
 
+def get_recent_acquisitions(n=6, start_timestamp=None):
+    response = refresh_or_get_supabase_client()
+    query = supabase.table("nft_scores").select(
+        "network,contract_address,token_id,analysis_text,image_url,acquire_recommendation,scores,total_score"
+    ).eq("decision", "ACQUIRE").eq("source", "donation").order("timestamp", desc=True)
+    
+    if start_timestamp:
+        query = query.gte("timestamp", start_timestamp)
+        
+    response = query.limit(n).execute()
+    return response.data
+
 def get_last_n_posts(n=10):
     print("Fetching last n posts")
     response = refresh_or_get_supabase_client()

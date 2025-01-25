@@ -1,3 +1,4 @@
+@ -0,0 +1,326 @@
 <!-- templates/taste_profile.html -->
 <!DOCTYPE html>
 <html lang="en">
@@ -199,6 +200,7 @@
 
     let userWallet = null;
     let client = null;
+    let messages = [];
 
     window.addEventListener('load', async () => {
       const chatMessages = document.getElementById('chatMessages');
@@ -206,7 +208,6 @@
       const connectButton = document.getElementById('connectButton');
       const walletStatus = document.getElementById('walletStatus');
       const sendButton = document.querySelector('.input-group-append button');
-      let messages = [];
 
       // Check if MetaMask is installed
       if (typeof window.ethereum !== 'undefined') {
@@ -265,7 +266,7 @@
         }
       }
 
-      function addMessage(content, isUser) {
+      window.addMessage = function(content, isUser) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', isUser ? 'user-message' : 'artto-message');
         
@@ -281,7 +282,7 @@
         messages.push({ role: isUser ? 'user' : 'assistant', content: content });
       }
 
-      function sendMessage() {
+      window.sendMessage = function() {
         const userMessage = userInput.value.trim();
         if (userMessage && userWallet) {
           addMessage(userMessage, true);

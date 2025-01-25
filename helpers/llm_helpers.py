@@ -107,6 +107,18 @@ chat_tools = [
                 "additionalProperties": False
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_recent_acquisitions",
+            "description": "Get the most recent NFT acquisitions",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": False
+            }
+        }
     }
 ]
 
@@ -563,6 +575,27 @@ async def get_chat_reply(messages):
 
                 except Exception as e:
                     return f"I'm sorry, but I couldn't analyze the wallet: {str(e)}"
+            
+            elif tool_call.function.name == "get_recent_acquisitions":
+                recent_acquisitions = get_recent_acquisitions(n=10)
+                print("Recent acquisitions: ", recent_acquisitions)
+
+                messages.append({
+                    "role": "assistant",
+                    "content": f"Here are my recent acquisitions: {json.dumps(recent_acquisitions)}"
+                })
+
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system", "content": "Summarize the recent acquisitions and provide your thoughts on them."},
+                        *messages
+                    ],
+                    tools=chat_tools,
+                    max_tokens=1000
+                )
+
+                return response.choices[0].message.content
             
             elif tool_call.function.name == "get_top_collections":
                 tool_input = json.loads(tool_call.function.arguments)
