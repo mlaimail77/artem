@@ -122,8 +122,8 @@ chat_tools = [
     }
 ]
 
-def get_generate_memory(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, previous_memory):
-    system_prompt = get_generate_memory_prompt(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, previous_memory)
+def get_generate_memory(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, hoa_reports_text, previous_memory):
+    system_prompt = get_generate_memory_prompt(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, hoa_reports_text, previous_memory)
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "system", "content": system_prompt}],

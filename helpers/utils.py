@@ -797,6 +797,28 @@ def insert_nft_discovery(network, contract_address, token_id, opensea_url):
         print(f"Error inserting NFT discovery: {str(e)}")
         return None
     
+def get_last_n_24_hoa_reports(n=10):
+    """
+    Get the N most recent 24 HOA reports ordered by timestamp in descending order.
+    
+    Args:
+        n (int): Number of reports to return (default 10)
+        
+    Returns:
+        list: The N most recent 24 HOA reports
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        result = supabase.table("24_hoa_reports") \
+                        .select("id,timestamp,content") \
+                        .order("timestamp", desc=True) \
+                        .limit(n) \
+                        .execute()
+        return result.data
+    except Exception as e:
+        print(f"Error getting 24 HOA reports: {str(e)}")
+        return None
 
 def save_posts(posts, type):
     """

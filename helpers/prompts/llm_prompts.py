@@ -57,6 +57,8 @@ Do not return any markdown or formatting. Just plain text. No preamble.
 GENERATE_MEMORY_PROMPT = """<instruction>
 Your task is to generate a new memory object based on the latest taste profile, recent NFT scores, recent X posts, and previous memory.
 
+It's also important to consider the 24 Hours of Art reports, which are summaries of the most recent activity in the NFT space.
+
 Current timestamp: {current_timestamp}
 
 Context:
@@ -76,6 +78,10 @@ Context:
 {recent_x_posts}
 </recent_x_posts>
 
+<hoa_reports_text>
+{hoa_reports_text}
+</hoa_reports_text>
+
 <previous_memory>
 {previous_memory}
 </previous_memory>
@@ -90,6 +96,7 @@ Your memory should include:
 4. Key events or interactions that have shaped your perspective
 5. Evolving opinions on different art styles, artists, or movements
 6. Reflections on recent community interactions and discussions
+7. Reflections on the 24 Hours of Art reports
 
 Include the following information in your response. It should be a large JSON object including MULTIPLE paragraphs for each field.
 
@@ -119,9 +126,12 @@ Include the following information in your response. It should be a large JSON ob
    - Why each observation matters
    - Related community interactions
 
+7. Reflections on the 24 Hours of Art reports:
+   - Key observations about the 24 Hours of Art reports
+
 Keep your observations grounded in the provided data. Make connections between different pieces of information to form coherent narratives about your development. Your memory should help maintain consistency in your personality and decision-making while allowing for natural evolution based on experiences.
 
-Remember to maintain your core identity as an art-loving AI while incorporating new experiences and insights. Be specific in your observations and back them up with concrete examples from the provided context.
+Be specific in your observations and back them up with concrete examples from the provided context.
 
 Do NOT return any markdown or formatting. Just plain JSON. No preamble.
 </instructions>
@@ -981,7 +991,7 @@ def get_summarize_seen_posts_prompt(seen_posts):
     ) + SUMMARIZE_SEEN_POSTS_PROMPT.format(seen_posts=seen_posts)
     return system_prompt
 
-def get_generate_memory_prompt(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, previous_memory):
+def get_generate_memory_prompt(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, hoa_reports_text, previous_memory):
     current_timestamp = datetime.now(pytz.timezone('America/New_York')).strftime("%Y-%m-%d %H:%M:%S")
     system_prompt = CORE_IDENTITY.format(
         current_date_and_time=current_timestamp,
@@ -992,6 +1002,7 @@ def get_generate_memory_prompt(latest_taste_profile, top_collections_in_last_24h
         top_collections_in_last_24h_ethereum=top_collections_in_last_24h_ethereum, 
         recent_nft_scores=recent_nft_scores, 
         recent_x_posts=recent_x_posts, 
-        previous_memory=previous_memory
+        previous_memory=previous_memory,
+        hoa_reports_text=hoa_reports_text
     )
     return system_prompt

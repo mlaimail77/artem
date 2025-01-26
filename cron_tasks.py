@@ -45,6 +45,14 @@ async def generate_memory():
         since_timestamp=one_day_ago_utc_iso
     )
 
+    # Get last 10 24 HOA reports
+    hoa_reports = get_last_n_24_hoa_reports(n=5)
+    hoa_reports_text = "\n".join([
+        f"24 Hours of Art Report: {report['timestamp']}\n<content>\n{report['content']}\n</content>"
+        for report in hoa_reports
+    ])
+
+
     # Add KOL posts to seen_posts table
     get_kol_tweets_formatted(
         refreshed_token["access_token"], 
@@ -62,7 +70,7 @@ async def generate_memory():
     # Get previous memory or None if no memories exist
     previous_memory = get_latest_memory()
 
-    memory = get_generate_memory(latest_taste_profile, formatted_top_collections, nft_batch, summary, previous_memory)
+    memory = get_generate_memory(latest_taste_profile, formatted_top_collections, nft_batch, summary, hoa_reports_text, previous_memory)
 
     insert_memory(memory)
 
@@ -741,7 +749,7 @@ async def reply_twitter_mentions():
         except Exception as e:
             print(f"Error generating reply: {str(e)}")
             continue
-        
+
         if response:
             try:
                 set_post_created(response)
