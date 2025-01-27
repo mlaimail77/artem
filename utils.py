@@ -24,6 +24,10 @@ def create_app() -> Flask:
             task_ignore_result=True,
             timezone='America/New_York',
             beat_schedule={
+                "post_recent_activity_every_day_at_2PM": {
+                    "task": "post_recent_activity",
+                    "schedule": crontab(minute=0, hour='14')
+                },
 
                 "sell_and_post_nfts_daily": {
                     "task": "sell_and_post_nfts",

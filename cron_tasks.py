@@ -318,6 +318,36 @@ async def post_rewards_summary():
     update_nft_reward_posts(ids, True)
 
 
+async def post_recent_activity():
+    refreshed_token = refresh_token()
+    one_day_ago = int((datetime.now() - timedelta(days=1)).timestamp())
+    recent_sales = await get_recent_sales(from_timestamp=one_day_ago)
+    parsed_transfers = parse_recent_sales_response(recent_sales)
+
+    recent_activity_summary = get_recent_activity_summary(parsed_transfers)
+    print(recent_activity_summary)
+
+    payload = {
+        "text": recent_activity_summary
+    }
+
+    # Get small image URLs from transfers
+    image_urls = []
+    for transfer in parsed_transfers:
+        if 'image_small_url' in transfer:
+            image_urls.append(transfer['image_small_url'])
+    
+    print("image_urls: ", image_urls)
+    payload["media"] = {"media_ids": []}
+    
+    # Take random 4 images and upload them
+    for image_url in random.sample(image_urls, min(4, len(image_urls))):
+        response = upload_media(image_url)
+        media = response['media']
+        media_ids = media['media_ids']
+        payload["media"]["media_ids"].extend(media_ids)
+
+    await post_tweet(payload, refreshed_token, parent=None)
 
 async def post_simple_analysis_nfts():
     # Every 4 hours, post a summary of the NFTs that have been analyzed in the last 4 hours

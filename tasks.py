@@ -21,6 +21,11 @@ celery_app = flask_app.extensions["celery"]
 
 logger = get_task_logger(__name__)
 
+
+@shared_task(ignore_result=False, name="post_recent_activity")
+def sync_post_recent_activity():
+    async_to_sync(post_recent_activity)()
+
 @shared_task(ignore_result=False, name="generate_memory")
 def sync_generate_memory():
     async_to_sync(generate_memory)()

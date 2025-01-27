@@ -119,8 +119,24 @@ chat_tools = [
                 "additionalProperties": False
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_recent_sales",
+            "description": "Get recent activity (sales, mints, etc.) from big collectors",
+            "parameters": {}
+        }
     }
 ]
+
+def get_recent_activity_summary(recent_activity):
+    system_prompt = get_recent_activity_prompt(json.dumps(recent_activity))
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "system", "content": system_prompt}],
+    )
+    return response.choices[0].message.content
 
 def get_generate_memory(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, hoa_reports_text, previous_memory):
     system_prompt = get_generate_memory_prompt(latest_taste_profile, top_collections_in_last_24h_ethereum, recent_nft_scores, recent_x_posts, hoa_reports_text, previous_memory)
@@ -596,6 +612,27 @@ async def get_chat_reply(messages):
                 )
 
                 return response.choices[0].message.content
+            
+            elif tool_call.function.name == "get_recent_sales":
+                one_day_ago = int((datetime.now() - timedelta(days=1)).timestamp())
+                recent_sales = await get_recent_sales(from_timestamp=one_day_ago)
+                parsed_transfers = parse_recent_sales_response(recent_sales)
+                messages.append({
+                    "role": "assistant",
+                    "content": f"Here is some recent activity from big collectors: {json.dumps(parsed_transfers)}"
+                })
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system", "content": get_chat_system_prompt()},
+                        *messages
+                    ],
+                    tools=chat_tools,
+                    max_tokens=1000
+                )
+
+                return response.choices[0].message.content
+
             
             elif tool_call.function.name == "get_top_collections":
                 tool_input = json.loads(tool_call.function.arguments)

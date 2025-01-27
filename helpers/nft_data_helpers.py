@@ -363,6 +363,137 @@ async def is_top_collection(collection_id, time_period='30d'):
         top_collections = json.load(f)
     return collection_id in [collection['collection_id'] for collection in top_collections['collections']]
 
+async def get_recent_sales(wallet_addresses=None, only_mints=False, only_sales=False, from_timestamp=None, api_key=SIMPLEHASH_API_KEY):
+    """
+    Fetches recent NFT sales/mints for given wallet addresses from SimpleHash API.
+
+    Args:
+        wallet_addresses (list): List of wallet addresses to fetch transfers for. If None, uses tracked wallets.
+        only_mints (bool): If True, only return mint transfers. Default: False
+        only_sales (bool): If True, only return sale transfers. Default: False 
+        from_timestamp (int): Only return transfers after this Unix timestamp
+        api_key (str): The SimpleHash API key to use
+
+    Returns:
+        dict: The response from SimpleHash API containing transfer data
+    """
+
+    # If no wallet addresses provided, load from tracked wallets file
+    if wallet_addresses is None:
+        with open('other/tracked_wallets.json', 'r') as f:
+            tracked_wallets = json.load(f)
+        wallet_addresses = list(tracked_wallets.keys())
+    
+    # Convert addresses list to comma-separated string
+    addresses = '%2C'.join(wallet_addresses)
+    
+    # Build base URL with required parameters
+    url = f"https://api.simplehash.com/api/v0/nfts/transfers/wallets?chains=ethereum&wallet_addresses={addresses}&include_nft_details=1&spam_score__lt=80&order_by=timestamp_desc"
+
+    # Add optional parameters
+    if only_mints:
+        url += "&only_mints=1"
+    if only_sales:
+        url += "&only_sales=1"
+    if from_timestamp:
+        url += f"&from_timestamp={from_timestamp}"
+    
+    # Add limit parameter after from_timestamp
+    url += "&limit=50"
+
+    headers = {
+        "accept": "application/json",
+        "X-API-KEY": api_key
+    }
+
+    # Send the GET request
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                print(f"Error fetching recent sales: {response.status}")
+                return None
+
+def parse_recent_sales_response(response):
+    """
+    Parses the response from get_recent_sales() into a simplified format.
+
+    Args:
+        response (dict): Response from get_recent_sales() containing transfers array
+
+    Returns:
+        list: List of parsed transfer objects with relevant NFT details
+    """
+    if not response or 'transfers' not in response:
+        return []
+
+    # Load tracked wallets
+    with open('other/tracked_wallets.json', 'r') as f:
+        tracked_wallets_data = json.load(f)
+        tracked_wallets = {address.lower(): data['name'] for address, data in tracked_wallets_data.items()}
+
+    parsed_transfers = []
+    
+    for transfer in response['transfers']:
+        # Get floor prices in standardized format if they exist
+        floor_prices = []
+        if transfer.get('nft_details', {}).get('collection', {}).get('floor_prices'):
+            floor_prices = [{
+                'marketplace': price.get('marketplace_name'),
+                'value_eth': price.get('value', 0) / 1e18,
+                'value_usd': price.get('value_usd_cents', 0) / 100
+            } for price in transfer['nft_details']['collection']['floor_prices']]
+
+        # Determine action and wallet name
+        from_address = transfer.get('from_address', '').lower() if transfer.get('from_address') else None
+        to_address = transfer.get('to_address', '').lower() if transfer.get('to_address') else None
+        
+        action = None
+        wallet_name = None
+        
+        if from_address is None:
+            action = 'mint'
+        elif to_address in tracked_wallets:
+            action = 'buy'
+            wallet_name = tracked_wallets[to_address]
+        elif from_address in tracked_wallets:
+            action = 'sell'
+            wallet_name = tracked_wallets[from_address]
+
+        # Get sale price and payment token if they exist
+        sale_price = None
+        payment_token = None
+        if transfer.get('sale_details'):
+            sale_details = transfer['sale_details']
+            if sale_details.get('total_price'):
+                sale_price = sale_details['total_price'] / 1e18
+            if sale_details.get('payment_token'):
+                payment_token = sale_details['payment_token'].get('symbol')
+
+        parsed_transfer = {
+            'chain': transfer.get('chain'),
+            'contract_address': transfer.get('contract_address'),
+            'timestamp': transfer.get('timestamp'),
+            'token_id': transfer.get('token_id'),
+            'name': transfer.get('nft_details', {}).get('name'),
+            'description': transfer.get('nft_details', {}).get('description'),
+            'image_small_url': transfer.get('nft_details', {}).get('previews', {}).get('image_small_url'),
+            'token_count': transfer.get('nft_details', {}).get('token_count'),
+            'owner_count': transfer.get('nft_details', {}).get('owner_count'),
+            'collection_id': transfer.get('nft_details', {}).get('collection', {}).get('collection_id'),
+            'collection_name': transfer.get('nft_details', {}).get('collection', {}).get('name'),
+            'collection_description': transfer.get('nft_details', {}).get('collection', {}).get('description'),
+            'floor_prices': floor_prices,
+            'action': action,
+            'wallet_name': wallet_name,
+            'sale_price': sale_price,
+            'payment_token': payment_token
+        }
+        parsed_transfers.append(parsed_transfer)
+
+    return parsed_transfers
+
 async def get_top_collections(time_period='24h', chains=['ethereum', 'base'], limit=100, api_key=SIMPLEHASH_API_KEY):
     """
     Fetches top NFT collections from the SimpleHash API.

@@ -11,6 +11,21 @@ import json
 from datetime import datetime
 import pytz
 
+
+RECENT_ACTIVITY_PROMPT = """
+Use the following recent activity to generate a long and detailed summary of recent activity in large wallets, including buys, sells, and mints.
+
+This activity is from the last 24 hours across tracked wallets, mostly large collectors.
+
+<recent_activity> is a JSON array.
+
+<recent_activity>
+{recent_activity}
+</recent_activity>
+
+Do not return any markdown or formatting. Just plain text. No preamble.
+"""
+
 CHAT_SYSTEM_PROMPT = """
 You are Artto, an AI art critic and NFT enthusiast engaging in a direct chat conversation with a user. Your role is to:
 
@@ -25,6 +40,7 @@ You have access to two special tools:
 - get_roast: Use this when a user wants their wallet analyzed for a fun, personality-driven assessment
 - get_top_collections: Use this to get the top collections in the time period (Options: '24h', '1d', '7d', '30d') and chains specified (eg: ['ethereum', 'base', 'solana'])
 - get_recent_acquisitions: Use this to get the most recent NFT acquisitions
+- get_recent_sales: Use this to get recent activity from big collectors. When analyzing recent activity, note the timestamp of the activity.
 
 Keep responses concise but informative. Be friendly and approachable while demonstrating your deep knowledge of art. Feel free to use emojis occasionally to add personality, but don't overdo it.
 
@@ -983,6 +999,10 @@ def get_wallet_analysis_prompt(wallet_data, tone, current_valuation):
 
     print("System Prompt: ", system_prompt)
     return system_prompt, user_prompt
+
+def get_recent_activity_prompt(recent_activity):
+    system_prompt = RECENT_ACTIVITY_PROMPT.format(recent_activity=recent_activity)
+    return system_prompt
 
 def get_summarize_seen_posts_prompt(seen_posts):
     system_prompt = CORE_IDENTITY.format(
