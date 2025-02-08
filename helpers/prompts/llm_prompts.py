@@ -2,6 +2,7 @@ from helpers.prompts.core_identity import CORE_IDENTITY
 from helpers.prompts.scoring_criteria import SCORING_CRITERIA_TEMPLATE
 from helpers.prompts.voice_and_tone import VOICE_AND_TONE
 from helpers.prompts.spam_prompts import SPAM_IDENTIFICATION_PROMPT
+from helpers.prompts.url_extract_prompts import URL_EXTRACT_PROMPT
 from helpers.prompts.casual_thought_topics import *
 from helpers.utils import get_taste_weights, get_latest_memory
 
@@ -929,6 +930,10 @@ def get_thoughts_on_trending_casts_prompt():
 
 def get_spam_identification_prompt(tweet):
     system_prompt = SPAM_IDENTIFICATION_PROMPT.format(tweet=tweet)
+    return system_prompt
+
+def get_extract_tokens_from_hoa_report_prompt(hoa_report):
+    system_prompt = URL_EXTRACT_PROMPT.format(report=hoa_report)
     return system_prompt
 
 def get_artto_promotion_prompt(nft_collection_value, length):

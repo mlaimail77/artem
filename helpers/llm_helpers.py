@@ -9,6 +9,7 @@ from helpers.prompts.llm_prompts import *
 from helpers.artto_decision_helpers import *
 from helpers.scoring_criteria_schema import *
 from helpers.spam_tweet_schema import *
+from helpers.url_array_report_schema import *
 from helpers.wallet_analysis import *
 
 client = OpenAI(
@@ -129,6 +130,24 @@ chat_tools = [
         }
     }
 ]
+
+def extract_tokens_from_hoa_report(hoa_report):
+    system_prompt = get_extract_tokens_from_hoa_report_prompt(hoa_report)
+    response = client.beta.chat.completions.parse(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": system_prompt}
+        ],
+        response_format=URLArrayReport
+    )
+
+    # Deduplicate URLs by converting to tuples and back to lists
+    response = response.choices[0].message.parsed
+    urls = response.urls
+    url_tuples = [tuple(url) for url in urls]
+    unique_url_tuples = list(set(url_tuples))
+    urls = [list(url_tuple) for url_tuple in unique_url_tuples]
+    return urls
 
 def get_recent_activity_summary(recent_activity):
     system_prompt = get_recent_activity_prompt(json.dumps(recent_activity))

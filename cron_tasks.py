@@ -119,6 +119,32 @@ async def analyze_nfts_in_discovery():
 
 async def add_nfts_to_discovery():
     refreshed_token = refresh_token()
+
+    hoa_report = get_last_n_24_hoa_reports(n=1)
+
+    print("HOA Report: ", hoa_report)
+
+    nfts_identified = extract_tokens_from_hoa_report(hoa_report)
+
+    print("Found NFTs: ", len(nfts_identified))
+
+    for nft in nfts_identified:
+        network = nft[0]
+        contract_address = nft[1]
+        token_id = nft[2]
+        url = nft[3]
+
+        # Skip if missing required fields
+        if not all([contract_address, token_id, url]):
+            continue
+        
+        # Check if NFT already exists before inserting
+        if not check_nft_exists(network, contract_address, token_id):
+            if count_nfts_by_contract(contract_address) < 10:
+                print(f"Inserting NFT: {network}, {contract_address}, {token_id}, {url}")
+                insert_nft_discovery(network, contract_address, token_id, url)
+
+
     opensea_tweets = get_nft_url_tweets(
         refreshed_token["access_token"], 
         "opensea.io/assets/ethereum", 

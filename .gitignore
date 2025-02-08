@@ -177,3 +177,4 @@ helpers/.DS_Store
 opensea_poc.py
 test_sell.py
 /selenium
+.DS_Store
