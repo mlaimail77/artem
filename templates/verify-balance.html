@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Artto Balance</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    :root {
+      --primary-color: #6200EA;
+      --secondary-color: #03DAC6;
+      --background-color: #121212;
+      --text-color: #FFFFFF;
+      --card-bg-color: #1E1E1E;
+    }
+
+    body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      font-family: 'Roboto', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .navbar {
+      background-color: var(--primary-color) !important;
+    }
+
+    .verification-container {
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: var(--card-bg-color);
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--secondary-color);
+      border-color: var(--secondary-color);
+      color: var(--background-color);
+    }
+
+    #verificationCode {
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      margin: 1rem 0;
+      padding: 1rem;
+      background-color: var(--background-color);
+      border-radius: 5px;
+      display: none;
+    }
+
+    .error-message {
+      color: #ff4444;
+      margin-top: 1rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">Artto 🎨🤖</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="verification-container">
+      <h2 class="text-center mb-4">Verify Your Artto Balance</h2>
+      {% if error %}
+        <div class="error-message">{{ error }}</div>
+      {% else %}
+        <p class="text-center">Wallet Address: <strong>{{ wallet }}</strong></p>
+        <p class="text-center">Click the button below to connect your wallet and verify your $ARTTO balance.</p>
+        <div class="text-center">
+          <button id="connectButton" class="btn btn-primary">Connect Wallet</button>
+        </div>
+        <div id="verificationCode"></div>
+        <div id="errorMessage" class="error-message"></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script type="module">
+    import { createWalletClient, custom } from 'https://cdn.jsdelivr.net/npm/viem@1.19.11/+esm'
+
+    // Wallet state management
+    const WalletState = {
+      DISCONNECTED: 'disconnected',
+      CONNECTING: 'connecting',
+      CONNECTED: 'connected',
+      ERROR: 'error'
+    };
+
+    class WalletManager {
+      constructor() {
+        this.state = WalletState.DISCONNECTED;
+        this.userWallet = null;
+        this.client = null;
+        this.connectButton = null;
+        this.verificationCode = null;
+        this.errorMessage = null;
+        this.targetWallet = null;
+      }
+
+      init(targetWallet) {
+        this.targetWallet = targetWallet;
+        this.connectButton = document.getElementById('connectButton');
+        this.verificationCode = document.getElementById('verificationCode');
+        this.errorMessage = document.getElementById('errorMessage');
+
+        if (typeof window.ethereum !== 'undefined') {
+          this.client = createWalletClient({
+            transport: custom(window.ethereum)
+          });
+          this.connectButton.addEventListener('click', () => this.connectWallet());
+          this.setupEthereumListeners();
+        } else {
+          this.handleNoMetaMask();
+        }
+      }
+
+      setupEthereumListeners() {
+        window.ethereum.on('accountsChanged', (accounts) => {
+          if (accounts.length === 0) {
+            this.handleDisconnect();
+          }
+        });
+
+        window.ethereum.on('chainChanged', () => {
+          window.location.reload();
+        });
+
+        window.ethereum.on('disconnect', () => {
+          this.handleDisconnect();
+        });
+      }
+
+      handleDisconnect() {
+        this.userWallet = null;
+        this.state = WalletState.DISCONNECTED;
+        this.errorMessage.textContent = 'Wallet disconnected. Please connect again.';
+        this.connectButton.style.display = 'block';
+        this.verificationCode.style.display = 'none';
+      }
+
+      handleNoMetaMask() {
+        this.state = WalletState.ERROR;
+        this.errorMessage.textContent = 'Please install MetaMask to connect your wallet.';
+        this.connectButton.disabled = true;
+      }
+
+      async connectWallet() {
+        if (this.state === WalletState.CONNECTING) return;
+        
+        this.state = WalletState.CONNECTING;
+        this.connectButton.disabled = true;
+        this.errorMessage.textContent = '';
+        
+        try {
+          const [address] = await this.client.requestAddresses();
+          this.userWallet = address;
+          
+          if (this.userWallet.toLowerCase() !== this.targetWallet.toLowerCase()) {
+            this.errorMessage.textContent = 'Please connect with the wallet address you provided to the bot.';
+            this.connectButton.disabled = false;
+            return;
+          }
+
+          this.state = WalletState.CONNECTED;
+          await this.generateVerificationCode();
+        } catch (error) {
+          console.error('Failed to connect wallet:', error);
+          this.state = WalletState.ERROR;
+          this.errorMessage.textContent = 'Failed to connect wallet. Please try again.';
+          this.connectButton.disabled = false;
+        }
+      }
+
+      async generateVerificationCode() {
+        try {
+          const response = await fetch('/generate-code', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ wallet: this.userWallet })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            this.verificationCode.style.display = 'block';
+            this.verificationCode.textContent = `Your verification code: ${data.code}`;
+            this.errorMessage.textContent = `This code will expire in ${Math.floor(data.expires_in / 60)} minutes.`;
+            this.connectButton.style.display = 'none';
+          } else {
+            this.errorMessage.textContent = data.error || 'Failed to generate verification code.';
+            this.connectButton.disabled = false;
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          this.errorMessage.textContent = 'Failed to generate verification code. Please try again.';
+          this.connectButton.disabled = false;
+        }
+      }
+    }
+
+    // Initialize wallet manager
+    const walletManager = new WalletManager();
+    walletManager.init('{{ wallet }}');
+  </script>
+</body>
+</html> 

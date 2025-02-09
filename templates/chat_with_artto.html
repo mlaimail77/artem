@@ -197,73 +197,170 @@
   <script type="module">
     import { createWalletClient, custom } from 'https://cdn.jsdelivr.net/npm/viem@1.19.11/+esm'
 
-    let userWallet = null;
-    let client = null;
-    let messages = [];
+    // Wallet state management
+    const WalletState = {
+      DISCONNECTED: 'disconnected',
+      CONNECTING: 'connecting',
+      CONNECTED: 'connected',
+      ERROR: 'error'
+    };
 
-    window.addEventListener('load', async () => {
-      const chatMessages = document.getElementById('chatMessages');
-      const userInput = document.getElementById('userInput');
-      const connectButton = document.getElementById('connectButton');
-      const walletStatus = document.getElementById('walletStatus');
-      const sendButton = document.querySelector('.input-group-append button');
-
-      // Check if MetaMask is installed
-      if (typeof window.ethereum !== 'undefined') {
-        client = createWalletClient({
-          transport: custom(window.ethereum)
-        });
-        connectButton.addEventListener('click', connectWallet);
-      } else {
-        connectButton.textContent = 'MetaMask not detected';
-        connectButton.disabled = true;
-        walletStatus.textContent = 'Please install MetaMask to connect your wallet.';
-        walletStatus.classList.remove('alert-warning');
-        walletStatus.classList.add('alert-danger');
+    class WalletManager {
+      constructor() {
+        this.state = WalletState.DISCONNECTED;
+        this.userWallet = null;
+        this.client = null;
+        this.connectButton = null;
+        this.walletStatus = null;
+        this.userInput = null;
+        this.sendButton = null;
       }
 
-      async function connectWallet() {
-        try {
-          const [address] = await client.requestAddresses();
-          userWallet = address;
-          connectButton.textContent = `Connected: ${userWallet.slice(0, 6)}...${userWallet.slice(-4)}`;
-          checkArttoBalance();
-        } catch (error) {
-          console.error('Failed to connect wallet:', error);
-          walletStatus.textContent = 'Failed to connect wallet. Please try again.';
-          walletStatus.classList.remove('alert-warning');
-          walletStatus.classList.add('alert-danger');
+      init() {
+        this.connectButton = document.getElementById('connectButton');
+        this.walletStatus = document.getElementById('walletStatus');
+        this.userInput = document.getElementById('userInput');
+        this.sendButton = document.querySelector('.input-group-append button');
+
+        if (typeof window.ethereum !== 'undefined') {
+          this.client = createWalletClient({
+            transport: custom(window.ethereum)
+          });
+          this.connectButton.addEventListener('click', () => this.connectWallet());
+          this.setupEthereumListeners();
+        } else {
+          this.handleNoMetaMask();
+        }
+
+        // Check if already connected
+        this.checkExistingConnection();
+      }
+
+      async checkExistingConnection() {
+        if (this.client) {
+          try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (accounts.length > 0) {
+              this.userWallet = accounts[0];
+              this.updateUIForConnectedState();
+              this.checkArttoBalance();
+            }
+          } catch (error) {
+            console.error('Error checking existing connection:', error);
+          }
         }
       }
 
-      async function checkArttoBalance() {
+      setupEthereumListeners() {
+        window.ethereum.on('accountsChanged', (accounts) => {
+          if (accounts.length === 0) {
+            this.handleDisconnect();
+          } else {
+            this.userWallet = accounts[0];
+            this.updateUIForConnectedState();
+            this.checkArttoBalance();
+          }
+        });
+
+        window.ethereum.on('chainChanged', () => {
+          window.location.reload();
+        });
+
+        window.ethereum.on('disconnect', () => {
+          this.handleDisconnect();
+        });
+      }
+
+      handleDisconnect() {
+        this.userWallet = null;
+        this.state = WalletState.DISCONNECTED;
+        this.updateUIForDisconnectedState();
+      }
+
+      handleNoMetaMask() {
+        this.state = WalletState.ERROR;
+        this.connectButton.textContent = 'MetaMask not detected';
+        this.connectButton.disabled = true;
+        this.updateWalletStatus('Please install MetaMask to connect your wallet.', 'alert-danger');
+      }
+
+      async connectWallet() {
+        if (this.state === WalletState.CONNECTING) return;
+        
+        this.state = WalletState.CONNECTING;
+        this.connectButton.textContent = 'Connecting...';
+        
+        try {
+          const [address] = await this.client.requestAddresses();
+          this.userWallet = address;
+          this.state = WalletState.CONNECTED;
+          this.updateUIForConnectedState();
+          this.checkArttoBalance();
+        } catch (error) {
+          console.error('Failed to connect wallet:', error);
+          this.state = WalletState.ERROR;
+          this.updateWalletStatus('Failed to connect wallet. Please try again.', 'alert-danger');
+          this.connectButton.textContent = 'Connect Wallet';
+        }
+      }
+
+      updateUIForConnectedState() {
+        this.connectButton.textContent = `Connected: ${this.userWallet.slice(0, 6)}...${this.userWallet.slice(-4)}`;
+        this.connectButton.classList.add('btn-success');
+        this.connectButton.classList.remove('btn-outline-light');
+      }
+
+      updateUIForDisconnectedState() {
+        this.connectButton.textContent = 'Connect Wallet';
+        this.connectButton.classList.remove('btn-success');
+        this.connectButton.classList.add('btn-outline-light');
+        this.updateWalletStatus('Please connect your wallet to chat with Artto.', 'alert-warning');
+        this.userInput.disabled = true;
+        this.sendButton.disabled = true;
+      }
+
+      updateWalletStatus(message, alertClass) {
+        this.walletStatus.textContent = message;
+        this.walletStatus.className = 'alert text-center mb-4';
+        this.walletStatus.classList.add(alertClass);
+      }
+
+      async checkArttoBalance() {
         try {
           const response = await fetch('/check_artto_balance', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ wallet: userWallet }),
+            body: JSON.stringify({ wallet: this.userWallet }),
           });
+          
+          if (!response.ok) throw new Error('Network response was not ok');
+          
           const data = await response.json();
           if (data.sufficient_balance) {
-            walletStatus.textContent = 'Wallet connected and balance sufficient. You can now chat with Artto!';
-            walletStatus.classList.remove('alert-warning');
-            walletStatus.classList.add('alert-success');
-            userInput.disabled = false;
-            sendButton.disabled = false;
+            this.updateWalletStatus('Wallet connected and balance sufficient. You can now chat with Artto!', 'alert-success');
+            this.userInput.disabled = false;
+            this.sendButton.disabled = false;
           } else {
-            walletStatus.textContent = 'Insufficient $ARTTO balance. You need at least 10,000 $ARTTO to chat with Artto.';
-            walletStatus.classList.remove('alert-warning');
-            walletStatus.classList.add('alert-danger');
+            this.updateWalletStatus('Insufficient $ARTTO balance. You need at least 10,000 $ARTTO to chat with Artto.', 'alert-danger');
           }
         } catch (error) {
           console.error('Failed to check $ARTTO balance:', error);
-          walletStatus.textContent = 'Failed to check $ARTTO balance. Please try again.';
-          walletStatus.classList.remove('alert-warning');
-          walletStatus.classList.add('alert-danger');
+          this.updateWalletStatus('Failed to check $ARTTO balance. Please try again.', 'alert-danger');
         }
       }
+    }
+
+    let messages = [];
+    const walletManager = new WalletManager();
+
+    window.addEventListener('load', async () => {
+      const chatMessages = document.getElementById('chatMessages');
+      const userInput = document.getElementById('userInput');
+      
+      // Initialize wallet manager
+      walletManager.init();
 
       window.addMessage = function(content, isUser) {
         const messageDiv = document.createElement('div');
@@ -283,7 +380,7 @@
 
       window.sendMessage = function() {
         const userMessage = userInput.value.trim();
-        if (userMessage && userWallet) {
+        if (userMessage && walletManager.userWallet) {
           addMessage(userMessage, true);
           userInput.value = '';
           
@@ -294,10 +391,13 @@
             },
             body: JSON.stringify({ 
               messages: messages,
-              wallet: userWallet
+              wallet: walletManager.userWallet
             }),
           })
-          .then(response => response.json())
+          .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+          })
           .then(data => {
             if (data.error) {
               addMessage(`Error: ${data.error}`, false);
