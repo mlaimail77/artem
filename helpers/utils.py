@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import time
 
 from datetime import datetime, date, timezone, timedelta
 from supabase import create_client, Client
@@ -1063,6 +1064,273 @@ def save_chat_message(user_message, artto_reply, wallet):
         print(f"Error saving chat message pair: {str(e)}")
         return None
 
+def save_verification_code(wallet, code, expires_at):
+    """
+    Save a verification code to the verification_codes table in Supabase
+    
+    Args:
+        wallet (str): The wallet address
+        code (str): The verification code
+        expires_at (float): Unix timestamp when the code expires
+        
+    Returns:
+        dict: Response from Supabase insert operation
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        data = {
+            "id": hashlib.sha256(f"{wallet}:{code}:{str(datetime.now())}".encode()).hexdigest(),
+            "wallet": wallet,
+            "code": code,
+            "expires_at": expires_at,
+            "created_at": str(datetime.now()),
+            "used": False
+        }
+        
+        result = supabase.table("verification_codes").insert(data).execute()
+        return result.data
+    except Exception as e:
+        print(f"Error saving verification code: {str(e)}")
+        return None
+
+def get_verification_code(wallet, code):
+    """
+    Get a verification code from the verification_codes table
+    
+    Args:
+        wallet (str): The wallet address
+        code (str): The verification code
+        
+    Returns:
+        dict: The verification code record if found and not expired/used, None otherwise
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        result = supabase.table("verification_codes") \
+            .select("*") \
+            .eq("wallet", wallet) \
+            .eq("code", code) \
+            .eq("used", False) \
+            .execute()
+            
+        if not result.data:
+            return None
+            
+        code_data = result.data[0]
+        current_time = time.time()
+
+        print(f"Current time: {current_time}")
+        print(f"Code Data: {code_data}")
+        
+        # Check if code has expired
+        if current_time > code_data["expires_at"]:
+            return None
+        
+        print(f"Verification code: {code_data}")
+        return code_data
+    except Exception as e:
+        print(f"Error getting verification code: {str(e)}")
+        return None
+
+def mark_verification_code_used(wallet, code):
+    """
+    Mark a verification code as used
+    
+    Args:
+        wallet (str): The wallet address
+        code (str): The verification code
+        
+    Returns:
+        dict: Response from Supabase update operation
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        result = supabase.table("verification_codes") \
+            .update({"used": True}) \
+            .eq("wallet", wallet) \
+            .eq("code", code) \
+            .execute()
+            
+        return result.data
+    except Exception as e:
+        print(f"Error marking verification code as used: {str(e)}")
+        return None
+
+def save_telegram_user_wallet(user_id, wallet):
+    """
+    Save a Telegram user's wallet address to the telegram_users table
+    
+    Args:
+        user_id (int): The Telegram user ID
+        wallet (str): The wallet address
+        
+    Returns:
+        dict: Response from Supabase insert/update operation
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        # Check if user exists
+        existing = supabase.table("telegram_users").select("*").eq("user_id", user_id).execute()
+        
+        data = {
+            "user_id": user_id,
+            "wallet": wallet,
+            "updated_at": str(datetime.now())
+        }
+        
+        if existing.data:
+            result = supabase.table("telegram_users").update(data).eq("user_id", user_id).execute()
+        else:
+            data["created_at"] = str(datetime.now())
+            result = supabase.table("telegram_users").insert(data).execute()
+            
+        return result.data
+    except Exception as e:
+        print(f"Error saving Telegram user wallet: {str(e)}")
+        return None
+
+def get_telegram_user_wallet(user_id):
+    """
+    Get a Telegram user's wallet address from the telegram_users table
+    
+    Args:
+        user_id (int): The Telegram user ID
+        
+    Returns:
+        str: The wallet address if found, None otherwise
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        result = supabase.table("telegram_users").select("wallet").eq("user_id", user_id).execute()
+        if result.data:
+            return result.data[0]["wallet"]
+        return None
+    except Exception as e:
+        print(f"Error getting Telegram user wallet: {str(e)}")
+        return None
+
+def save_telegram_message_count(user_id, count, reset_time):
+    """
+    Save a Telegram user's message count to the telegram_message_counts table
+    
+    Args:
+        user_id (int): The Telegram user ID
+        count (int): The current message count
+        reset_time (float): Unix timestamp when the count resets
+        
+    Returns:
+        dict: Response from Supabase insert/update operation
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        # Check if count exists
+        existing = supabase.table("telegram_message_counts").select("*").eq("user_id", user_id).execute()
+        
+        data = {
+            "user_id": user_id,
+            "count": count,
+            "reset_time": reset_time,
+            "updated_at": str(datetime.now())
+        }
+        
+        if existing.data:
+            result = supabase.table("telegram_message_counts").update(data).eq("user_id", user_id).execute()
+        else:
+            data["created_at"] = str(datetime.now())
+            result = supabase.table("telegram_message_counts").insert(data).execute()
+            
+        return result.data
+    except Exception as e:
+        print(f"Error saving Telegram message count: {str(e)}")
+        return None
+
+def get_telegram_message_count(user_id):
+    """
+    Get a Telegram user's message count from the telegram_message_counts table
+    
+    Args:
+        user_id (int): The Telegram user ID
+        
+    Returns:
+        tuple: (count, reset_time) if found, None otherwise
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        result = supabase.table("telegram_message_counts").select("count,reset_time").eq("user_id", user_id).execute()
+        if result.data:
+            data = result.data[0]
+            return (data["count"], data["reset_time"])
+        return None
+    except Exception as e:
+        print(f"Error getting Telegram message count: {str(e)}")
+        return None
+
+def get_messages_before_check(user_id):
+    """Get number of messages sent before balance check"""
+    print(f"Getting messages before check for user {user_id}")
+    response = refresh_or_get_supabase_client()
+    try:
+        result = supabase.table("telegram_message_counts").select("messages_before_check").eq("user_id", user_id).execute()
+        if result.data:
+            messages = result.data[0].get("messages_before_check")
+            return messages if messages is not None else 0
+        return 0
+    except Exception as e:
+        print(f"Error getting messages before check: {str(e)}")
+        return 0
+
+def increment_messages_before_check(user_id):
+    """Increment messages before check counter"""
+    print(f"Incrementing messages before check for user {user_id}")
+    response = refresh_or_get_supabase_client()
+    messages_before_check = get_messages_before_check(user_id)
+    print(f"Messages before check: {messages_before_check}")
+    count = messages_before_check + 1
+    print(f"Count: {count}")
+    try:
+        data = {"messages_before_check": count}
+        result = supabase.table("telegram_message_counts").update(data).eq("user_id", user_id).execute()
+        if not result.data:
+            data["user_id"] = user_id
+            result = supabase.table("telegram_message_counts").insert(data).execute()
+        return count
+    except Exception as e:
+        print(f"Error incrementing messages before check: {str(e)}")
+        return count
+
+def save_telegram_feedback(user_id, feedback_text):
+    """
+    Save feedback from a Telegram user to the telegram_feedback table
+    
+    Args:
+        user_id (int): The Telegram user ID
+        feedback_text (str): The feedback message
+        
+    Returns:
+        dict: Response from Supabase insert operation
+    """
+    response = refresh_or_get_supabase_client()
+    
+    try:
+        data = {
+            "id": hashlib.sha256(f"{user_id}:{feedback_text}:{str(datetime.now())}".encode()).hexdigest(),
+            "user_id": user_id,
+            "feedback": feedback_text,
+            "created_at": str(datetime.now())
+        }
+        
+        result = supabase.table("telegram_feedback").insert(data).execute()
+        return result.data
+    except Exception as e:
+        print(f"Error saving Telegram feedback: {str(e)}")
+        return None
 
 def main():
     supabase = get_supabase_client()
