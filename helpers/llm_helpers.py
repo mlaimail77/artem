@@ -128,6 +128,30 @@ chat_tools = [
             "description": "Get recent activity (sales, mints, etc.) from big collectors",
             "parameters": {}
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_collection_value",
+            "description": "Get the current total value of Artto's NFT collection",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": False
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_latest_art_news",
+            "description": "Get the latest news and updates from the art world using the most recent 24 Hours of Art report",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": False
+            }
+        }
     }
 ]
 
@@ -560,6 +584,7 @@ async def get_chat_reply(messages):
     if response.choices[0].message.tool_calls:
         for tool_call in response.choices[0].message.tool_calls:
             if tool_call.function.name == "get_nft_opinion":
+                print("Tool call: get_nft_opinion")
                 tool_input = json.loads(tool_call.function.arguments)
                 network = tool_input["network"]
                 contract_address = tool_input["contract_address"]
@@ -594,6 +619,7 @@ async def get_chat_reply(messages):
                     return f"I'm sorry, but I couldn't fetch the NFT metadata."
 
             elif tool_call.function.name == "get_roast":
+                print("Tool call: get_roast")
                 tool_input = json.loads(tool_call.function.arguments)
                 wallet_address = tool_input["wallet_address"]
                 
@@ -612,27 +638,32 @@ async def get_chat_reply(messages):
                     return f"I'm sorry, but I couldn't analyze the wallet: {str(e)}"
             
             elif tool_call.function.name == "get_recent_acquisitions":
-                recent_acquisitions = get_recent_acquisitions(n=10)
-                print("Recent acquisitions: ", recent_acquisitions)
+                print("Tool call: get_recent_acquisitions")
+                try:
+                    recent_acquisitions = get_recent_acquisitions(n=10)
+                    print("Recent acquisitions: ", recent_acquisitions)
 
-                messages.append({
-                    "role": "assistant",
-                    "content": f"Here are my recent acquisitions: {json.dumps(recent_acquisitions)}"
-                })
+                    messages.append({
+                        "role": "assistant", 
+                        "content": f"Here are my recent acquisitions: {json.dumps(recent_acquisitions)}"
+                    })
 
-                response = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": "system", "content": "Summarize the recent acquisitions and provide your thoughts on them."},
-                        *messages
-                    ],
-                    tools=chat_tools,
-                    max_tokens=1000
-                )
+                    response = client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[
+                            {"role": "system", "content": "Summarize the recent acquisitions and provide your thoughts on them. Do not use markdown."},
+                            *messages
+                        ],
+                        tools=chat_tools,
+                        max_tokens=1000
+                    )
 
-                return response.choices[0].message.content
+                    return response.choices[0].message.content
+                except Exception as e:
+                    return f"I'm sorry, but I couldn't fetch the recent acquisitions."
             
             elif tool_call.function.name == "get_recent_sales":
+                print("Tool call: get_recent_sales")
                 one_day_ago = int((datetime.now() - timedelta(days=1)).timestamp())
                 recent_sales = await get_recent_sales(from_timestamp=one_day_ago)
                 parsed_transfers = parse_recent_sales_response(recent_sales)
@@ -654,6 +685,7 @@ async def get_chat_reply(messages):
 
             
             elif tool_call.function.name == "get_top_collections":
+                print("Tool call: get_top_collections")
                 tool_input = json.loads(tool_call.function.arguments)
                 time_period = tool_input["time_period"]
                 chains = tool_input["chains"]
@@ -684,6 +716,56 @@ async def get_chat_reply(messages):
                 )
 
                 return response.choices[0].message.content
+
+            elif tool_call.function.name == "get_collection_value":
+                print("Tool call: get_collection_value")
+                try:
+                    current_valuation = get_wallet_valuation(os.getenv('ARTTO_ADDRESS_MAINNET'))
+                    messages.append({
+                        "role": "assistant",
+                        "content": f"My wallet is valued at ${current_valuation:,.2f}"
+                    })
+
+                    response = client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[
+                            {"role": "system", "content": get_chat_system_prompt()},
+                            *messages
+                        ],
+                        tools=chat_tools,
+                        max_tokens=1000
+                    )
+
+                    return response.choices[0].message.content
+                except Exception as e:
+                    return f"I'm sorry, but I couldn't fetch my current collection value at the moment."
+
+            elif tool_call.function.name == "get_latest_art_news":
+                print("Tool call: get_latest_art_news")
+                try:
+                    hoa_report = get_last_n_24_hoa_reports(n=3)
+                    if not hoa_report:
+                        return "I'm sorry, but I couldn't find any recent art news updates."
+                    
+                    latest_report = hoa_report[0]
+                    messages.append({
+                        "role": "assistant",
+                        "content": f"Here's the latest from the art world based on the 24 Hours of Art report from {latest_report['timestamp']}:\n\n{latest_report['content']}"
+                    })
+
+                    response = client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[
+                            {"role": "system", "content": "Summarize the latest art news in a conversational way, highlighting the most interesting and important updates. Do not use markdown."},
+                            *messages
+                        ],
+                        tools=chat_tools,
+                        max_tokens=1000
+                    )
+
+                    return response.choices[0].message.content
+                except Exception as e:
+                    return f"I'm sorry, but I couldn't fetch the latest art news at the moment: {str(e)}"
 
     return response.choices[0].message.content
 

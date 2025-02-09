@@ -460,11 +460,13 @@ def generate_code():
         # Generate a random 6-character verification code
         verification_code = ''.join(secrets.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for _ in range(6))
         
-        # Store the code with expiration
-        verification_codes[wallet] = {
-            'code': verification_code,
-            'expires_at': time.time() + VERIFICATION_CODE_EXPIRY
-        }
+        # Calculate expiration time
+        expires_at = time.time() + VERIFICATION_CODE_EXPIRY
+        
+        # Save code to Supabase
+        result = save_verification_code(wallet, verification_code, expires_at)
+        if not result:
+            return jsonify({"error": "Failed to save verification code"}), 500
         
         return jsonify({
             "code": verification_code,
@@ -483,20 +485,13 @@ def verify_code():
     if not wallet or not code:
         return jsonify({"error": "Both wallet address and verification code are required"}), 400
         
-    stored_data = verification_codes.get(wallet)
-    if not stored_data:
-        return jsonify({"valid": False, "error": "No verification code found for this wallet"}), 404
+    # Get code from Supabase
+    code_data = get_verification_code(wallet, code)
+    if not code_data:
+        return jsonify({"valid": False, "error": "Invalid or expired verification code"}), 401
         
-    if time.time() > stored_data['expires_at']:
-        # Clean up expired code
-        del verification_codes[wallet]
-        return jsonify({"valid": False, "error": "Verification code has expired"}), 401
-        
-    if stored_data['code'] != code:
-        return jsonify({"valid": False, "error": "Invalid verification code"}), 401
-        
-    # Clean up used code
-    del verification_codes[wallet]
+    # Mark code as used
+    mark_verification_code_used(wallet, code)
     
     return jsonify({"valid": True})
 
