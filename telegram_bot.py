@@ -31,9 +31,13 @@ verification_codes = {}
 # Format: {user_id: (count, reset_timestamp)}
 message_counts: Dict[int, Tuple[int, float]] = {}
 
+# Store message counts before balance check
+messages_before_check: Dict[int, int] = {}
+
 MAX_HISTORY = 10
 MIN_ARTTO_BALANCE = 10000
 MAX_DAILY_MESSAGES = 100
+MESSAGES_BEFORE_BALANCE_CHECK = 4
 
 def get_message_count(user_id: int) -> Tuple[int, bool]:
     """
@@ -63,7 +67,7 @@ def increment_message_count(user_id: int):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id, 
-        text="I'm Artto AI! To interact with me, you'll need to:\n1. Have at least 10,000 $ARTTO tokens\n2. Link your wallet using /link_wallet <your_wallet_address>"
+        text="I'm Artto AI! You can start chatting with me right away for your first 4 messages. After that, you'll need to:\n1. Have at least 10,000 $ARTTO tokens\n2. Link your wallet using /link_wallet <your_wallet_address>\n\nTo buy $ARTTO tokens, use the /buy-artto command."
     )
 
 async def link_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -79,13 +83,12 @@ async def link_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
         
         # Basic wallet address validation
-        if not (wallet.startswith('0x') or wallet.endswith('.eth')):
+        if not wallet.startswith('0x'):
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="Invalid wallet address format. Please provide a valid Ethereum address or ENS name."
+                text="Invalid wallet address format. Please provide a valid Ethereum address. ENS names are not supported."
             )
             return
-        
         # Generate verification URL
         verification_url = f"{os.getenv('ARTTO_BASE_URL', 'https://www.artto.xyz')}/verify-balance?address={wallet}"
         
@@ -101,10 +104,10 @@ async def link_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
         
         # Basic wallet address validation
-        if not (wallet.startswith('0x') or wallet.endswith('.eth')):
+        if not wallet.startswith('0x'):
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="Invalid wallet address format. Please provide a valid Ethereum address or ENS name."
+                text="Invalid wallet address format. Please provide a valid Ethereum address. ENS names are not supported."
             )
             return
         
@@ -138,6 +141,12 @@ async def link_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text="Error verifying code. Please try again later."
             )
 
+async def buy_artto(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="You can buy $ARTTO tokens on Base network at contract address:\n`0x9239e9f9e325e706ef8b89936ece9d48896abbe3`\n\nCheck price and trading info on DEXScreener:\nhttps://dexscreener.com/base/0x9239e9f9e325e706ef8b89936ece9d48896abbe3"
+    )
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_message = update.message.text
@@ -152,29 +161,37 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     
-    # Check if user has linked wallet
-    if user_id not in user_wallets:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="Please link your wallet first using /link_wallet <your_wallet_address>"
-        )
-        return
-    
-    # Check ARTTO balance
-    try:
-        balance = get_artto_balance(user_wallets[user_id])
-        if balance < MIN_ARTTO_BALANCE:
+    # Initialize or increment messages before check counter
+    if user_id not in messages_before_check:
+        messages_before_check[user_id] = 1
+    else:
+        messages_before_check[user_id] += 1
+
+    # Only check wallet and balance after MESSAGES_BEFORE_BALANCE_CHECK messages
+    if messages_before_check[user_id] > MESSAGES_BEFORE_BALANCE_CHECK:
+        # Check if user has linked wallet
+        if user_id not in user_wallets:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text=f"You need at least {MIN_ARTTO_BALANCE:,} $ARTTO to chat with me. Your current balance is {balance:,.0f}."
+                text="You've used your free messages. Please link your wallet using /link_wallet <your_wallet_address> to continue chatting."
             )
             return
-    except Exception as e:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="Error checking $ARTTO balance. Please try again later."
-        )
-        return
+        
+        # Check ARTTO balance
+        try:
+            balance = get_artto_balance(user_wallets[user_id])
+            if balance < MIN_ARTTO_BALANCE:
+                await context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=f"You've used your free messages. You need at least {MIN_ARTTO_BALANCE:,} $ARTTO to continue chatting. Your current balance is {balance:,.0f}.\nUse /buy-artto to learn how to get tokens."
+                )
+                return
+        except Exception as e:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="Error checking $ARTTO balance. Please try again later."
+            )
+            return
     
     # Increment message count
     increment_message_count(user_id)
@@ -202,10 +219,12 @@ def run_telegram_bot():
     
     start_handler = CommandHandler('start', start)
     link_wallet_handler = CommandHandler('link_wallet', link_wallet)
+    buy_artto_handler = CommandHandler('buy-artto', buy_artto)
     message_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message)
     
     application.add_handler(start_handler)
     application.add_handler(link_wallet_handler)
+    application.add_handler(buy_artto_handler)
     application.add_handler(message_handler)
 
     
