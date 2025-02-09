@@ -4,6 +4,7 @@ from tasks import flask_app, sync_process_webhook, sync_process_neynar_webhook
 import logging
 import os
 import time
+import secrets
 
 from helpers.utils import *
 from helpers.llm_helpers import *
@@ -30,6 +31,10 @@ from functools import lru_cache
 # Authentication cache
 auth_cache = {}
 AUTH_CACHE_EXPIRY = 300  # 5 minutes
+
+# Store verification codes with expiration
+verification_codes = {}
+VERIFICATION_CODE_EXPIRY = 300  # 5 minutes
 
 @lru_cache(maxsize=1)
 def get_cached_analyses(timestamp):
@@ -426,6 +431,74 @@ def check_artto_balance():
     except Exception as e:
         print(f"Error in check_artto_balance route: {str(e)}")
         return jsonify({"error": "An error occurred while checking the $ARTTO balance"}), 500
+
+@flask_app.route('/verify-balance')
+def verify_balance():
+    wallet = request.args.get('address')
+    if not wallet:
+        return render_template('verify-balance.html', error="No wallet address provided")
+    
+    return render_template('verify-balance.html', wallet=wallet)
+
+@flask_app.route('/generate-code', methods=['POST'])
+def generate_code():
+    try:
+        data = request.json
+        wallet = data.get('wallet')
+        
+        if not wallet:
+            return jsonify({"error": "Wallet address is required"}), 400
+            
+        # Check ARTTO balance
+        artto_balance = get_artto_balance(wallet)
+        if artto_balance < 10000:
+            return jsonify({
+                "error": "Insufficient $ARTTO balance",
+                "balance": artto_balance
+            }), 403
+            
+        # Generate a random 6-character verification code
+        verification_code = ''.join(secrets.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for _ in range(6))
+        
+        # Store the code with expiration
+        verification_codes[wallet] = {
+            'code': verification_code,
+            'expires_at': time.time() + VERIFICATION_CODE_EXPIRY
+        }
+        
+        return jsonify({
+            "code": verification_code,
+            "expires_in": VERIFICATION_CODE_EXPIRY
+        })
+        
+    except Exception as e:
+        print(f"Error generating verification code: {str(e)}")
+        return jsonify({"error": "An error occurred while generating the verification code"}), 500
+
+@flask_app.route('/verify-code')
+def verify_code():
+    wallet = request.args.get('address')
+    code = request.args.get('code')
+    
+    if not wallet or not code:
+        return jsonify({"error": "Both wallet address and verification code are required"}), 400
+        
+    stored_data = verification_codes.get(wallet)
+    if not stored_data:
+        return jsonify({"valid": False, "error": "No verification code found for this wallet"}), 404
+        
+    if time.time() > stored_data['expires_at']:
+        # Clean up expired code
+        del verification_codes[wallet]
+        return jsonify({"valid": False, "error": "Verification code has expired"}), 401
+        
+    if stored_data['code'] != code:
+        return jsonify({"valid": False, "error": "Invalid verification code"}), 401
+        
+    # Clean up used code
+    del verification_codes[wallet]
+    
+    return jsonify({"valid": True})
 
 if __name__ == '__main__':
     flask_app.run(
