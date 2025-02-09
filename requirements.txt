@@ -17,3 +17,4 @@ flower
 twikit
 tweepy
 pillow
+python-telegram-bot
